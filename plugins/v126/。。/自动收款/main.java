@@ -19,33 +19,31 @@ import me.hd.wauxv.data.bean.info.FriendInfo;
 import me.hd.wauxv.data.bean.info.GroupInfo;
 
 // ================= 配置键名常量 =================
-String KEY_ENABLE = "tf_ultra_enable";          // 总开关
-String KEY_MODE = "tf_ultra_mode";              // 0:全收, 1:仅白名单, 2:拒黑名单
-String KEY_WHITELIST = "tf_ultra_whitelist";    // 白名单wxid
-String KEY_BLACKLIST = "tf_ultra_blacklist";    // 黑名单wxid
-String KEY_REFUSE = "tf_ultra_refuse";          // 拒收时动作: false忽略, true退回
-String KEY_DELAY = "tf_ultra_delay";            // 接收延迟(ms)
+String KEY_ENABLE = "tf_ultra_enable"; // 总开关
+String KEY_MODE = "tf_ultra_mode"; // 0:全收, 1:仅白名单, 2:拒黑名单
+String KEY_WHITELIST = "tf_ultra_whitelist"; // 白名单wxid
+String KEY_BLACKLIST = "tf_ultra_blacklist"; // 黑名单wxid
+String KEY_REFUSE = "tf_ultra_refuse"; // 拒收时动作: false忽略, true退回
+String KEY_DELAY = "tf_ultra_delay"; // 接收延迟(ms)
 
 // 金额规则
-String KEY_AMT_ENABLE = "tf_ultra_amt_enable";  // 金额限制开关
-String KEY_AMT_COND = "tf_ultra_amt_cond";      // 条件: 0:大于, 1:小于, 2:等于
-String KEY_AMT_VAL = "tf_ultra_amt_val";        // 金额数值
-String KEY_AMT_ACTION = "tf_ultra_amt_act";     // 动作: 0:拒收, 1:接收
+String KEY_AMT_ENABLE = "tf_ultra_amt_enable"; // 金额限制开关
+String KEY_AMT_COND = "tf_ultra_amt_cond"; // 条件: 0:大于, 1:小于, 2:等于
+String KEY_AMT_VAL = "tf_ultra_amt_val"; // 金额数值
+String KEY_AMT_ACTION = "tf_ultra_amt_act"; // 动作: 0:拒收, 1:接收
 
 // 关键词规则
-String KEY_KW_MODE = "tf_ultra_kw_mode";        // 0:关, 1:包含即收, 2:包含即拒
-String KEY_KEYWORDS = "tf_ultra_keywords";      // 关键词
+String KEY_KW_MODE = "tf_ultra_kw_mode"; // 0:关, 1:包含即收, 2:包含即拒
+String KEY_KEYWORDS = "tf_ultra_keywords"; // 关键词
 
 // 自动回复
 String KEY_REPLY_ENABLE = "tf_ultra_reply_enable";
-String KEY_REPLY_TEXT = "tf_ultra_reply_text";
+String KEY_REPLY_TEXT = "tf_ultra_reply_text"; // 缓存变量
 
-// 缓存变量
 List sCachedFriendList = null;
 List sCachedGroupList = null;
 
 // ================= 入口函数 =================
-
 /**
  * 拦截发送消息，用于触发设置界面
  */
@@ -71,7 +69,6 @@ void onHandleMsg(Object msgInfoBean) {
 }
 
 // ================= 转账处理逻辑 =================
-
 void handleTransfer(final Object msg) {
     if (!getBoolean(KEY_ENABLE, false)) return;
 
@@ -92,10 +89,11 @@ void handleTransfer(final Object msg) {
         }
     }
 
-    // --- 新增：过滤已领取通知（paysubtype=3） ---
+    // --- 核心修复 2：严格校验转账状态 (防止退回消息触发回复) ---
+    // paysubtype: 1=待收款(正常), 3=已收款, 4=已退回/拒收
     String paysubtype = parsePaySubtypeFromXml(content);
-    if ("3".equals(paysubtype)) {
-        log(">> paysubtype=3，转账已领取通知，忽略处理");
+    if (!"1".equals(paysubtype)) {
+        log(">> 忽略非收款请求: paysubtype=" + paysubtype + " (可能是退回或已领取)");
         return;
     }
 
@@ -103,15 +101,14 @@ void handleTransfer(final Object msg) {
     final String talker = msg.getTalker(); // 聊天对象
     String payer = "";
     double amount = 0.0;
-
     try {
         // 获取付款人（恢复原逻辑，兼容payerUsername为空的合法转账）
-        payer = msg.getSendTalker(); 
+        payer = msg.getSendTalker();
         if (TextUtils.isEmpty(payer)) {
             if (msg.transferMsg != null) payer = msg.transferMsg.payerUsername;
         }
         if (TextUtils.isEmpty(payer)) payer = talker; // 私聊兜底
-        
+
         // 防止自己转账给自己
         if (!TextUtils.isEmpty(myWxid) && payer.equals(myWxid)) {
             log(">> 付款人是本人，忽略（防止自己转账给自己触发）");
@@ -120,10 +117,9 @@ void handleTransfer(final Object msg) {
 
         // 解析金额
         amount = parseAmountFromXml(content);
-        
     } catch (Exception e) {
         log("转账信息解析异常: " + e.getMessage());
-        return; 
+        return;
     }
 
     // 打印调试日志
@@ -132,12 +128,26 @@ void handleTransfer(final Object msg) {
     // 2. 规则判定 (rejectReason不为空则拒收)
     String rejectReason = null;
 
-    // A. 名单检查
+    // A. 名单检查（优化版：支持群聊白/黑名单）
     int listMode = getInt(KEY_MODE, 0); // 0:全收, 1:白名单, 2:黑名单
-    if (listMode == 1) {
-        if (!checkUserInList(payer, KEY_WHITELIST)) rejectReason = "非白名单用户";
-    } else if (listMode == 2) {
-        if (checkUserInList(payer, KEY_BLACKLIST)) rejectReason = "黑名单用户";
+    boolean isGroup = !payer.equals(talker);  // 群聊时 payer ≠ talker，私聊时相等
+
+    if (listMode == 1) {  // 仅接收白名单
+        boolean inWhite = checkUserInList(payer, KEY_WHITELIST);
+        if (isGroup) {
+            inWhite = inWhite || checkUserInList(talker, KEY_WHITELIST);
+        }
+        if (!inWhite) {
+            rejectReason = "非白名单用户或群聊";
+        }
+    } else if (listMode == 2) {  // 拒收黑名单
+        boolean inBlack = checkUserInList(payer, KEY_BLACKLIST);
+        if (isGroup) {
+            inBlack = inBlack || checkUserInList(talker, KEY_BLACKLIST);
+        }
+        if (inBlack) {
+            rejectReason = "黑名单用户或群聊";
+        }
     }
 
     // B. 金额检查 (逻辑已修复)
@@ -145,18 +155,14 @@ void handleTransfer(final Object msg) {
         int cond = getInt(KEY_AMT_COND, 1); // 0:>, 1:<, 2:=
         double limit = Double.parseDouble(getString(KEY_AMT_VAL, "0"));
         int action = getInt(KEY_AMT_ACTION, 0); // 0:拒收(黑名单逻辑), 1:强制接收(白名单逻辑)
-
         boolean match = false;
-        if (cond == 0 && amount > limit + 0.001) match = true;       // 大于
-        else if (cond == 1 && amount < limit - 0.001) match = true;  // 小于
+        if (cond == 0 && amount > limit + 0.001) match = true; // 大于
+        else if (cond == 1 && amount < limit - 0.001) match = true; // 小于
         else if (cond == 2 && Math.abs(amount - limit) < 0.01) match = true; // 等于
 
-        if (action == 0) {
-            // 动作0: 拒收/忽略 -> 满足条件则拒收 (黑名单逻辑)
+        if (action == 0) { // 动作0: 拒收/忽略 -> 满足条件则拒收 (黑名单逻辑)
             if (match) rejectReason = "金额(" + amount + ")触发拒收规则";
-        } else {
-            // 动作1: 强制接收 -> 不满足条件则拒收 (白名单逻辑)
-            // 这就是你想要的功能：只有满足条件才收，其他一律拒
+        } else { // 动作1: 强制接收 -> 不满足条件则拒收 (白名单逻辑)
             if (!match) rejectReason = "金额(" + amount + ")不满足仅接收条件";
         }
     }
@@ -184,10 +190,8 @@ void handleTransfer(final Object msg) {
             public void run() {
                 try {
                     if (delay > 0) Thread.sleep(delay);
-                    
                     // 调用收款接口
                     confirmTransfer(msg.transferMsg.transactionId, msg.transferMsg.transferId, msg.transferMsg.payerUsername, msg.transferMsg.invalidTime);
-                    
                     log(">> 收款动作执行完成 (单号:" + msg.transferMsg.transferId + ")");
 
                     // 成功后才回复
@@ -197,7 +201,16 @@ void handleTransfer(final Object msg) {
                         log(">> 已自动回复: " + replyText);
                     }
                 } catch (Exception e) {
-                    log("❌ 收款异常(可能已被领取或非本人): " + e.getMessage());
+                    final String errorMsg = e.getMessage();
+                    log("❌ 收款异常(可能已被领取或非本人): " + errorMsg);
+                    // --- 特定报错弹窗提示 ---
+                    if (errorMsg != null && errorMsg.contains("no permission to invoke")) {
+                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+                            public void run() {
+                                toast("需关注微信公众号:"画杂记"才可使用");
+                            }
+                        });
+                    }
                 }
             }
         }).start();
@@ -216,7 +229,6 @@ void handleTransfer(final Object msg) {
 }
 
 // ================= 解析逻辑 =================
-
 String parseReceiverFromXml(String xml) {
     if (xml == null) return "";
     try {
@@ -292,13 +304,16 @@ String getDisplayName(String wxid) {
 }
 
 // ================= UI 构建逻辑 =================
-
 void showSettingsUI() {
     Activity ctx = getTopActivity();
     if (ctx == null) return;
     ctx.runOnUiThread(new Runnable() {
         public void run() {
-            try { showDialogInternal(ctx); } catch (Exception e) { toast("UI Error: " + e); }
+            try {
+                showDialogInternal(ctx);
+            } catch (Exception e) {
+                toast("UI Error: " + e);
+            }
         }
     });
 }
@@ -306,7 +321,6 @@ void showSettingsUI() {
 void showDialogInternal(final Activity ctx) {
     ScrollView scrollView = new ScrollView(ctx);
     scrollView.setBackgroundColor(Color.parseColor("#F5F6F8"));
-
     LinearLayout root = new LinearLayout(ctx);
     root.setOrientation(LinearLayout.VERTICAL);
     root.setPadding(30, 30, 30, 30);
@@ -319,21 +333,15 @@ void showDialogInternal(final Activity ctx) {
     final Switch swEnable = addSwitch(ctx, card1, "开启自动收款", getBoolean(KEY_ENABLE, false));
     final Switch swRefuse = addSwitch(ctx, card1, "拒收时原路退回", getBoolean(KEY_REFUSE, false));
     long delayVal = getLong(KEY_DELAY, -1);
-final EditText etDelay = addInput(
-    ctx,
-    card1,
-    "收款延迟 (毫秒)",
-    delayVal <= 0 ? "" : String.valueOf(delayVal),
-    InputType.TYPE_CLASS_NUMBER
-);
+    final EditText etDelay = addInput(ctx, card1, "收款延迟 (毫秒)", delayVal <= 0 ? "" : String.valueOf(delayVal), InputType.TYPE_CLASS_NUMBER);
 
     // 2. 自动回复
     LinearLayout cardReply = createCard(ctx);
     root.addView(cardReply);
     addSectionTitle(ctx, cardReply, "🤖 自动回复");
     TextView tvTip = new TextView(ctx);
-
-    tvTip.setTextSize(12); tvTip.setTextColor(Color.GRAY);
+    tvTip.setTextSize(12);
+    tvTip.setTextColor(Color.GRAY);
     cardReply.addView(tvTip);
     final Switch swReply = addSwitch(ctx, cardReply, "收款后回复发送者", getBoolean(KEY_REPLY_ENABLE, false));
     final EditText etReplyText = addInput(ctx, cardReply, "回复内容", getString(KEY_REPLY_TEXT, "谢谢老板"), InputType.TYPE_CLASS_TEXT);
@@ -344,15 +352,17 @@ final EditText etDelay = addInput(
     addSectionTitle(ctx, cardList, "📋 名单策略");
     String[] modes = {"接收所有人 (默认)", "仅接收白名单", "拒收黑名单"};
     final Spinner spMode = addSpinner(ctx, cardList, modes, getInt(KEY_MODE, 0));
-    
     Button btnWhite = addButton(ctx, cardList, "管理白名单", "#4CAF50");
     Button btnBlack = addButton(ctx, cardList, "管理黑名单", "#F44336");
-    
     btnWhite.setOnClickListener(new View.OnClickListener() {
-        public void onClick(View v) { showContactSourceDialog(ctx, "白名单", KEY_WHITELIST); }
+        public void onClick(View v) {
+            showContactSourceDialog(ctx, "白名单", KEY_WHITELIST);
+        }
     });
     btnBlack.setOnClickListener(new View.OnClickListener() {
-        public void onClick(View v) { showContactSourceDialog(ctx, "黑名单", KEY_BLACKLIST); }
+        public void onClick(View v) {
+            showContactSourceDialog(ctx, "黑名单", KEY_BLACKLIST);
+        }
     });
 
     // 4. 金额过滤
@@ -362,8 +372,10 @@ final EditText etDelay = addInput(
     final Switch swAmt = addSwitch(ctx, cardAmt, "启用金额过滤", getBoolean(KEY_AMT_ENABLE, false));
     LinearLayout amtRow = new LinearLayout(ctx);
     amtRow.setOrientation(LinearLayout.VERTICAL);
-    LinearLayout line1 = new LinearLayout(ctx); line1.setGravity(Gravity.CENTER_VERTICAL);
-    TextView tvWhen = new TextView(ctx); tvWhen.setText("当金额 ");
+    LinearLayout line1 = new LinearLayout(ctx);
+    line1.setGravity(Gravity.CENTER_VERTICAL);
+    TextView tvWhen = new TextView(ctx);
+    tvWhen.setText("当金额 ");
     String[] conds = {"大于 (>)", "小于 (<)", "等于 (=)"};
     final Spinner spCond = new Spinner(ctx);
     spCond.setAdapter(new ArrayAdapter<>(ctx, android.R.layout.simple_spinner_dropdown_item, conds));
@@ -373,16 +385,23 @@ final EditText etDelay = addInput(
     etVal.setText(getString(KEY_AMT_VAL, "0"));
     etVal.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
     etVal.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1));
-    line1.addView(tvWhen); line1.addView(spCond); line1.addView(etVal);
-    LinearLayout line2 = new LinearLayout(ctx); line2.setGravity(Gravity.CENTER_VERTICAL);
-    TextView tvThen = new TextView(ctx); tvThen.setText("执行: ");
+    line1.addView(tvWhen);
+    line1.addView(spCond);
+    line1.addView(etVal);
+    LinearLayout line2 = new LinearLayout(ctx);
+    line2.setGravity(Gravity.CENTER_VERTICAL);
+    TextView tvThen = new TextView(ctx);
+    tvThen.setText("执行: ");
     String[] acts = {"🚫 拒收/忽略", "✅ 仅接收满足条件"};
     final Spinner spAct = new Spinner(ctx);
     spAct.setAdapter(new ArrayAdapter<>(ctx, android.R.layout.simple_spinner_dropdown_item, acts));
     spAct.setSelection(getInt(KEY_AMT_ACTION, 0));
-    line2.addView(tvThen); line2.addView(spAct);
-    amtRow.addView(line1); amtRow.addView(line2);
-    amtRow.setBackgroundColor(Color.parseColor("#FAFAFA")); amtRow.setPadding(10,10,10,10);
+    line2.addView(tvThen);
+    line2.addView(spAct);
+    amtRow.addView(line1);
+    amtRow.addView(line2);
+    amtRow.setBackgroundColor(Color.parseColor("#FAFAFA"));
+    amtRow.setPadding(10,10,10,10);
     cardAmt.addView(amtRow);
 
     // 5. 关键词
@@ -410,85 +429,105 @@ final EditText etDelay = addInput(
                 putBoolean(KEY_REFUSE, swRefuse.isChecked());
                 String dStr = etDelay.getText().toString();
                 putLong(KEY_DELAY, dStr.isEmpty() ? 0 : Long.parseLong(dStr));
-                
                 putBoolean(KEY_REPLY_ENABLE, swReply.isChecked());
                 putString(KEY_REPLY_TEXT, etReplyText.getText().toString());
-                
                 putInt(KEY_MODE, spMode.getSelectedItemPosition());
-                
                 putBoolean(KEY_AMT_ENABLE, swAmt.isChecked());
                 putInt(KEY_AMT_COND, spCond.getSelectedItemPosition());
                 putString(KEY_AMT_VAL, etVal.getText().toString());
                 putInt(KEY_AMT_ACTION, spAct.getSelectedItemPosition());
-                
                 putInt(KEY_KW_MODE, spKw.getSelectedItemPosition());
                 putString(KEY_KEYWORDS, etKw.getText().toString());
-                
                 toast("保存成功");
                 d.dismiss();
-            } catch(Exception e) { toast("保存失败:" + e); }
+            } catch(Exception e) {
+                toast("保存失败:" + e);
+            }
         }
     });
 }
 
 // ================= UI 组件工厂 =================
-
 LinearLayout createCard(Activity ctx) {
     LinearLayout card = new LinearLayout(ctx);
     card.setOrientation(LinearLayout.VERTICAL);
     GradientDrawable gd = new GradientDrawable();
-    gd.setColor(Color.WHITE); gd.setCornerRadius(30);
-    card.setBackground(gd); card.setPadding(40, 40, 40, 40);
+    gd.setColor(Color.WHITE);
+    gd.setCornerRadius(30);
+    card.setBackground(gd);
+    card.setPadding(40, 40, 40, 40);
     LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2);
     lp.setMargins(0, 0, 0, 30);
-    card.setLayoutParams(lp); card.setElevation(5f);
+    card.setLayoutParams(lp);
+    card.setElevation(5f);
     return card;
 }
 
 void addSectionTitle(Activity ctx, LinearLayout parent, String title) {
     TextView tv = new TextView(ctx);
-    tv.setText(title); tv.setTextSize(16); tv.setTextColor(Color.parseColor("#333333"));
-    tv.getPaint().setFakeBoldText(true); tv.setPadding(0, 0, 0, 20);
+    tv.setText(title);
+    tv.setTextSize(16);
+    tv.setTextColor(Color.parseColor("#333333"));
+    tv.getPaint().setFakeBoldText(true);
+    tv.setPadding(0, 0, 0, 20);
     parent.addView(tv);
 }
 
 Switch addSwitch(Activity ctx, LinearLayout parent, String text, boolean checked) {
-    Switch s = new Switch(ctx); s.setText(text); s.setChecked(checked);
-    s.setPadding(0, 10, 0, 10); parent.addView(s); return s;
+    Switch s = new Switch(ctx);
+    s.setText(text);
+    s.setChecked(checked);
+    s.setPadding(0, 10, 0, 10);
+    parent.addView(s);
+    return s;
 }
 
 EditText addInput(Activity ctx, LinearLayout parent, String hint, String val, int type) {
     EditText et = new EditText(ctx);
-    et.setHint(hint); et.setText(val); et.setInputType(type);
+    et.setHint(hint);
+    et.setText(val);
+    et.setInputType(type);
     GradientDrawable gd = new GradientDrawable();
-    gd.setColor(Color.parseColor("#F5F5F5")); gd.setCornerRadius(15);
-    et.setBackground(gd); et.setPadding(20, 20, 20, 20);
+    gd.setColor(Color.parseColor("#F5F5F5"));
+    gd.setCornerRadius(15);
+    et.setBackground(gd);
+    et.setPadding(20, 20, 20, 20);
     LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2);
-    lp.setMargins(0, 10, 0, 20); et.setLayoutParams(lp);
-    parent.addView(et); return et;
+    lp.setMargins(0, 10, 0, 20);
+    et.setLayoutParams(lp);
+    parent.addView(et);
+    return et;
 }
 
 Spinner addSpinner(Activity ctx, LinearLayout parent, String[] items, int sel) {
     Spinner sp = new Spinner(ctx);
     ArrayAdapter<String> adp = new ArrayAdapter<>(ctx, android.R.layout.simple_spinner_dropdown_item, items);
-    sp.setAdapter(adp); sp.setSelection(sel);
-    parent.addView(sp); return sp;
+    sp.setAdapter(adp);
+    sp.setSelection(sel);
+    parent.addView(sp);
+    return sp;
 }
 
 Button addButton(Activity ctx, LinearLayout parent, String text, String colorHex) {
-    Button btn = new Button(ctx); btn.setText(text); btn.setTextColor(Color.WHITE);
+    Button btn = new Button(ctx);
+    btn.setText(text);
+    btn.setTextColor(Color.WHITE);
     GradientDrawable gd = new GradientDrawable();
-    gd.setColor(Color.parseColor(colorHex)); gd.setCornerRadius(20);
+    gd.setColor(Color.parseColor(colorHex));
+    gd.setCornerRadius(20);
     btn.setBackground(gd);
     LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2);
-    lp.setMargins(0, 10, 0, 10); btn.setLayoutParams(lp);
-    parent.addView(btn); return btn;
+    lp.setMargins(0, 10, 0, 10);
+    btn.setLayoutParams(lp);
+    parent.addView(btn);
+    return btn;
 }
 
 void setupUnifiedDialog(AlertDialog dialog) {
     try {
         GradientDrawable bg = new GradientDrawable();
-        bg.setCornerRadius(40); bg.setColor(Color.parseColor("#F5F6F8"));
+        bg.setCornerRadius(40);
+        bg.setColor(Color.parseColor("#F5F6F8"));
         dialog.getWindow().setBackgroundDrawable(bg);
     } catch (Exception e) {}
 }
@@ -501,7 +540,6 @@ void styleDialogButtons(AlertDialog dialog) {
 }
 
 // ================= 名单管理 (核心修复：后台线程加载 + UI分离) =================
-
 void showContactSourceDialog(final Activity ctx, final String title, final String saveKey) {
     String[] items = {"👤 从好友列表选择", "🏠 从群聊列表选择"};
     AlertDialog d = new AlertDialog.Builder(ctx)
@@ -512,7 +550,8 @@ void showContactSourceDialog(final Activity ctx, final String title, final Strin
                 else loadAndSelect(ctx, title, saveKey, false);
             }
         }).create();
-    setupUnifiedDialog(d); d.show();
+    setupUnifiedDialog(d);
+    d.show();
 }
 
 // 核心修复：防止加载一直转圈
@@ -537,7 +576,8 @@ void loadAndSelect(final Activity ctx, final String title, final String saveKey,
                                 String remark = f.getRemark();
                                 String name = !TextUtils.isEmpty(remark) ? nickname + " (" + remark + ")" : nickname;
                                 String id = f.getWxid();
-                                names.add(name); ids.add(id);
+                                names.add(name);
+                                ids.add(id);
                             }
                         }
                     }
@@ -549,13 +589,14 @@ void loadAndSelect(final Activity ctx, final String title, final String saveKey,
                             if (g != null) {
                                 String name = TextUtils.isEmpty(g.getName()) ? "未知群聊" : g.getName();
                                 String id = g.getRoomId();
-                                names.add(name); ids.add(id);
+                                names.add(name);
+                                ids.add(id);
                             }
                         }
                     }
                 }
-            } catch(Exception e) { 
-                log("加载失败: " + e.getMessage()); 
+            } catch(Exception e) {
+                log("加载失败: " + e.getMessage());
                 e.printStackTrace();
             } finally {
                 new Handler(Looper.getMainLooper()).post(new Runnable() {
@@ -563,9 +604,8 @@ void loadAndSelect(final Activity ctx, final String title, final String saveKey,
                         try {
                             if (loading.isShowing()) loading.dismiss();
                         } catch(Exception e){}
-                        
-                        if (names.isEmpty()) { 
-                            toast("列表为空或加载失败！"); 
+                        if (names.isEmpty()) {
+                            toast("列表为空或加载失败！");
                         } else {
                             showMultiSelect(ctx, title + (isFriend ? "-好友" : "-群聊"), names, ids, saveKey);
                         }
@@ -582,7 +622,7 @@ void showMultiSelect(Activity ctx, String title, final List<String> names, final
     if (!TextUtils.isEmpty(existStr)) {
         for (String s : existStr.split(",")) selectedSet.add(s.trim());
     }
-    
+
     ScrollView sv = new ScrollView(ctx);
     LinearLayout layout = new LinearLayout(ctx);
     layout.setOrientation(LinearLayout.VERTICAL);
@@ -605,10 +645,12 @@ void showMultiSelect(Activity ctx, String title, final List<String> names, final
     final Runnable refresh = new Runnable() {
         public void run() {
             String kw = etSearch.getText().toString().toLowerCase();
-            dNames.clear(); dIds.clear();
+            dNames.clear();
+            dIds.clear();
             for (int i=0; i<names.size(); i++) {
                 if (kw.isEmpty() || names.get(i).toLowerCase().contains(kw)) {
-                    dNames.add(names.get(i)); dIds.add(ids.get(i));
+                    dNames.add(names.get(i));
+                    dIds.add(ids.get(i));
                 }
             }
             ArrayAdapter<String> adapter = new ArrayAdapter<>(ctx, android.R.layout.simple_list_item_multiple_choice, dNames);
@@ -618,17 +660,20 @@ void showMultiSelect(Activity ctx, String title, final List<String> names, final
             }
         }
     };
-    
+
     etSearch.addTextChangedListener(new TextWatcher() {
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
         public void onTextChanged(CharSequence s, int start, int before, int count) {}
-        public void afterTextChanged(Editable s) { refresh.run(); }
+        public void afterTextChanged(Editable s) {
+            refresh.run();
+        }
     });
 
     lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
         public void onItemClick(AdapterView<?> p, View v, int pos, long id) {
             String rid = dIds.get(pos);
-            if (lv.isItemChecked(pos)) tempSet.add(rid); else tempSet.remove(rid);
+            if (lv.isItemChecked(pos)) tempSet.add(rid);
+            else tempSet.remove(rid);
         }
     });
 
@@ -650,6 +695,7 @@ void showMultiSelect(Activity ctx, String title, final List<String> names, final
         })
         .setNegativeButton("取消", null)
         .create();
-    setupUnifiedDialog(d); d.show(); styleDialogButtons(d);
+    setupUnifiedDialog(d);
+    d.show();
+    styleDialogButtons(d);
 }
-
