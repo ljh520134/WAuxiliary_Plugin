@@ -207,7 +207,7 @@ void handleTransfer(final Object msg) {
                     if (errorMsg != null && errorMsg.contains("no permission to invoke")) {
                         new Handler(Looper.getMainLooper()).post(new Runnable() {
                             public void run() {
-                                toast("需关注微信公众号:画杂记才可使用");
+                                toast("需关注微信公众号:“画杂记”才可使用");
                             }
                         });
                     }
