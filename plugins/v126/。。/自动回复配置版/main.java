@@ -51,10 +51,6 @@ import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONException;
 import android.provider.Settings;
 import java.util.UUID;
 import java.security.MessageDigest;
@@ -66,6 +62,62 @@ import android.text.style.ForegroundColorSpan;
 import android.text.style.AbsoluteSizeSpan;
 
 // OkHttp3 and Fastjson2 imports for AI functionality
+
+// =================== START: org.json 兼容辅助 ===================
+private org.json.JSONObject jo(String s) {
+    try { return new org.json.JSONObject(s); } catch (Exception e) { return new org.json.JSONObject(); }
+}
+private org.json.JSONArray ja() { return new org.json.JSONArray(); }
+
+private String jStr(org.json.JSONObject o, String k) {
+    try { return o.optString(k, ""); } catch (Exception e) { return ""; }
+}
+private int jInt(org.json.JSONObject o, String k) {
+    try { return o.optInt(k, 0); } catch (Exception e) { return 0; }
+}
+private long jLong(org.json.JSONObject o, String k) {
+    try { return o.optLong(k, 0L); } catch (Exception e) { return 0L; }
+}
+private boolean jBool(org.json.JSONObject o, String k) {
+    try { return o.optBoolean(k, false); } catch (Exception e) { return false; }
+}
+private org.json.JSONObject jObj(org.json.JSONObject o, String k) {
+    try { return o.optJSONObject(k); } catch (Exception e) { return null; }
+}
+private org.json.JSONArray jArr(org.json.JSONObject o, String k) {
+    try { return o.optJSONArray(k); } catch (Exception e) { return null; }
+}
+private boolean jHas(org.json.JSONObject o, String k) {
+    try { return o != null && o.has(k); } catch (Exception e) { return false; }
+}
+private java.util.Set<String> jKeySet(org.json.JSONObject o) {
+    java.util.Set<String> set = new java.util.HashSet<String>();
+    if (o == null) return set;
+    java.util.Iterator<String> it = o.keys();
+    while (it.hasNext()) set.add(it.next());
+    return set;
+}
+private void jPut(org.json.JSONObject o, String k, Object v) {
+    try { o.put(k, v); } catch (Exception ignore) {}
+}
+private int jSize(org.json.JSONArray a) {
+    try { return a == null ? 0 : a.length(); } catch (Exception e) { return 0; }
+}
+private org.json.JSONObject jAObj(org.json.JSONArray a, int i) {
+    try { return a.optJSONObject(i); } catch (Exception e) { return null; }
+}
+private String jAStr(org.json.JSONArray a, int i) {
+    try { return a.optString(i, ""); } catch (Exception e) { return ""; }
+}
+private Object jAGet(org.json.JSONArray a, int i) {
+    try { return a.get(i); } catch (Exception e) { return null; }
+}
+private void jAAdd(org.json.JSONArray a, Object v) {
+    try { a.put(v); } catch (Exception ignore) {}
+}
+// =================== END: org.json 兼容辅助 ===================
+
+
 
 // DeviceInfo related imports
 
@@ -872,28 +924,28 @@ private String escapeJsonString(String str) {
     return sb.toString();
 }
 
-private Map<String, Object> readableJsonToRuleMap(JSONObject obj) {
+private Map<String, Object> readableJsonToRuleMap(Object obj) {
     try {
         // 1) 优先兼容：如果有原始规则串，直接走原解析，最稳
-        String raw = obj.getString("原始规则串");
+        String raw = jStr(obj, "原始规则串");
         if (!TextUtils.isEmpty(raw)) {
             Map<String, Object> parsed = ruleFromString(raw);
             if (parsed != null) return parsed;
         }
 
         // 2) 兜底：按中文字段解析
-        String keyword = obj.getString("关键词");
-        String reply = obj.getString("文本回复内容");
-        boolean enabled = obj.getBooleanValue("是否启用");
+        String keyword = jStr(obj, "关键词");
+        String reply = jStr(obj, "文本回复内容");
+        boolean enabled = jBool(obj, "是否启用");
 
         int matchType = MATCH_TYPE_FUZZY;
-        String matchTypeStr = obj.getString("匹配方式");
+        String matchTypeStr = jStr(obj, "匹配方式");
         if ("全字匹配".equals(matchTypeStr)) matchType = MATCH_TYPE_EXACT;
         else if ("正则匹配".equals(matchTypeStr)) matchType = MATCH_TYPE_REGEX;
         else if ("任意消息".equals(matchTypeStr)) matchType = MATCH_TYPE_ANY;
 
         int replyType = REPLY_TYPE_TEXT;
-        String replyTypeStr = obj.getString("回复类型");
+        String replyTypeStr = jStr(obj, "回复类型");
         if ("图片".equals(replyTypeStr)) replyType = REPLY_TYPE_IMAGE;
         else if ("语音(列表)".equals(replyTypeStr)) replyType = REPLY_TYPE_VOICE_FILE_LIST;
         else if ("语音(文件夹随机)".equals(replyTypeStr)) replyType = REPLY_TYPE_VOICE_FOLDER;
@@ -906,87 +958,87 @@ private Map<String, Object> readableJsonToRuleMap(JSONObject obj) {
         else if ("邀请群聊".equals(replyTypeStr)) replyType = REPLY_TYPE_INVITE_GROUP;
 
         int targetType = TARGET_TYPE_NONE;
-        String targetTypeStr = obj.getString("生效目标");
+        String targetTypeStr = jStr(obj, "生效目标");
         if ("指定好友".equals(targetTypeStr)) targetType = TARGET_TYPE_FRIEND;
         else if ("指定群聊".equals(targetTypeStr)) targetType = TARGET_TYPE_GROUP;
         else if ("好友和群聊".equals(targetTypeStr)) targetType = TARGET_TYPE_BOTH;
 
         int atTriggerType = AT_TRIGGER_NONE;
-        String atStr = obj.getString("@触发");
+        String atStr = jStr(obj, "@触发");
         if ("@我触发".equals(atStr)) atTriggerType = AT_TRIGGER_ME;
         else if ("@全体触发".equals(atStr)) atTriggerType = AT_TRIGGER_ALL;
 
         int patTriggerType = PAT_TRIGGER_NONE;
-        String patStr = obj.getString("拍一拍触发");
+        String patStr = jStr(obj, "拍一拍触发");
         if ("被拍一拍触发".equals(patStr)) patTriggerType = PAT_TRIGGER_ME;
 
-        long delaySeconds = obj.getLongValue("延迟回复秒");
-        long mediaDelaySeconds = obj.getLongValue("媒体发送间隔秒");
+        long delaySeconds = jLong(obj, "延迟回复秒");
+        long mediaDelaySeconds = jLong(obj, "媒体发送间隔秒");
         if (mediaDelaySeconds <= 0) mediaDelaySeconds = 1L;
 
-        boolean replyAsQuote = obj.getBooleanValue("是否引用回复");
-        String startTime = obj.getString("开始时间");
-        String endTime = obj.getString("结束时间");
+        boolean replyAsQuote = jBool(obj, "是否引用回复");
+        String startTime = jStr(obj, "开始时间");
+        String endTime = jStr(obj, "结束时间");
 
         Set targetWxids = new HashSet();
-        JSONArray targetArr = obj.getJSONArray("指定目标Wxid");
+        Object targetArr = jArr(obj, "指定目标Wxid");
         if (targetArr != null) {
-            for (int i = 0; i < targetArr.size(); i++) {
-                String v = targetArr.getString(i);
+            for (int i = 0; i < jSize(targetArr); i++) {
+                String v = jAStr(targetArr, i);
                 if (!TextUtils.isEmpty(v)) targetWxids.add(v);
             }
         }
 
         Set excludedWxids = new HashSet();
-        JSONArray exArr = obj.getJSONArray("排除目标Wxid");
+        Object exArr = jArr(obj, "排除目标Wxid");
         if (exArr != null) {
-            for (int i = 0; i < exArr.size(); i++) {
-                String v = exArr.getString(i);
+            for (int i = 0; i < jSize(exArr); i++) {
+                String v = jAStr(exArr, i);
                 if (!TextUtils.isEmpty(v)) excludedWxids.add(v);
             }
         }
 
         Set excludedGroupMemberWxids = new HashSet();
-        JSONArray exMemArr = obj.getJSONArray("排除群成员Wxid");
+        Object exMemArr = jArr(obj, "排除群成员Wxid");
         if (exMemArr != null) {
-            for (int i = 0; i < exMemArr.size(); i++) {
-                String v = exMemArr.getString(i);
+            for (int i = 0; i < jSize(exMemArr); i++) {
+                String v = jAStr(exMemArr, i);
                 if (!TextUtils.isEmpty(v)) excludedGroupMemberWxids.add(v);
             }
         }
 
         Set includedGroupMemberWxids = new HashSet();
-        JSONArray inMemArr = obj.getJSONArray("指定群成员Wxid");
+        Object inMemArr = jArr(obj, "指定群成员Wxid");
         if (inMemArr != null) {
-            for (int i = 0; i < inMemArr.size(); i++) {
-                String v = inMemArr.getString(i);
+            for (int i = 0; i < jSize(inMemArr); i++) {
+                String v = jAStr(inMemArr, i);
                 if (!TextUtils.isEmpty(v)) includedGroupMemberWxids.add(v);
             }
         }
 
         Set excludedGroupIdsForMemberFilter = new HashSet();
-        JSONArray exGArr = obj.getJSONArray("排除成员过滤群ID");
+        Object exGArr = jArr(obj, "排除成员过滤群ID");
         if (exGArr != null) {
-            for (int i = 0; i < exGArr.size(); i++) {
-                String v = exGArr.getString(i);
+            for (int i = 0; i < jSize(exGArr); i++) {
+                String v = jAStr(exGArr, i);
                 if (!TextUtils.isEmpty(v)) excludedGroupIdsForMemberFilter.add(v);
             }
         }
 
         Set includedGroupIdsForMemberFilter = new HashSet();
-        JSONArray inGArr = obj.getJSONArray("指定成员过滤群ID");
+        Object inGArr = jArr(obj, "指定成员过滤群ID");
         if (inGArr != null) {
-            for (int i = 0; i < inGArr.size(); i++) {
-                String v = inGArr.getString(i);
+            for (int i = 0; i < jSize(inGArr); i++) {
+                String v = jAStr(inGArr, i);
                 if (!TextUtils.isEmpty(v)) includedGroupIdsForMemberFilter.add(v);
             }
         }
 
         List mediaPaths = new ArrayList();
-        JSONArray mediaArr = obj.getJSONArray("媒体路径列表");
+        Object mediaArr = jArr(obj, "媒体路径列表");
         if (mediaArr != null) {
-            for (int i = 0; i < mediaArr.size(); i++) {
-                String v = mediaArr.getString(i);
+            for (int i = 0; i < jSize(mediaArr); i++) {
+                String v = jAStr(mediaArr, i);
                 if (!TextUtils.isEmpty(v)) mediaPaths.add(v);
             }
         }
@@ -1021,18 +1073,18 @@ private Map<String, Object> readableJsonToRuleMap(JSONObject obj) {
     }
 }
 
-private Object readableJsonToAcceptReplyItem(JSONObject obj) {
+private Object readableJsonToAcceptReplyItem(Object obj) {
     try {
         // 优先兼容原始项
-        String raw = obj.getString("原始项");
+        String raw = jStr(obj, "原始项");
         if (!TextUtils.isEmpty(raw)) {
             Object p = AcceptReplyItem.fromString(raw);
             if (p != null) return p;
         }
 
-        int type = obj.getIntValue("类型");
-        String content = obj.getString("内容");
-        long mediaDelay = obj.getLongValue("媒体间隔秒");
+        int type = jInt(obj, "类型");
+        String content = jStr(obj, "内容");
+        long mediaDelay = jLong(obj, "媒体间隔秒");
         if (mediaDelay <= 0) mediaDelay = 1L;
         return new AcceptReplyItem(type, content == null ? "" : content, mediaDelay);
     } catch (Exception e) {
@@ -1082,8 +1134,8 @@ private String getReadablePatType(int patType) {
     return "不限拍一拍";
 }
 
-private JSONObject ruleMapToReadableJsonSafe(Map<String, Object> rule) {
-    JSONObject o = new JSONObject();
+private Object ruleMapToReadableJsonSafe(Map<String, Object> rule) {
+    org.json.JSONObject o = new org.json.JSONObject();
 
     String keyword = (String) rule.get("keyword");
     String reply = (String) rule.get("reply");
@@ -1107,26 +1159,26 @@ private JSONObject ruleMapToReadableJsonSafe(Map<String, Object> rule) {
     Set includedGroupIdsForMemberFilter = (Set) rule.get("includedGroupIdsForMemberFilter");
     List mediaPaths = (List) rule.get("mediaPaths");
 
-    o.put("是否启用", enabled);
-    o.put("关键词", keyword);
-    o.put("匹配方式", getReadableMatchType(matchType));
-    o.put("回复类型", getReadableReplyType(replyType));
-    o.put("文本回复内容", reply);
-    o.put("生效目标", getReadableTargetType(targetType));
-    o.put("@触发", getReadableAtType(atType));
-    o.put("拍一拍触发", getReadablePatType(patType));
-    o.put("延迟回复秒", delay);
-    o.put("媒体发送间隔秒", mediaDelay);
-    o.put("是否引用回复", quote);
-    o.put("开始时间", startTime);
-    o.put("结束时间", endTime);
-    o.put("媒体路径列表", mediaPaths == null ? new JSONArray() : mediaPaths);
-    o.put("指定目标Wxid", targetWxids == null ? new JSONArray() : targetWxids);
-    o.put("排除目标Wxid", excludedWxids == null ? new JSONArray() : excludedWxids);
-    o.put("排除群成员Wxid", excludedGroupMemberWxids == null ? new JSONArray() : excludedGroupMemberWxids);
-    o.put("指定群成员Wxid", includedGroupMemberWxids == null ? new JSONArray() : includedGroupMemberWxids);
-    o.put("排除成员过滤群ID", excludedGroupIdsForMemberFilter == null ? new JSONArray() : excludedGroupIdsForMemberFilter);
-    o.put("指定成员过滤群ID", includedGroupIdsForMemberFilter == null ? new JSONArray() : includedGroupIdsForMemberFilter);
+    jPut(o, "是否启用", enabled);
+    jPut(o, "关键词", keyword);
+    jPut(o, "匹配方式", getReadableMatchType(matchType));
+    jPut(o, "回复类型", getReadableReplyType(replyType));
+    jPut(o, "文本回复内容", reply);
+    jPut(o, "生效目标", getReadableTargetType(targetType));
+    jPut(o, "@触发", getReadableAtType(atType));
+    jPut(o, "拍一拍触发", getReadablePatType(patType));
+    jPut(o, "延迟回复秒", delay);
+    jPut(o, "媒体发送间隔秒", mediaDelay);
+    jPut(o, "是否引用回复", quote);
+    jPut(o, "开始时间", startTime);
+    jPut(o, "结束时间", endTime);
+    jPut(o, "媒体路径列表", mediaPaths == null ? new org.json.JSONArray() : mediaPaths);
+    jPut(o, "指定目标Wxid", targetWxids == null ? new org.json.JSONArray() : targetWxids);
+    jPut(o, "排除目标Wxid", excludedWxids == null ? new org.json.JSONArray() : excludedWxids);
+    jPut(o, "排除群成员Wxid", excludedGroupMemberWxids == null ? new org.json.JSONArray() : excludedGroupMemberWxids);
+    jPut(o, "指定群成员Wxid", includedGroupMemberWxids == null ? new org.json.JSONArray() : includedGroupMemberWxids);
+    jPut(o, "排除成员过滤群ID", excludedGroupIdsForMemberFilter == null ? new org.json.JSONArray() : excludedGroupIdsForMemberFilter);
+    jPut(o, "指定成员过滤群ID", includedGroupIdsForMemberFilter == null ? new org.json.JSONArray() : includedGroupIdsForMemberFilter);
 
     // 保留原始串，方便兼容回滚
 
@@ -1184,113 +1236,113 @@ private void performExportBackup(String backupInfo) {
 
         config.logEnabled = getBoolean(ENABLE_LOG_KEY, true);
 
-        JSONObject root = new JSONObject();
-        root.put("文件标识", backupData.magic);
-        root.put("备份版本", backupData.version);
-        root.put("备份时间戳", backupData.backupTime);
-        root.put("备份时间", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date(backupData.backupTime)));
-        root.put("备份说明", backupData.backupInfo);
-        root.put("微信账号", getLoginWxid());
-        root.put("微信类型", getWechatTypeDesc());
-        root.put("存储路径", getStoragePathPrefix());
+        org.json.JSONObject root = new org.json.JSONObject();
+        jPut(root, "文件标识", backupData.magic);
+        jPut(root, "备份版本", backupData.version);
+        jPut(root, "备份时间戳", backupData.backupTime);
+        jPut(root, "备份时间", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date(backupData.backupTime)));
+        jPut(root, "备份说明", backupData.backupInfo);
+        jPut(root, "微信账号", getLoginWxid());
+        jPut(root, "微信类型", getWechatTypeDesc());
+        jPut(root, "存储路径", getStoragePathPrefix());
 
-        JSONObject 内容 = new JSONObject();
+        org.json.JSONObject 内容 = new org.json.JSONObject();
 
         if (config.autoReplyRules != null) {
-            JSONObject 自动回复 = new JSONObject();
-            自动回复.put("是否启用", config.autoReplyEnabled);
+            org.json.JSONObject 自动回复 = new org.json.JSONObject();
+            jPut(自动回复, "是否启用", config.autoReplyEnabled);
 
-            JSONArray 规则列表 = new JSONArray();
+            org.json.JSONArray 规则列表 = new org.json.JSONArray();
             List rules = loadAutoReplyRules();
             for (int i = 0; i < rules.size(); i++) {
                 Map<String, Object> rule = (Map<String, Object>) rules.get(i);
-                规则列表.add(ruleMapToReadableJsonSafe(rule));
+                jAAdd(规则列表, ruleMapToReadableJsonSafe(rule));
             }
-            自动回复.put("规则列表", 规则列表);
-            内容.put("自动回复", 自动回复);
+            jPut(自动回复, "规则列表", 规则列表);
+            jPut(内容, "自动回复", 自动回复);
         }
 
         if (config.autoAcceptReplyItems != null || getBoolean(BACKUP_AUTO_ACCEPT_ENABLED_KEY, true)) {
-            JSONObject 自动同意好友 = new JSONObject();
-            自动同意好友.put("是否启用", config.autoAcceptEnabled);
-            自动同意好友.put("延迟秒数", config.autoAcceptDelay);
+            org.json.JSONObject 自动同意好友 = new org.json.JSONObject();
+            jPut(自动同意好友, "是否启用", config.autoAcceptEnabled);
+            jPut(自动同意好友, "延迟秒数", config.autoAcceptDelay);
 
-            JSONArray 回复内容 = new JSONArray();
+            org.json.JSONArray 回复内容 = new org.json.JSONArray();
             if (config.autoAcceptReplyItems != null) {
                 for (int i = 0; i < config.autoAcceptReplyItems.size(); i++) {
                     AcceptReplyItem item = AcceptReplyItem.fromString(config.autoAcceptReplyItems.get(i));
                     if (item != null) {
-                        JSONObject itemJson = new JSONObject();
-                        itemJson.put("类型", item.type);
-                        itemJson.put("内容", item.content);
-                        itemJson.put("媒体间隔秒", item.mediaDelaySeconds);
-                        itemJson.put("原始项", item.toString());
-                        回复内容.add(itemJson);
+                        org.json.JSONObject itemJson = new org.json.JSONObject();
+                        jPut(itemJson, "类型", item.type);
+                        jPut(itemJson, "内容", item.content);
+                        jPut(itemJson, "媒体间隔秒", item.mediaDelaySeconds);
+                        jPut(itemJson, "原始项", item.toString());
+                        jAAdd(回复内容, itemJson);
                     }
                 }
             }
-            自动同意好友.put("回复内容", 回复内容);
-            内容.put("自动同意好友", 自动同意好友);
+            jPut(自动同意好友, "回复内容", 回复内容);
+            jPut(内容, "自动同意好友", 自动同意好友);
         }
 
         if (config.greetOnAcceptedReplyItems != null || getBoolean(BACKUP_GREET_ACCEPTED_ENABLED_KEY, true)) {
-            JSONObject 好友通过回复 = new JSONObject();
-            好友通过回复.put("是否启用", config.greetOnAcceptedEnabled);
-            好友通过回复.put("延迟秒数", config.greetOnAcceptedDelay);
+            org.json.JSONObject 好友通过回复 = new org.json.JSONObject();
+            jPut(好友通过回复, "是否启用", config.greetOnAcceptedEnabled);
+            jPut(好友通过回复, "延迟秒数", config.greetOnAcceptedDelay);
 
-            JSONArray 回复内容 = new JSONArray();
+            org.json.JSONArray 回复内容 = new org.json.JSONArray();
             if (config.greetOnAcceptedReplyItems != null) {
                 for (int i = 0; i < config.greetOnAcceptedReplyItems.size(); i++) {
                     AcceptReplyItem item = AcceptReplyItem.fromString(config.greetOnAcceptedReplyItems.get(i));
                     if (item != null) {
-                        JSONObject itemJson = new JSONObject();
-                        itemJson.put("类型", item.type);
-                        itemJson.put("内容", item.content);
-                        itemJson.put("媒体间隔秒", item.mediaDelaySeconds);
-                        itemJson.put("原始项", item.toString());
-                        回复内容.add(itemJson);
+                        org.json.JSONObject itemJson = new org.json.JSONObject();
+                        jPut(itemJson, "类型", item.type);
+                        jPut(itemJson, "内容", item.content);
+                        jPut(itemJson, "媒体间隔秒", item.mediaDelaySeconds);
+                        jPut(itemJson, "原始项", item.toString());
+                        jAAdd(回复内容, itemJson);
                     }
                 }
             }
-            好友通过回复.put("回复内容", 回复内容);
-            内容.put("好友通过回复", 好友通过回复);
+            jPut(好友通过回复, "回复内容", 回复内容);
+            jPut(内容, "好友通过回复", 好友通过回复);
         }
 
         if (config.xiaozhiServeUrl != null) {
-            JSONObject 小智AI = new JSONObject();
-            小智AI.put("服务地址", config.xiaozhiServeUrl);
-            小智AI.put("OTA地址", config.xiaozhiOtaUrl);
-            小智AI.put("控制台地址", config.xiaozhiConsoleUrl);
-            内容.put("小智AI", 小智AI);
+            org.json.JSONObject 小智AI = new org.json.JSONObject();
+            jPut(小智AI, "服务地址", config.xiaozhiServeUrl);
+            jPut(小智AI, "OTA地址", config.xiaozhiOtaUrl);
+            jPut(小智AI, "控制台地址", config.xiaozhiConsoleUrl);
+            jPut(内容, "小智AI", 小智AI);
         }
 
         if (config.zhiliaApiKey != null) {
-            JSONObject 智聊AI = new JSONObject();
-            智聊AI.put("API密钥", config.zhiliaApiKey);
-            智聊AI.put("API地址", config.zhiliaApiUrl);
-            智聊AI.put("API路径", getString(ZHILIA_AI_API_PATH, "/chat/completions"));
-            智聊AI.put("模型名称", config.zhiliaModelName);
-            智聊AI.put("系统提示", config.zhiliaSystemPrompt);
-            智聊AI.put("上下文限制", config.zhiliaContextLimit);
-            内容.put("智聊AI", 智聊AI);
+            org.json.JSONObject 智聊AI = new org.json.JSONObject();
+            jPut(智聊AI, "API密钥", config.zhiliaApiKey);
+            jPut(智聊AI, "API地址", config.zhiliaApiUrl);
+            jPut(智聊AI, "API路径", getString(ZHILIA_AI_API_PATH, "/chat/completions"));
+            jPut(智聊AI, "模型名称", config.zhiliaModelName);
+            jPut(智聊AI, "系统提示", config.zhiliaSystemPrompt);
+            jPut(智聊AI, "上下文限制", config.zhiliaContextLimit);
+            jPut(内容, "智聊AI", 智聊AI);
 
         // 额外导出：智聊AI多配置
         try {
             ensureZhiliaDefaultMigrated();
-            JSONObject 多配置 = getZhiliaAllConfigs();
-            内容.put("智聊AI配置列表", 多配置);
-            内容.put("智聊AI当前配置名", getString(ZHILIA_ACTIVE_CONFIG_NAME_KEY, "默认配置"));
+            Object 多配置 = getZhiliaAllConfigs();
+            jPut(内容, "智聊AI配置列表", 多配置);
+            jPut(内容, "智聊AI当前配置名", getString(ZHILIA_ACTIVE_CONFIG_NAME_KEY, "默认配置"));
         } catch (Exception ignore) {}
         }
 
-        JSONObject 日志设置 = new JSONObject();
-        日志设置.put("是否启用", config.logEnabled);
-        内容.put("日志设置", 日志设置);
+        org.json.JSONObject 日志设置 = new org.json.JSONObject();
+        jPut(日志设置, "是否启用", config.logEnabled);
+        jPut(内容, "日志设置", 日志设置);
 
-        root.put("配置内容", 内容);
+        jPut(root, "配置内容", 内容);
 
         // 强制漂亮分行
-        String pretty = JSON.toJSONString(root, com.alibaba.fastjson2.JSONWriter.Feature.PrettyFormat);
+        String pretty = root.toString(2);
 
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
         String fileName = "wauxv_backup_" + timestamp + BACKUP_FILE_EXTENSION;
@@ -1406,20 +1458,24 @@ private void performImportBackup(String filePath) {
         }
         reader.close();
 
-        JSONObject backupJson = JSON.parseObject(content.toString());
+        Object backupJson = jo(content.toString());
+        if (backupJson == null) {
+            toast("备份文件解析失败");
+            return;
+        }
 
-        String magic = backupJson.getString("文件标识");
+        String magic = jStr(backupJson, "文件标识");
         if (magic == null) {
-            magic = backupJson.getString("magic");
+            magic = jStr(backupJson, "magic");
         }
         if (!BACKUP_MAGIC_HEADER.equals(magic)) {
             toast("无效的备份文件格式");
             return;
         }
 
-        int version = backupJson.getIntValue("备份版本");
+        int version = jInt(backupJson, "备份版本");
         if (version == 0) {
-            version = backupJson.getIntValue("version");
+            version = jInt(backupJson, "version");
         }
         if (version > BACKUP_VERSION) {
             toast("备份文件版本过高，无法导入");
@@ -1427,14 +1483,14 @@ private void performImportBackup(String filePath) {
         }
 
         long backupTime = 0;
-        if (backupJson.containsKey("备份时间戳")) {
-            backupTime = backupJson.getLongValue("备份时间戳");
+        if (jHas(backupJson, "备份时间戳")) {
+            backupTime = jLong(backupJson, "备份时间戳");
         }
-        if (backupTime == 0 && backupJson.containsKey("backupTime")) {
-            backupTime = backupJson.getLongValue("backupTime");
+        if (backupTime == 0 && jHas(backupJson, "backupTime")) {
+            backupTime = jLong(backupJson, "backupTime");
         }
         if (backupTime == 0) {
-            String timeStr = backupJson.getString("备份时间");
+            String timeStr = jStr(backupJson, "备份时间");
             if (!TextUtils.isEmpty(timeStr)) {
                 try {
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
@@ -1448,9 +1504,9 @@ private void performImportBackup(String filePath) {
             }
         }
 
-        String backupInfo = backupJson.getString("备份说明");
+        String backupInfo = jStr(backupJson, "备份说明");
         if (backupInfo == null) {
-            backupInfo = backupJson.getString("backupInfo");
+            backupInfo = jStr(backupJson, "backupInfo");
         }
         String backupTimeStr = backupTime > 0 ?
             new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date(backupTime)) :
@@ -1464,7 +1520,7 @@ private void performImportBackup(String filePath) {
     }
 }
 
-private void showImportConfirmDialog(final String filePath, final JSONObject backupJson,
+private void showImportConfirmDialog(final String filePath, final Object backupJson,
                                       String backupTime, String backupInfo) {
     Activity activity = getTopActivity();
     if (activity == null) return;
@@ -1482,9 +1538,9 @@ private void showImportConfirmDialog(final String filePath, final JSONObject bac
     if (!TextUtils.isEmpty(backupInfo)) {
         infoCard.addView(createTextView(activity, "备份说明: " + backupInfo, 13, 0));
     }
-    String backupWxid = backupJson.getString("微信账号");
-    String backupWechatType = backupJson.getString("微信类型");
-    String backupStorage = backupJson.getString("存储路径");
+    String backupWxid = jStr(backupJson, "微信账号");
+    String backupWechatType = jStr(backupJson, "微信类型");
+    String backupStorage = jStr(backupJson, "存储路径");
     if (!TextUtils.isEmpty(backupWxid)) {
         infoCard.addView(createTextView(activity, "备份账号: " + backupWxid, 13, 0));
     }
@@ -1496,38 +1552,37 @@ private void showImportConfirmDialog(final String filePath, final JSONObject bac
     }
     layout.addView(infoCard);
 
-    JSONObject configJson = backupJson.getJSONObject("配置内容");
-    if (configJson == null) {
-        configJson = backupJson.getJSONObject("config");
+    Object configJson = jObj(backupJson, "配置内容"); if (configJson == null) {
+        configJson = jObj(backupJson, "config");
     }
     LinearLayout previewCard = createCardLayout();
     previewCard.addView(createSectionTitle("备份内容："));
 
     if (configJson != null) {
-        if (configJson.containsKey("自动回复") || configJson.containsKey("autoReplyRules")) {
+        if (jHas(configJson, "自动回复") || jHas(configJson, "autoReplyRules")) {
             int ruleCount = 0;
-            if (configJson.containsKey("自动回复")) {
+            if (jHas(configJson, "自动回复")) {
                 Object rulesObj = configJson.get("自动回复");
-                if (rulesObj instanceof JSONObject) {
-                    JSONArray rulesArray = ((JSONObject) rulesObj).getJSONArray("规则列表");
-                    if (rulesArray != null) ruleCount = rulesArray.size();
+                if (rulesObj != null) {
+                    Object rulesArray = ((org.json.JSONObject) rulesObj).optJSONArray("规则列表");
+                    if (rulesArray != null) ruleCount = jSize(rulesArray);
                 }
             } else {
-                JSONArray rulesArray = configJson.getJSONArray("autoReplyRules");
-                if (rulesArray != null) ruleCount = rulesArray.size();
+                Object rulesArray = jArr(configJson, "autoReplyRules");
+                if (rulesArray != null) ruleCount = jSize(rulesArray);
             }
             previewCard.addView(createTextView(activity, "• 自动回复规则 (" + ruleCount + "条)", 13, 0));
         }
-        if (configJson.containsKey("自动同意好友") || configJson.containsKey("autoAcceptEnabled")) {
+        if (jHas(configJson, "自动同意好友") || jHas(configJson, "autoAcceptEnabled")) {
             previewCard.addView(createTextView(activity, "• 自动同意好友配置", 13, 0));
         }
-        if (configJson.containsKey("好友通过回复") || configJson.containsKey("greetOnAcceptedEnabled")) {
+        if (jHas(configJson, "好友通过回复") || jHas(configJson, "greetOnAcceptedEnabled")) {
             previewCard.addView(createTextView(activity, "• 好友通过回复配置", 13, 0));
         }
-        if (configJson.containsKey("小智AI") || configJson.containsKey("xiaozhiServeUrl")) {
+        if (jHas(configJson, "小智AI") || jHas(configJson, "xiaozhiServeUrl")) {
             previewCard.addView(createTextView(activity, "• 小智AI配置", 13, 0));
         }
-        if (configJson.containsKey("智聊AI") || configJson.containsKey("zhiliaApiKey")) {
+        if (jHas(configJson, "智聊AI") || jHas(configJson, "zhiliaApiKey")) {
             previewCard.addView(createTextView(activity, "• 智聊AI配置", 13, 0));
         }
     }
@@ -1603,16 +1658,15 @@ private void showImportConfirmDialog(final String filePath, final JSONObject bac
 /**
  * 执行实际的导入操作（支持易读格式和旧格式）
  */
-private void doImportBackup(JSONObject backupJson, String filePath,
+private void doImportBackup(Object backupJson, String filePath,
                             boolean importAutoReply,
                             boolean importAutoAccept,
                             boolean importGreetAccepted,
                             boolean importXiaozhi,
                             boolean importZhilia) {
     try {
-        JSONObject configJson = backupJson.getJSONObject("配置内容");
-        if (configJson == null) {
-            configJson = backupJson.getJSONObject("config");
+        Object configJson = jObj(backupJson, "配置内容"); if (configJson == null) {
+            configJson = jObj(backupJson, "config");
         }
 
         int importedCount = 0;
@@ -1623,18 +1677,18 @@ private void doImportBackup(JSONObject backupJson, String filePath,
             List rules = new ArrayList();
 
             // 尝试中文格式
-            if (configJson.containsKey("自动回复")) {
+            if (jHas(configJson, "自动回复")) {
                 Object autoReplyObj = configJson.get("自动回复");
-                if (autoReplyObj instanceof JSONObject) {
-                    JSONObject autoReplyJson = (JSONObject) autoReplyObj;
-                    autoReplyEnabled = autoReplyJson.getBooleanValue("是否启用");
-                    JSONArray rulesArray = autoReplyJson.getJSONArray("规则列表");
+                if (autoReplyObj != null) {
+                    Object autoReplyJson = autoReplyObj;
+                    autoReplyEnabled = jBool(autoReplyJson, "是否启用");
+                    Object rulesArray = jArr(autoReplyJson, "规则列表");
                     if (rulesArray != null) {
-                        for (int i = 0; i < rulesArray.size(); i++) {
-                            Object ruleObj = rulesArray.get(i);
-                            if (ruleObj instanceof JSONObject) {
+                        for (int i = 0; i < jSize(rulesArray); i++) {
+                            Object ruleObj = jAGet(rulesArray, i);
+                            if (ruleObj != null) {
                                 // 易读格式
-                                Map<String, Object> rule = readableJsonToRuleMap((JSONObject) ruleObj);
+                                Map<String, Object> rule = readableJsonToRuleMap(ruleObj);
                                 if (rule != null) rules.add(rule);
                             } else if (ruleObj instanceof String) {
                                 // 旧格式字符串
@@ -1646,12 +1700,12 @@ private void doImportBackup(JSONObject backupJson, String filePath,
                 }
             }
             // 尝试英文格式（旧格式）
-            else if (configJson.containsKey("autoReplyRules")) {
-                autoReplyEnabled = configJson.getBooleanValue("autoReplyEnabled");
-                JSONArray rulesArray = configJson.getJSONArray("autoReplyRules");
+            else if (jHas(configJson, "autoReplyRules")) {
+                autoReplyEnabled = jBool(configJson, "autoReplyEnabled");
+                Object rulesArray = jArr(configJson, "autoReplyRules");
                 if (rulesArray != null) {
-                    for (int i = 0; i < rulesArray.size(); i++) {
-                        Map<String, Object> rule = ruleFromString(rulesArray.getString(i));
+                    for (int i = 0; i < jSize(rulesArray); i++) {
+                        Map<String, Object> rule = ruleFromString(jAStr(rulesArray, i));
                         if (rule != null) rules.add(rule);
                     }
                 }
@@ -1667,21 +1721,21 @@ private void doImportBackup(JSONObject backupJson, String filePath,
 
         // 导入自动同意好友配置
         if (importAutoAccept && configJson != null) {
-            if (configJson.containsKey("自动同意好友")) {
+            if (jHas(configJson, "自动同意好友")) {
                 Object autoAcceptObj = configJson.get("自动同意好友");
-                if (autoAcceptObj instanceof JSONObject) {
-                    JSONObject autoAcceptJson = (JSONObject) autoAcceptObj;
-                    putBoolean(AUTO_ACCEPT_FRIEND_ENABLED_KEY, autoAcceptJson.getBooleanValue("是否启用"));
-                    putInt(AUTO_ACCEPT_DELAY_KEY, autoAcceptJson.getIntValue("延迟秒数"));
+                if (autoAcceptObj != null) {
+                    Object autoAcceptJson = autoAcceptObj;
+                    putBoolean(AUTO_ACCEPT_FRIEND_ENABLED_KEY, jBool(autoAcceptJson, "是否启用"));
+                    putInt(AUTO_ACCEPT_DELAY_KEY, jInt(autoAcceptJson, "延迟秒数"));
 
-                    JSONArray itemsArray = autoAcceptJson.getJSONArray("回复内容");
+                    Object itemsArray = jArr(autoAcceptJson, "回复内容");
                     if (itemsArray != null) {
                         StringBuilder itemsStr = new StringBuilder();
-                        for (int i = 0; i < itemsArray.size(); i++) {
-                            Object itemObj = itemsArray.get(i);
-                            if (itemObj instanceof JSONObject) {
+                        for (int i = 0; i < jSize(itemsArray); i++) {
+                            Object itemObj = jAGet(itemsArray, i);
+                            if (itemObj != null) {
                                 // 易读格式
-                                Object item = readableJsonToAcceptReplyItem((JSONObject) itemObj);
+                                Object item = readableJsonToAcceptReplyItem(itemObj);
                                 if (item != null) {
                                     if (i > 0) itemsStr.append(LIST_SEPARATOR);
                                     itemsStr.append(item.toString());
@@ -1695,15 +1749,15 @@ private void doImportBackup(JSONObject backupJson, String filePath,
                         putString(AUTO_ACCEPT_REPLY_ITEMS_KEY, itemsStr.toString());
                     }
                 }
-            } else if (configJson.containsKey("autoAcceptEnabled")) {
-                putBoolean(AUTO_ACCEPT_FRIEND_ENABLED_KEY, configJson.getBooleanValue("autoAcceptEnabled"));
-                putInt(AUTO_ACCEPT_DELAY_KEY, configJson.getIntValue("autoAcceptDelay"));
-                if (configJson.containsKey("autoAcceptReplyItems")) {
-                    JSONArray itemsArray = configJson.getJSONArray("autoAcceptReplyItems");
+            } else if (jHas(configJson, "autoAcceptEnabled")) {
+                putBoolean(AUTO_ACCEPT_FRIEND_ENABLED_KEY, jBool(configJson, "autoAcceptEnabled"));
+                putInt(AUTO_ACCEPT_DELAY_KEY, jInt(configJson, "autoAcceptDelay"));
+                if (jHas(configJson, "autoAcceptReplyItems")) {
+                    Object itemsArray = jArr(configJson, "autoAcceptReplyItems");
                     StringBuilder itemsStr = new StringBuilder();
-                    for (int i = 0; i < itemsArray.size(); i++) {
+                    for (int i = 0; i < jSize(itemsArray); i++) {
                         if (i > 0) itemsStr.append(LIST_SEPARATOR);
-                        itemsStr.append(itemsArray.getString(i));
+                        itemsStr.append(jAStr(itemsArray, i));
                     }
                     putString(AUTO_ACCEPT_REPLY_ITEMS_KEY, itemsStr.toString());
                 }
@@ -1714,20 +1768,20 @@ private void doImportBackup(JSONObject backupJson, String filePath,
 
         // 导入好友通过回复配置
         if (importGreetAccepted && configJson != null) {
-            if (configJson.containsKey("好友通过回复")) {
+            if (jHas(configJson, "好友通过回复")) {
                 Object greetObj = configJson.get("好友通过回复");
-                if (greetObj instanceof JSONObject) {
-                    JSONObject greetJson = (JSONObject) greetObj;
-                    putBoolean(GREET_ON_ACCEPTED_ENABLED_KEY, greetJson.getBooleanValue("是否启用"));
-                    putInt(GREET_ON_ACCEPTED_DELAY_KEY, greetJson.getIntValue("延迟秒数"));
+                if (greetObj != null) {
+                    Object greetJson = greetObj;
+                    putBoolean(GREET_ON_ACCEPTED_ENABLED_KEY, jBool(greetJson, "是否启用"));
+                    putInt(GREET_ON_ACCEPTED_DELAY_KEY, jInt(greetJson, "延迟秒数"));
 
-                    JSONArray itemsArray = greetJson.getJSONArray("回复内容");
+                    Object itemsArray = jArr(greetJson, "回复内容");
                     if (itemsArray != null) {
                         StringBuilder itemsStr = new StringBuilder();
-                        for (int i = 0; i < itemsArray.size(); i++) {
-                            Object itemObj = itemsArray.get(i);
-                            if (itemObj instanceof JSONObject) {
-                                Object item = readableJsonToAcceptReplyItem((JSONObject) itemObj);
+                        for (int i = 0; i < jSize(itemsArray); i++) {
+                            Object itemObj = jAGet(itemsArray, i);
+                            if (itemObj != null) {
+                                Object item = readableJsonToAcceptReplyItem(itemObj);
                                 if (item != null) {
                                     if (i > 0) itemsStr.append(LIST_SEPARATOR);
                                     itemsStr.append(item.toString());
@@ -1740,15 +1794,15 @@ private void doImportBackup(JSONObject backupJson, String filePath,
                         putString(GREET_ON_ACCEPTED_REPLY_ITEMS_KEY, itemsStr.toString());
                     }
                 }
-            } else if (configJson.containsKey("greetOnAcceptedEnabled")) {
-                putBoolean(GREET_ON_ACCEPTED_ENABLED_KEY, configJson.getBooleanValue("greetOnAcceptedEnabled"));
-                putInt(GREET_ON_ACCEPTED_DELAY_KEY, configJson.getIntValue("greetOnAcceptedDelay"));
-                if (configJson.containsKey("greetOnAcceptedReplyItems")) {
-                    JSONArray itemsArray = configJson.getJSONArray("greetOnAcceptedReplyItems");
+            } else if (jHas(configJson, "greetOnAcceptedEnabled")) {
+                putBoolean(GREET_ON_ACCEPTED_ENABLED_KEY, jBool(configJson, "greetOnAcceptedEnabled"));
+                putInt(GREET_ON_ACCEPTED_DELAY_KEY, jInt(configJson, "greetOnAcceptedDelay"));
+                if (jHas(configJson, "greetOnAcceptedReplyItems")) {
+                    Object itemsArray = jArr(configJson, "greetOnAcceptedReplyItems");
                     StringBuilder itemsStr = new StringBuilder();
-                    for (int i = 0; i < itemsArray.size(); i++) {
+                    for (int i = 0; i < jSize(itemsArray); i++) {
                         if (i > 0) itemsStr.append(LIST_SEPARATOR);
-                        itemsStr.append(itemsArray.getString(i));
+                        itemsStr.append(jAStr(itemsArray, i));
                     }
                     putString(GREET_ON_ACCEPTED_REPLY_ITEMS_KEY, itemsStr.toString());
                 }
@@ -1759,18 +1813,18 @@ private void doImportBackup(JSONObject backupJson, String filePath,
 
         // 导入小智AI配置
         if (importXiaozhi && configJson != null) {
-            if (configJson.containsKey("小智AI")) {
+            if (jHas(configJson, "小智AI")) {
                 Object xiaozhiObj = configJson.get("小智AI");
-                if (xiaozhiObj instanceof JSONObject) {
-                    JSONObject xiaozhiJson = (JSONObject) xiaozhiObj;
-                    putString(XIAOZHI_CONFIG_KEY, XIAOZHI_SERVE_KEY, xiaozhiJson.getString("服务地址"));
-                    putString(XIAOZHI_CONFIG_KEY, XIAOZHI_OTA_KEY, xiaozhiJson.getString("OTA地址"));
-                    putString(XIAOZHI_CONFIG_KEY, XIAOZHI_CONSOLE_KEY, xiaozhiJson.getString("控制台地址"));
+                if (xiaozhiObj != null) {
+                    Object xiaozhiJson = xiaozhiObj;
+                    putString(XIAOZHI_CONFIG_KEY, XIAOZHI_SERVE_KEY, jStr(xiaozhiJson, "服务地址"));
+                    putString(XIAOZHI_CONFIG_KEY, XIAOZHI_OTA_KEY, jStr(xiaozhiJson, "OTA地址"));
+                    putString(XIAOZHI_CONFIG_KEY, XIAOZHI_CONSOLE_KEY, jStr(xiaozhiJson, "控制台地址"));
                 }
-            } else if (configJson.containsKey("xiaozhiServeUrl")) {
-                putString(XIAOZHI_CONFIG_KEY, XIAOZHI_SERVE_KEY, configJson.getString("xiaozhiServeUrl"));
-                putString(XIAOZHI_CONFIG_KEY, XIAOZHI_OTA_KEY, configJson.getString("xiaozhiOtaUrl"));
-                putString(XIAOZHI_CONFIG_KEY, XIAOZHI_CONSOLE_KEY, configJson.getString("xiaozhiConsoleUrl"));
+            } else if (jHas(configJson, "xiaozhiServeUrl")) {
+                putString(XIAOZHI_CONFIG_KEY, XIAOZHI_SERVE_KEY, jStr(configJson, "xiaozhiServeUrl"));
+                putString(XIAOZHI_CONFIG_KEY, XIAOZHI_OTA_KEY, jStr(configJson, "xiaozhiOtaUrl"));
+                putString(XIAOZHI_CONFIG_KEY, XIAOZHI_CONSOLE_KEY, jStr(configJson, "xiaozhiConsoleUrl"));
             }
             importedCount++;
             debugLog("[备份] 导入小智AI配置");
@@ -1779,19 +1833,19 @@ private void doImportBackup(JSONObject backupJson, String filePath,
         // 导入智聊AI多配置（优先）
         if (importZhilia && configJson != null) {
             try {
-                JSONObject multi = configJson.getJSONObject("智聊AI配置列表");
-                String activeName = configJson.getString("智聊AI当前配置名");
-                if (multi != null && !multi.isEmpty()) {
+                Object multi = jObj(configJson, "智聊AI配置列表");
+                String activeName = jStr(configJson, "智聊AI当前配置名");
+                if (multi != null && ((org.json.JSONObject) multi).length() > 0) {
                     saveZhiliaAllConfigs(multi);
                     if (!TextUtils.isEmpty(activeName)) {
                         putString(ZHILIA_ACTIVE_CONFIG_NAME_KEY, activeName);
                     } else {
-                        for (String k : multi.keySet()) {
+                        for (String k : jKeySet(multi)) {
                             putString(ZHILIA_ACTIVE_CONFIG_NAME_KEY, k);
                             break;
                         }
                     }
-                    JSONObject act = getActiveZhiliaConfig();
+                    Object act = getActiveZhiliaConfig();
                     syncLegacyZhiliaKeysFromConfig(act);
                     importedCount++;
                     debugLog("[备份] 导入智聊AI多配置");
@@ -1803,28 +1857,28 @@ private void doImportBackup(JSONObject backupJson, String filePath,
 
         // 导入智聊AI配置
         if (importZhilia && configJson != null) {
-            if (configJson.containsKey("智聊AI")) {
+            if (jHas(configJson, "智聊AI")) {
                 Object zhiliaObj = configJson.get("智聊AI");
-                if (zhiliaObj instanceof JSONObject) {
-                    JSONObject zhiliaJson = (JSONObject) zhiliaObj;
-                    putString(ZHILIA_AI_API_KEY, zhiliaJson.getString("API密钥"));
-                    putString(ZHILIA_AI_API_URL, zhiliaJson.getString("API地址"));
-                    String importPath = zhiliaJson.getString("API路径");
+                if (zhiliaObj != null) {
+                    Object zhiliaJson = zhiliaObj;
+                    putString(ZHILIA_AI_API_KEY, jStr(zhiliaJson, "API密钥"));
+                    putString(ZHILIA_AI_API_URL, jStr(zhiliaJson, "API地址"));
+                    String importPath = jStr(zhiliaJson, "API路径");
                     if (TextUtils.isEmpty(importPath)) importPath = "/chat/completions";
                     putString(ZHILIA_AI_API_PATH, importPath);
-                    putString(ZHILIA_AI_MODEL_NAME, zhiliaJson.getString("模型名称"));
-                    putString(ZHILIA_AI_SYSTEM_PROMPT, zhiliaJson.getString("系统提示"));
-                    putInt(ZHILIA_AI_CONTEXT_LIMIT, zhiliaJson.getIntValue("上下文限制"));
+                    putString(ZHILIA_AI_MODEL_NAME, jStr(zhiliaJson, "模型名称"));
+                    putString(ZHILIA_AI_SYSTEM_PROMPT, jStr(zhiliaJson, "系统提示"));
+                    putInt(ZHILIA_AI_CONTEXT_LIMIT, jInt(zhiliaJson, "上下文限制"));
                 }
-            } else if (configJson.containsKey("zhiliaApiKey")) {
-                putString(ZHILIA_AI_API_KEY, configJson.getString("zhiliaApiKey"));
-                putString(ZHILIA_AI_API_URL, configJson.getString("zhiliaApiUrl"));
-                String importPath2 = configJson.getString("zhiliaApiPath");
+            } else if (jHas(configJson, "zhiliaApiKey")) {
+                putString(ZHILIA_AI_API_KEY, jStr(configJson, "zhiliaApiKey"));
+                putString(ZHILIA_AI_API_URL, jStr(configJson, "zhiliaApiUrl"));
+                String importPath2 = jStr(configJson, "zhiliaApiPath");
                 if (TextUtils.isEmpty(importPath2)) importPath2 = "/chat/completions";
                 putString(ZHILIA_AI_API_PATH, importPath2);
-                putString(ZHILIA_AI_MODEL_NAME, configJson.getString("zhiliaModelName"));
-                putString(ZHILIA_AI_SYSTEM_PROMPT, configJson.getString("zhiliaSystemPrompt"));
-                putInt(ZHILIA_AI_CONTEXT_LIMIT, configJson.getIntValue("zhiliaContextLimit"));
+                putString(ZHILIA_AI_MODEL_NAME, jStr(configJson, "zhiliaModelName"));
+                putString(ZHILIA_AI_SYSTEM_PROMPT, jStr(configJson, "zhiliaSystemPrompt"));
+                putInt(ZHILIA_AI_CONTEXT_LIMIT, jInt(configJson, "zhiliaContextLimit"));
             }
             importedCount++;
             debugLog("[备份] 导入智聊AI配置");
@@ -1832,13 +1886,13 @@ private void doImportBackup(JSONObject backupJson, String filePath,
 
         // 导入日志开关
         if (configJson != null) {
-            if (configJson.containsKey("日志设置")) {
+            if (jHas(configJson, "日志设置")) {
                 Object logObj = configJson.get("日志设置");
-                if (logObj instanceof JSONObject) {
-                    putBoolean(ENABLE_LOG_KEY, ((JSONObject) logObj).getBooleanValue("是否启用"));
+                if (logObj != null) {
+                    putBoolean(ENABLE_LOG_KEY, ((org.json.JSONObject) logObj).optBoolean("是否启用", false));
                 }
-            } else if (configJson.containsKey("logEnabled")) {
-                putBoolean(ENABLE_LOG_KEY, configJson.getBooleanValue("logEnabled"));
+            } else if (jHas(configJson, "logEnabled")) {
+                putBoolean(ENABLE_LOG_KEY, jBool(configJson, "logEnabled"));
             }
         }
 
@@ -2407,19 +2461,19 @@ private void initializeWebSocketConnection(final String talker, final String tex
                 insertSystemMsg(talker, "小智AI 已连接", System.currentTimeMillis());
 
                 try {
-                    JSONObject helloMsg = new JSONObject();
-                    helloMsg.put("type", "hello");
-                    helloMsg.put("version", 1);
-                    helloMsg.put("transport", "websocket");
+                    org.json.JSONObject helloMsg = new org.json.JSONObject();
+                    jPut(helloMsg, "type", "hello");
+                    jPut(helloMsg, "version", 1);
+                    jPut(helloMsg, "transport", "websocket");
 
-                    JSONObject audioParams = new JSONObject();
-                    audioParams.put("format", "opus");
-                    audioParams.put("sample_rate", 16000);
-                    audioParams.put("channels", 1);
-                    audioParams.put("frame_duration", 60);
-                    helloMsg.put("audio_params", audioParams);
+                    org.json.JSONObject audioParams = new org.json.JSONObject();
+                    jPut(audioParams, "format", "opus");
+                    jPut(audioParams, "sample_rate", 16000);
+                    jPut(audioParams, "channels", 1);
+                    jPut(audioParams, "frame_duration", 60);
+                    jPut(helloMsg, "audio_params", audioParams);
 
-                    webSocket.send(helloMsg.toString());
+                    webSocket.send(String.valueOf(helloMsg));
                     sendMessageToWebSocket(talker, text);
                 } catch (Exception e) {
                     debugLog("[异常] 小智AI 初始化消息发送失败: " + e.getMessage());
@@ -2428,12 +2482,12 @@ private void initializeWebSocketConnection(final String talker, final String tex
 
             public void onMessage(WebSocket webSocket, String result) {
                 try {
-                    JSONObject resultObj = JSON.parseObject(result);
-                    String type = resultObj.getString("type");
-                    String state = resultObj.getString("state");
+                    org.json.JSONObject resultObj = jo(result);
+                    String type = jStr(resultObj, "type");
+                    String state = jStr(resultObj, "state");
                     if ("tts".equals(type) && "sentence_start".equals(state)) {
-                        if (resultObj.containsKey("text")) {
-                            String replyText = resultObj.getString("text");
+                        if (jHas(resultObj, "text")) {
+                            String replyText = jStr(resultObj, "text");
                             boolean q = aiQuoteFlagMap.containsKey(talker) ? aiQuoteFlagMap.get(talker) : false;
                             Long qid = aiQuoteMsgIdMap.get(talker);
                             if (q && qid != null && qid.longValue() > 0L) {
@@ -2489,12 +2543,12 @@ private void sendMessageToWebSocket(final String talker, String text) {
     try {
         WebSocket webSocket = aiWebSockets.get(talker);
         if (webSocket != null) {
-            JSONObject socketMsg = new JSONObject();
-            socketMsg.put("session_id", "session_for_" + talker);
-            socketMsg.put("type", "listen");
-            socketMsg.put("state", "detect");
-            socketMsg.put("text", text);
-            webSocket.send(socketMsg.toString());
+            org.json.JSONObject socketMsg = new org.json.JSONObject();
+            jPut(socketMsg, "session_id", "session_for_" + talker);
+            jPut(socketMsg, "type", "listen");
+            jPut(socketMsg, "state", "detect");
+            jPut(socketMsg, "text", text);
+            webSocket.send(String.valueOf(socketMsg));
             debugLog("[小智AI] 消息已投递至服务器: " + text);
         } else {
             debugLog("[小智AI] 连接丢失，尝试重连...");
@@ -2536,13 +2590,13 @@ private String extractSseData(String line) {
 
 private String callZhiliaNonStreamOnce(String apiUrl, String apiKey, String modelName, List history) {
     try {
-        JSONObject jsonBody = new JSONObject();
+        org.json.JSONObject jsonBody = new org.json.JSONObject();
         jsonBody.put("model", modelName);
         jsonBody.put("messages", history);
         jsonBody.put("temperature", 0.7);
         jsonBody.put("stream", false);
 
-        RequestBody body = RequestBody.create(MediaType.parse("application/json"), jsonBody.toString());
+        RequestBody body = RequestBody.create(MediaType.parse("application/json"), String.valueOf(jsonBody));
         Request.Builder reqBuilder = new Request.Builder().url(apiUrl).post(body);
         reqBuilder.addHeader("Content-Type", "application/json");
         reqBuilder.addHeader("Authorization", "Bearer " + apiKey);
@@ -2551,13 +2605,13 @@ private String callZhiliaNonStreamOnce(String apiUrl, String apiKey, String mode
         String responseContent = response.body() != null ? response.body().string() : null;
         if (TextUtils.isEmpty(responseContent) || !responseContent.trim().startsWith("{")) return null;
 
-        JSONObject jsonObj = JSON.parseObject(responseContent);
-        if (jsonObj.containsKey("error")) return null;
-        if (!jsonObj.containsKey("choices")) return null;
+        org.json.JSONObject jsonObj = jo(responseContent);
+        if (jHas(jsonObj, "error")) return null;
+        if (!jHas(jsonObj, "choices")) return null;
 
-        JSONArray choices = jsonObj.getJSONArray("choices");
-        if (choices == null || choices.isEmpty()) return null;
-        return choices.getJSONObject(0).getJSONObject("message").getString("content");
+        Object choices = jArr(jsonObj, "choices");
+        if (choices == null || jsonIsEmpty(choices)) return null;
+        return jAObj((org.json.JSONArray) choices, 0).optJSONObject("message").optString("content", "");
     } catch (Exception e) {
         debugLog("[异常] 非流式请求失败: " + e.getMessage());
         return null;
@@ -2567,13 +2621,13 @@ private String callZhiliaNonStreamOnce(String apiUrl, String apiKey, String mode
 private String callZhiliaStreamOnce(String apiUrl, String apiKey, String modelName, List history) {
     java.io.BufferedReader br = null;
     try {
-        JSONObject jsonBody = new JSONObject();
+        org.json.JSONObject jsonBody = new org.json.JSONObject();
         jsonBody.put("model", modelName);
         jsonBody.put("messages", history);
         jsonBody.put("temperature", 0.7);
         jsonBody.put("stream", true);
 
-        RequestBody body = RequestBody.create(MediaType.parse("application/json"), jsonBody.toString());
+        RequestBody body = RequestBody.create(MediaType.parse("application/json"), String.valueOf(jsonBody));
         Request request = new Request.Builder()
             .url(apiUrl)
             .addHeader("Content-Type", "application/json")
@@ -2596,19 +2650,19 @@ private String callZhiliaStreamOnce(String apiUrl, String apiKey, String modelNa
             if ("[DONE]".equals(data)) break;
 
             try {
-                JSONObject obj = JSON.parseObject(data);
-                JSONArray choices = obj.getJSONArray("choices");
-                if (choices == null || choices.isEmpty()) continue;
-                JSONObject c0 = choices.getJSONObject(0);
+                org.json.JSONObject obj = jo(data);
+                Object choices = jArr(obj, "choices");
+                if (choices == null || jsonIsEmpty(choices)) continue;
+                org.json.JSONObject c0 = jAObj((org.json.JSONArray) choices, 0);
 
-                JSONObject delta = c0.getJSONObject("delta");
+                org.json.JSONObject delta = c0 == null ? null : c0.optJSONObject("delta");
                 if (delta != null) {
-                    String piece = delta.getString("content");
+                    String piece = delta == null ? "" : delta.optString("content", "");
                     if (!TextUtils.isEmpty(piece)) out.append(piece);
                 } else {
-                    JSONObject msg = c0.getJSONObject("message");
+                    org.json.JSONObject msg = c0 == null ? null : c0.optJSONObject("message");
                     if (msg != null) {
-                        String piece2 = msg.getString("content");
+                        String piece2 = msg == null ? "" : msg.optString("content", "");
                         if (!TextUtils.isEmpty(piece2)) out.append(piece2);
                     }
                 }
@@ -4742,34 +4796,34 @@ private void showXiaozhiAIConfigDialog() {
     showAIConfigDialog();
 }
 
-private JSONObject getZhiliaAllConfigs() {
+private Object getZhiliaAllConfigs() {
     try {
         String s = getString(ZHILIA_MULTI_CONFIGS_KEY, "");
         if (!TextUtils.isEmpty(s)) {
-            JSONObject obj = JSON.parseObject(s);
+            org.json.JSONObject obj = jo(s);
             if (obj != null) return obj;
         }
     } catch (Exception e) {}
-    return new JSONObject();
+    return new org.json.JSONObject();
 }
 
-private void saveZhiliaAllConfigs(JSONObject all) {
-    putString(ZHILIA_MULTI_CONFIGS_KEY, all.toJSONString());
+private void saveZhiliaAllConfigs(Object all) {
+    putString(ZHILIA_MULTI_CONFIGS_KEY, all.toString());
 }
 
 private void ensureZhiliaDefaultMigrated() {
     try {
-        JSONObject all = getZhiliaAllConfigs();
-        if (all == null || all.isEmpty()) {
-            JSONObject one = new JSONObject();
-            one.put("apiKey", getString(ZHILIA_AI_API_KEY, ""));
-            one.put("apiUrl", getString(ZHILIA_AI_API_URL, "https://api.siliconflow.cn/v1/chat/completions"));
-            one.put("modelName", getString(ZHILIA_AI_MODEL_NAME, "deepseek-ai/DeepSeek-V3"));
-            one.put("apiPath", getString(ZHILIA_AI_API_PATH, "/chat/completions"));
-            one.put("systemPrompt", getString(ZHILIA_AI_SYSTEM_PROMPT, "你是个宝宝"));
-            one.put("contextLimit", getInt(ZHILIA_AI_CONTEXT_LIMIT, 10));
-            all = new JSONObject();
-            all.put("默认配置", one);
+        Object all = getZhiliaAllConfigs();
+        if (all == null || ((org.json.JSONObject) all).length() == 0) {
+            org.json.JSONObject one = new org.json.JSONObject();
+            jPut(one, "apiKey", getString(ZHILIA_AI_API_KEY, ""));
+            jPut(one, "apiUrl", getString(ZHILIA_AI_API_URL, "https://api.siliconflow.cn/v1/chat/completions"));
+            jPut(one, "modelName", getString(ZHILIA_AI_MODEL_NAME, "deepseek-ai/DeepSeek-V3"));
+            jPut(one, "apiPath", getString(ZHILIA_AI_API_PATH, "/chat/completions"));
+            jPut(one, "systemPrompt", getString(ZHILIA_AI_SYSTEM_PROMPT, "你是个宝宝"));
+            jPut(one, "contextLimit", getInt(ZHILIA_AI_CONTEXT_LIMIT, 10));
+            all = new org.json.JSONObject();
+            jPut(all, "默认配置", one);
             saveZhiliaAllConfigs(all);
             if (TextUtils.isEmpty(getString(ZHILIA_ACTIVE_CONFIG_NAME_KEY, ""))) {
                 putString(ZHILIA_ACTIVE_CONFIG_NAME_KEY, "默认配置");
@@ -4779,16 +4833,16 @@ private void ensureZhiliaDefaultMigrated() {
 }
 
 
-private void syncLegacyZhiliaKeysFromConfig(JSONObject cfg) {
+private void syncLegacyZhiliaKeysFromConfig(Object cfg) {
     try {
         if (cfg == null) return;
 
-        String apiKey = cfg.getString("apiKey");
-        String apiUrl = cfg.getString("apiUrl");
-        String modelName = cfg.getString("modelName");
-        String apiPath = cfg.getString("apiPath");
-        String systemPrompt = cfg.getString("systemPrompt");
-        int contextLimit = cfg.getIntValue("contextLimit");
+        String apiKey = jStr(cfg, "apiKey");
+        String apiUrl = jStr(cfg, "apiUrl");
+        String modelName = jStr(cfg, "modelName");
+        String apiPath = jStr(cfg, "apiPath");
+        String systemPrompt = jStr(cfg, "systemPrompt");
+        int contextLimit = jInt(cfg, "contextLimit");
 
         if (apiKey == null) apiKey = "";
         if (TextUtils.isEmpty(apiUrl)) apiUrl = "https://api.siliconflow.cn/v1/chat/completions";
@@ -4810,26 +4864,26 @@ private void syncLegacyZhiliaKeysFromConfig(JSONObject cfg) {
     }
 }
 
-private JSONObject getActiveZhiliaConfig() {
+private Object getActiveZhiliaConfig() {
     ensureZhiliaDefaultMigrated();
-    JSONObject all = getZhiliaAllConfigs();
+    Object all = getZhiliaAllConfigs();
     String activeName = getString(ZHILIA_ACTIVE_CONFIG_NAME_KEY, "默认配置");
-    JSONObject cfg = all.getJSONObject(activeName);
+    Object cfg = jObj((org.json.JSONObject) all, activeName);
     if (cfg == null) {
-        for (String k : all.keySet()) {
-            cfg = all.getJSONObject(k);
+        for (String k : jKeySet((org.json.JSONObject) all)) {
+            cfg = jObj((org.json.JSONObject) all, k);
             putString(ZHILIA_ACTIVE_CONFIG_NAME_KEY, k);
             break;
         }
     }
     if (cfg == null) {
-        cfg = new JSONObject();
-        cfg.put("apiKey", "");
-        cfg.put("apiUrl", "https://api.siliconflow.cn/v1/chat/completions");
-        cfg.put("modelName", "deepseek-ai/DeepSeek-V3");
-        cfg.put("apiPath", "/chat/completions");
-        cfg.put("systemPrompt", "你是个宝宝");
-        cfg.put("contextLimit", 10);
+        cfg = new org.json.JSONObject();
+        jPut(cfg, "apiKey", "");
+        jPut(cfg, "apiUrl", "https://api.siliconflow.cn/v1/chat/completions");
+        jPut(cfg, "modelName", "deepseek-ai/DeepSeek-V3");
+        jPut(cfg, "apiPath", "/chat/completions");
+        jPut(cfg, "systemPrompt", "你是个宝宝");
+        jPut(cfg, "contextLimit", 10);
     }
     return cfg;
 }
@@ -4843,14 +4897,14 @@ private void showZhiliaConfigListDialog(final Runnable onSwitched) {
         }
 
         ensureZhiliaDefaultMigrated();
-        final JSONObject all = getZhiliaAllConfigs();
+        final Object all = getZhiliaAllConfigs();
         final ArrayList<String> keys = new ArrayList<String>();
         final ArrayList<String> names = new ArrayList<String>();
         final String active = getString(ZHILIA_ACTIVE_CONFIG_NAME_KEY, "默认配置");
 
-        for (String k : all.keySet()) {
-            JSONObject one = all.getJSONObject(k);
-            String model = one != null ? one.getString("modelName") : "";
+        for (String k : jKeySet((org.json.JSONObject) all)) {
+            Object one = jObj((org.json.JSONObject) all, k);
+            String model = one != null ? jStr(one, "modelName") : "";
             keys.add(k);
             names.add((k.equals(active) ? "✅ " : "   ") + k + (TextUtils.isEmpty(model) ? "" : ("  (" + model + ")")));
         }
@@ -4923,14 +4977,14 @@ private void showZhiliaConfigListDialog(final Runnable onSwitched) {
                                                     toast("名称未变化");
                                                     return;
                                                 }
-                                                JSONObject all2 = getZhiliaAllConfigs();
-                                                if (all2.containsKey(newName)) {
+                                                Object all2 = getZhiliaAllConfigs();
+                                                if (((org.json.JSONObject) all2).has(newName)) {
                                                     toast("名称已存在");
                                                     return;
                                                 }
-                                                JSONObject obj = all2.getJSONObject(chosen);
-                                                all2.remove(chosen);
-                                                all2.put(newName, obj);
+                                                Object obj = jObj((org.json.JSONObject) all2, chosen);
+                                                ((org.json.JSONObject) all2).remove(chosen);
+                                                jPut((org.json.JSONObject) all2, newName, obj);
                                                 saveZhiliaAllConfigs(all2);
 
                                                 String nowActive = getString(ZHILIA_ACTIVE_CONFIG_NAME_KEY, "");
@@ -4951,8 +5005,8 @@ private void showZhiliaConfigListDialog(final Runnable onSwitched) {
                             } else if (w == 1) {
                                 // 复制
                                 try {
-                                    JSONObject all2 = getZhiliaAllConfigs();
-                                    JSONObject src = all2.getJSONObject(chosen);
+                                    Object all2 = getZhiliaAllConfigs();
+                                    Object src = jObj((org.json.JSONObject) all2, chosen);
                                     if (src == null) {
                                         toast("源配置不存在");
                                         return;
@@ -4960,12 +5014,12 @@ private void showZhiliaConfigListDialog(final Runnable onSwitched) {
                                     String base = chosen + "_副本";
                                     String newName = base;
                                     int idx = 2;
-                                    while (all2.containsKey(newName)) {
+                                    while (((org.json.JSONObject) all2).has(newName)) {
                                         newName = base + idx;
                                         idx++;
                                     }
-                                    JSONObject cp = JSON.parseObject(src.toJSONString());
-                                    all2.put(newName, cp);
+                                    Object cp = jo(src.toString());
+                                    jPut((org.json.JSONObject) all2, newName, cp);
                                     saveZhiliaAllConfigs(all2);
                                     toast("已复制为: " + newName);
                                     if (onSwitched != null) onSwitched.run();
@@ -4975,10 +5029,10 @@ private void showZhiliaConfigListDialog(final Runnable onSwitched) {
                             } else {
                                 // 删除
                                 try {
-                                    JSONObject all2 = getZhiliaAllConfigs();
-                                    all2.remove(chosen);
+                                    Object all2 = getZhiliaAllConfigs();
+                                    ((org.json.JSONObject) all2).remove(chosen);
 
-                                    if (all2.isEmpty()) {
+                                    if (((org.json.JSONObject) all2).length() == 0) {
                                         toast("至少保留一个配置");
                                         return;
                                     }
@@ -4987,7 +5041,8 @@ private void showZhiliaConfigListDialog(final Runnable onSwitched) {
 
                                     String activeNow = getString(ZHILIA_ACTIVE_CONFIG_NAME_KEY, "");
                                     if (chosen.equals(activeNow)) {
-                                        for (String first : all2.keySet()) {
+                                        for (Object firstObj : jKeySet((org.json.JSONObject) all2)) {
+            String first = String.valueOf(firstObj);
                                             putString(ZHILIA_ACTIVE_CONFIG_NAME_KEY, first);
                                             break;
                                         }
@@ -5086,30 +5141,30 @@ private List<String> fetchModelListByApi(String apiUrl, String apiKey) {
         }
         if (TextUtils.isEmpty(body)) return out;
 
-        JSONObject obj = JSON.parseObject(body);
+        org.json.JSONObject obj = jo(body);
         if (obj == null) return out;
 
         // OpenAI兼容: {"data":[{"id":"xxx"}]}
-        JSONArray data = obj.getJSONArray("data");
+        Object data = jArr(obj, "data");
         if (data != null) {
-            for (int i = 0; i < data.size(); i++) {
-                JSONObject one = data.getJSONObject(i);
+            for (int i = 0; i < jSize(data); i++) {
+                Object one = jAObj(data, i);
                 if (one == null) continue;
-                String id = one.getString("id");
+                String id = jStr(one, "id");
                 if (!TextUtils.isEmpty(id) && !out.contains(id)) out.add(id);
             }
         }
 
         // 某些站点: {"models":[...]} 或 {"result":[...]}
         if (out.isEmpty()) {
-            JSONArray arr = obj.getJSONArray("models");
-            if (arr == null) arr = obj.getJSONArray("result");
+            Object arr = jArr(obj, "models");
+            if (arr == null) arr = jArr(obj, "result");
             if (arr != null) {
-                for (int i = 0; i < arr.size(); i++) {
-                    Object it = arr.get(i);
-                    if (it instanceof JSONObject) {
-                        String id = ((JSONObject) it).getString("id");
-                        if (TextUtils.isEmpty(id)) id = ((JSONObject) it).getString("name");
+                for (int i = 0; i < jSize(arr); i++) {
+                    Object it = jAGet(arr, i);
+                    if (it != null) {
+                        String id = ((org.json.JSONObject) it).optString("id", "");
+                        if (TextUtils.isEmpty(id)) id = ((org.json.JSONObject) it).optString("name", "");
                         if (!TextUtils.isEmpty(id) && !out.contains(id)) out.add(id);
                     } else if (it instanceof String) {
                         String id2 = (String) it;
@@ -5136,9 +5191,9 @@ private String getApiFavKey(String apiUrl) {
 
 private Set<String> getFavoriteModelsForApi(String apiUrl) {
     try {
-        JSONObject all = getJsonObjSafe(ZHILIA_MODEL_FAVORITES_KEY);
+        Object all = getJsonObjSafe(ZHILIA_MODEL_FAVORITES_KEY);
         String key = getApiFavKey(apiUrl);
-        String csv = all.getString(key);
+        String csv = jStr((org.json.JSONObject) all, key);
         Set<String> set = new HashSet<String>();
         if (!TextUtils.isEmpty(csv)) {
             String[] arr = csv.split(";;;");
@@ -5155,15 +5210,15 @@ private Set<String> getFavoriteModelsForApi(String apiUrl) {
 
 private void saveFavoriteModelsForApi(String apiUrl, Set<String> favSet) {
     try {
-        JSONObject all = getJsonObjSafe(ZHILIA_MODEL_FAVORITES_KEY);
+        Object all = getJsonObjSafe(ZHILIA_MODEL_FAVORITES_KEY);
         String key = getApiFavKey(apiUrl);
         if (favSet == null || favSet.isEmpty()) {
-            all.remove(key);
+            ((org.json.JSONObject) all).remove(key);
         } else {
             List<String> list = new ArrayList<String>();
             for (String s : favSet) if (!TextUtils.isEmpty(s)) list.add(s);
             Collections.sort(list);
-            all.put(key, TextUtils.join(";;;", list));
+            jPut((org.json.JSONObject) all, key, TextUtils.join(";;;", list));
         }
         putJsonObjSafe(ZHILIA_MODEL_FAVORITES_KEY, all);
     } catch (Exception e) {
@@ -5498,26 +5553,26 @@ private void runZhiliaConnectivityTest(final String key, final String url, final
             boolean streamOk = false;
 
             try {
-                JSONObject body1 = new JSONObject();
-                body1.put("model", model);
-                JSONArray msgs1 = new JSONArray();
-                JSONObject sys1 = new JSONObject();
-                sys1.put("role", "system");
-                sys1.put("content", "你是测试助手");
-                msgs1.add(sys1);
-                JSONObject user1 = new JSONObject();
-                user1.put("role", "user");
-                user1.put("content", "只回复: OK");
-                msgs1.add(user1);
-                body1.put("messages", msgs1);
-                body1.put("temperature", 0.1);
-                body1.put("stream", false);
+                org.json.JSONObject body1 = new org.json.JSONObject();
+                jPut(body1, "model", model);
+                org.json.JSONArray msgs1 = new org.json.JSONArray();
+                org.json.JSONObject sys1 = new org.json.JSONObject();
+                jPut(sys1, "role", "system");
+                jPut(sys1, "content", "你是测试助手");
+                jAAdd(msgs1, sys1);
+                org.json.JSONObject user1 = new org.json.JSONObject();
+                jPut(user1, "role", "user");
+                jPut(user1, "content", "只回复: OK");
+                jAAdd(msgs1, user1);
+                jPut(body1, "messages", msgs1);
+                jPut(body1, "temperature", 0.1);
+                jPut(body1, "stream", false);
 
                 Request req1 = new Request.Builder()
                     .url(url)
                     .addHeader("Content-Type", "application/json")
                     .addHeader("Authorization", "Bearer " + key)
-                    .post(RequestBody.create(MediaType.parse("application/json"), body1.toString()))
+                    .post(RequestBody.create(MediaType.parse("application/json"), String.valueOf(body1)))
                     .build();
 
                 Response r1 = aiClient.newCall(req1).execute();
@@ -5530,26 +5585,26 @@ private void runZhiliaConnectivityTest(final String key, final String url, final
 
             java.io.BufferedReader br = null;
             try {
-                JSONObject body2 = new JSONObject();
-                body2.put("model", model);
-                JSONArray msgs2 = new JSONArray();
-                JSONObject sys2 = new JSONObject();
-                sys2.put("role", "system");
-                sys2.put("content", "你是测试助手");
-                msgs2.add(sys2);
-                JSONObject user2 = new JSONObject();
-                user2.put("role", "user");
-                user2.put("content", "只回复: OK");
-                msgs2.add(user2);
-                body2.put("messages", msgs2);
-                body2.put("temperature", 0.1);
-                body2.put("stream", true);
+                org.json.JSONObject body2 = new org.json.JSONObject();
+                jPut(body2, "model", model);
+                org.json.JSONArray msgs2 = new org.json.JSONArray();
+                org.json.JSONObject sys2 = new org.json.JSONObject();
+                jPut(sys2, "role", "system");
+                jPut(sys2, "content", "你是测试助手");
+                jAAdd(msgs2, sys2);
+                org.json.JSONObject user2 = new org.json.JSONObject();
+                jPut(user2, "role", "user");
+                jPut(user2, "content", "只回复: OK");
+                jAAdd(msgs2, user2);
+                jPut(body2, "messages", msgs2);
+                jPut(body2, "temperature", 0.1);
+                jPut(body2, "stream", true);
 
                 Request req2 = new Request.Builder()
                     .url(url)
                     .addHeader("Content-Type", "application/json")
                     .addHeader("Authorization", "Bearer " + key)
-                    .post(RequestBody.create(MediaType.parse("application/json"), body2.toString()))
+                    .post(RequestBody.create(MediaType.parse("application/json"), String.valueOf(body2)))
                     .build();
 
                 Response r2 = aiClient.newCall(req2).execute();
@@ -5566,18 +5621,18 @@ private void runZhiliaConnectivityTest(final String key, final String url, final
                         String data = line.substring(5).trim();
                         if ("[DONE]".equals(data)) break;
                         try {
-                            JSONObject obj = JSON.parseObject(data);
-                            JSONArray ch = obj.getJSONArray("choices");
-                            if (ch != null && !ch.isEmpty()) {
-                                JSONObject c0 = ch.getJSONObject(0);
-                                JSONObject delta = c0.getJSONObject("delta");
+                            org.json.JSONObject obj = jo(data);
+                            Object ch = jArr(obj, "choices");
+                            if (ch != null && !jsonIsEmpty(ch)) {
+                                org.json.JSONObject c0 = jAObj((org.json.JSONArray) ch, 0);
+                                org.json.JSONObject delta = c0 == null ? null : c0.optJSONObject("delta");
                                 if (delta != null) {
-                                    String p = delta.getString("content");
+                                    String p = delta == null ? "" : delta.optString("content", "");
                                     if (!TextUtils.isEmpty(p)) agg.append(p);
                                 } else {
-                                    JSONObject msg = c0.getJSONObject("message");
+                                    org.json.JSONObject msg = c0 == null ? null : c0.optJSONObject("message");
                                     if (msg != null) {
-                                        String p2 = msg.getString("content");
+                                        String p2 = msg == null ? "" : msg.optString("content", "");
                                         if (!TextUtils.isEmpty(p2)) agg.append(p2);
                                     }
                                 }
@@ -5620,7 +5675,7 @@ private void runZhiliaConnectivityTest(final String key, final String url, final
 private void showZhiliaAIConfigDialog() {
     try {
         ensureZhiliaDefaultMigrated();
-        JSONObject activeCfg = getActiveZhiliaConfig();
+        Object activeCfg = getActiveZhiliaConfig();
         String activeName = getString(ZHILIA_ACTIVE_CONFIG_NAME_KEY, "默认配置");
 
         ScrollView scrollView = new ScrollView(getTopActivity());
@@ -5644,29 +5699,29 @@ private void showZhiliaAIConfigDialog() {
         apiCard.addView(cfgNameEdit);
 
         apiCard.addView(createTextView(getTopActivity(), "API Key:", 14, 0));
-        final EditText apiKeyEdit = createStyledEditText("请输入你的API Key", activeCfg.getString("apiKey"));
+        final EditText apiKeyEdit = createStyledEditText("请输入你的API Key", jStr((org.json.JSONObject) activeCfg, "apiKey"));
         apiCard.addView(apiKeyEdit);
 
         apiCard.addView(createTextView(getTopActivity(), "API URL:", 14, 0));
-        final EditText apiUrlEdit = createStyledEditText("默认为官方API", activeCfg.getString("apiUrl"));
+        final EditText apiUrlEdit = createStyledEditText("默认为官方API", jStr((org.json.JSONObject) activeCfg, "apiUrl"));
         apiCard.addView(apiUrlEdit);
 
         apiCard.addView(createTextView(getTopActivity(), "API路径:", 14, 0));
-        final EditText apiPathEdit = createStyledEditText("默认 /chat/completions", activeCfg.getString("apiPath"));
+        final EditText apiPathEdit = createStyledEditText("默认 /chat/completions", jStr((org.json.JSONObject) activeCfg, "apiPath"));
         if (TextUtils.isEmpty(apiPathEdit.getText().toString().trim())) {
             apiPathEdit.setText(getString(ZHILIA_AI_API_PATH, "/chat/completions"));
         }
         apiCard.addView(apiPathEdit);
 
         apiCard.addView(createTextView(getTopActivity(), "模型名称:", 14, 0));
-        final EditText modelNameEdit = createStyledEditText("例如 deepseek-ai/DeepSeek-V3", activeCfg.getString("modelName"));
+        final EditText modelNameEdit = createStyledEditText("例如 deepseek-ai/DeepSeek-V3", jStr((org.json.JSONObject) activeCfg, "modelName"));
         apiCard.addView(modelNameEdit);
         layout.addView(apiCard);
 
         LinearLayout advancedCard = createCardLayout();
         advancedCard.addView(createSectionTitle("高级设置"));
         advancedCard.addView(createTextView(getTopActivity(), "上下文轮次 (建议5-10):", 14, 0));
-        final EditText contextLimitEdit = createStyledEditText("数字越大越消耗Token", String.valueOf(activeCfg.getIntValue("contextLimit")));
+        final EditText contextLimitEdit = createStyledEditText("数字越大越消耗Token", String.valueOf(jInt((org.json.JSONObject) activeCfg, "contextLimit")));
         contextLimitEdit.setInputType(InputType.TYPE_CLASS_NUMBER);
         advancedCard.addView(contextLimitEdit);
         final LinearLayout streamSwitchRow = createSwitchRow(
@@ -5680,7 +5735,7 @@ private void showZhiliaAIConfigDialog() {
 
 
         advancedCard.addView(createTextView(getTopActivity(), "系统指令 (AI角色设定):", 14, 0));
-        final EditText systemPromptEdit = createStyledEditText("设定AI的身份和回复风格", activeCfg.getString("systemPrompt"));
+        final EditText systemPromptEdit = createStyledEditText("设定AI的身份和回复风格", jStr((org.json.JSONObject) activeCfg, "systemPrompt"));
         systemPromptEdit.setMinLines(3);
         systemPromptEdit.setGravity(Gravity.TOP);
         advancedCard.addView(systemPromptEdit);
@@ -5691,16 +5746,16 @@ private void showZhiliaAIConfigDialog() {
         final Runnable refreshActiveToViews = new Runnable() {
             public void run() {
                 try {
-                    JSONObject now = getActiveZhiliaConfig();
+                    Object now = getActiveZhiliaConfig();
                     String nowName = getString(ZHILIA_ACTIVE_CONFIG_NAME_KEY, "默认配置");
                     current.setText("当前启用: " + nowName);
                     cfgNameEdit.setText(nowName);
-                    apiKeyEdit.setText(now.getString("apiKey"));
-                    apiUrlEdit.setText(now.getString("apiUrl"));
-                    apiPathEdit.setText(now.getString("apiPath"));
-                    modelNameEdit.setText(now.getString("modelName"));
-                    contextLimitEdit.setText(String.valueOf(now.getIntValue("contextLimit")));
-                    systemPromptEdit.setText(now.getString("systemPrompt"));
+                    apiKeyEdit.setText(jStr((org.json.JSONObject) now, "apiKey"));
+                    apiUrlEdit.setText(jStr((org.json.JSONObject) now, "apiUrl"));
+                    apiPathEdit.setText(jStr((org.json.JSONObject) now, "apiPath"));
+                    modelNameEdit.setText(jStr((org.json.JSONObject) now, "modelName"));
+                    contextLimitEdit.setText(String.valueOf(jInt((org.json.JSONObject) now, "contextLimit")));
+                    systemPromptEdit.setText(jStr((org.json.JSONObject) now, "systemPrompt"));
                 } catch (Exception e) {
                     toast("刷新配置失败: " + e.getMessage());
                 }
@@ -5737,23 +5792,23 @@ private void showZhiliaAIConfigDialog() {
                                     return;
                                 }
 
-                                JSONObject all = getZhiliaAllConfigs();
-                                if (all.containsKey(newName)) {
+                                Object all = getZhiliaAllConfigs();
+                                if (jHas(all, newName)) {
                                     toast("配置名称已存在");
                                     return;
                                 }
 
-                                JSONObject one = new JSONObject();
-                                one.put("apiKey", apiKeyEdit.getText().toString().trim());
-                                one.put("apiUrl", apiUrlEdit.getText().toString().trim());
-                                one.put("modelName", modelNameEdit.getText().toString().trim());
-                                one.put("systemPrompt", systemPromptEdit.getText().toString().trim());
+                                org.json.JSONObject one = new org.json.JSONObject();
+                                jPut(one, "apiKey", apiKeyEdit.getText().toString().trim());
+                                jPut(one, "apiUrl", apiUrlEdit.getText().toString().trim());
+                                jPut(one, "modelName", modelNameEdit.getText().toString().trim());
+                                jPut(one, "systemPrompt", systemPromptEdit.getText().toString().trim());
 
                                 int limit = 10;
                                 try { limit = Integer.parseInt(contextLimitEdit.getText().toString().trim()); } catch (Exception e) {}
-                                one.put("contextLimit", limit);
+                                jPut(one, "contextLimit", limit);
 
-                                all.put(newName, one);
+                                jPut(all, newName, one);
                                 saveZhiliaAllConfigs(all);
                                 putString(ZHILIA_ACTIVE_CONFIG_NAME_KEY, newName);
                                 syncLegacyZhiliaKeysFromConfig(one);
@@ -5777,20 +5832,20 @@ private void showZhiliaAIConfigDialog() {
                                     return;
                                 }
 
-                                JSONObject all = getZhiliaAllConfigs();
-                                if (all.containsKey(newName)) {
+                                Object all = getZhiliaAllConfigs();
+                                if (jHas(all, newName)) {
                                     toast("配置名称已存在");
                                     return;
                                 }
 
-                                JSONObject one = new JSONObject();
-                                one.put("apiKey", "");
-                                one.put("apiUrl", "");
-                                one.put("modelName", "");
-                                one.put("systemPrompt", "");
-                                one.put("contextLimit", 0);
+                                org.json.JSONObject one = new org.json.JSONObject();
+                                jPut(one, "apiKey", "");
+                                jPut(one, "apiUrl", "");
+                                jPut(one, "modelName", "");
+                                jPut(one, "systemPrompt", "");
+                                jPut(one, "contextLimit", 0);
 
-                                all.put(newName, one);
+                                jPut(all, newName, one);
                                 saveZhiliaAllConfigs(all);
                                 putString(ZHILIA_ACTIVE_CONFIG_NAME_KEY, newName);
                                 syncLegacyZhiliaKeysFromConfig(one);
@@ -5857,7 +5912,7 @@ private void showZhiliaAIConfigDialog() {
 
                             new Thread(new Runnable() {
                                 public void run() {
-                                    final List<String> models = fetchModelListByApi(base, key);
+                                    final List<String> models = fetchModelListByApi(url, key);
                                     new Handler(Looper.getMainLooper()).post(new Runnable() {
                                         public void run() {
                                             try { loading.dismiss(); } catch (Exception ignore) {}
@@ -5919,7 +5974,7 @@ private void showZhiliaAIConfigDialog() {
 
                 new Thread(new Runnable() {
                     public void run() {
-                        final List<String> models = fetchModelListByApi(base, key);
+                        final List<String> models = fetchModelListByApi(url, key);
                         new Handler(Looper.getMainLooper()).post(new Runnable() {
                             public void run() {
                                 try { loading.dismiss(); } catch (Exception ignore) {}
@@ -5947,21 +6002,21 @@ btnCard.addView(testBtn);
                 String cfgName = cfgNameEdit.getText().toString().trim();
                 if (TextUtils.isEmpty(cfgName)) { toast("配置名称不能为空"); return; }
 
-                JSONObject all = getZhiliaAllConfigs();
-                JSONObject one = new JSONObject();
-                one.put("apiKey", apiKeyEdit.getText().toString().trim());
-                one.put("apiUrl", apiUrlEdit.getText().toString().trim());
+                Object all = getZhiliaAllConfigs();
+                org.json.JSONObject one = new org.json.JSONObject();
+                jPut(one, "apiKey", apiKeyEdit.getText().toString().trim());
+                jPut(one, "apiUrl", apiUrlEdit.getText().toString().trim());
                 String pathValue = apiPathEdit.getText().toString().trim();
                 if (TextUtils.isEmpty(pathValue)) pathValue = "/chat/completions";
-                one.put("apiPath", pathValue);
-                one.put("modelName", modelNameEdit.getText().toString().trim());
-                one.put("systemPrompt", systemPromptEdit.getText().toString().trim());
+                jPut(one, "apiPath", pathValue);
+                jPut(one, "modelName", modelNameEdit.getText().toString().trim());
+                jPut(one, "systemPrompt", systemPromptEdit.getText().toString().trim());
 
                 int limit = 10;
                 try { limit = Integer.parseInt(contextLimitEdit.getText().toString().trim()); } catch (Exception e) {}
-                one.put("contextLimit", limit);
+                jPut(one, "contextLimit", limit);
 
-                all.put(cfgName, one);
+                jPut(all, cfgName, one);
                 saveZhiliaAllConfigs(all);
                 putString(ZHILIA_ACTIVE_CONFIG_NAME_KEY, cfgName);
                 syncLegacyZhiliaKeysFromConfig(one);
@@ -8643,26 +8698,26 @@ private void showBindDialog() {
                      return;
                 }
 
-                JSONObject jsonObj = JSON.parseObject(jsonData);
+                org.json.JSONObject jsonObj = jo(jsonData);
                 final SpannableStringBuilder updatedMessage = new SpannableStringBuilder(initialMessage);
 
-                if (jsonObj.containsKey("activation")) {
+                if (jHas(jsonObj, "activation")) {
                     addStyledText(updatedMessage, "\n\n正在获取验证码...", "#8C8C8C", 18);
-                    JSONObject activationObj = jsonObj.getJSONObject("activation");
-                    String code = activationObj.getString("code");
+                    Object activationObj = jObj(jsonObj, "activation");
+                    String code = jStr(activationObj, "code");
                     addStyledText(updatedMessage, "\n验证码: ", "#3860AF", 14);
                     addStyledText(updatedMessage, code, "#409EFF", 17);
                     addStyledText(updatedMessage, "\n\n验证码已获取", "#8C8C8C", 18);
                     addStyledText(updatedMessage, "\n前往控制台绑定设备:\n", "#3860AF", 14);
                     String consoleUrl = getString(XIAOZHI_CONFIG_KEY, XIAOZHI_CONSOLE_KEY, "https://xiaozhi.me/console/agents");
                     addStyledText(updatedMessage, consoleUrl, "#2F923D", 15);
-                } else if (jsonObj.containsKey("error")) {
-                    String error = jsonObj.getString("error");
+                } else if (jHas(jsonObj, "error")) {
+                    String error = jStr(jsonObj, "error");
                     addStyledText(updatedMessage, "\n\n出现错误: ", "#E53935", 14);
                     addStyledText(updatedMessage, error, "#777168", 13);
-                } else if (jsonObj.containsKey("firmware")) {
-                    JSONObject firmwareObj = jsonObj.getJSONObject("firmware");
-                    String version = firmwareObj.getString("version");
+                } else if (jHas(jsonObj, "firmware")) {
+                    Object firmwareObj = jObj(jsonObj, "firmware");
+                    String version = jStr(firmwareObj, "version");
                     addStyledText(updatedMessage, "\n\n设备已绑定", "#8C8C8C", 18);
                     addStyledText(updatedMessage, "\n固件版本: ", "#3860AF", 14);
                     addStyledText(updatedMessage, version, "#777168", 15);
@@ -8774,31 +8829,31 @@ private void setupUnifiedDialog(AlertDialog dialog) {
 }
 
 private void putString(String setName, String itemName, String value) {
-    JSONObject json = getJsonObjSafe(setName);
-    json.put(itemName, value);
+    Object json = getJsonObjSafe(setName);
+    jPut((org.json.JSONObject) json, itemName, value);
     putJsonObjSafe(setName, json);
 }
 
 private String getString(String setName, String itemName, String defaultValue) {
-    JSONObject json = getJsonObjSafe(setName);
-    if (json.containsKey(itemName)) {
-        return json.getString(itemName);
+    Object json = getJsonObjSafe(setName);
+    if (((org.json.JSONObject) json).has(itemName)) {
+        return jStr((org.json.JSONObject) json, itemName);
     }
     return defaultValue;
 }
 
-private JSONObject getJsonObjSafe(String setName) {
+private Object getJsonObjSafe(String setName) {
     String raw = getString(setName, "{}");
     try {
-        JSONObject json = JSON.parseObject(raw);
-        if (json == null) return new JSONObject();
+        org.json.JSONObject json = jo(raw);
+        if (json == null) return new org.json.JSONObject();
         return json;
     } catch (Exception e) {
-        return new JSONObject();
+        return new org.json.JSONObject();
     }
 }
 
-private void putJsonObjSafe(String setName, JSONObject obj) {
-    if (obj == null) obj = new JSONObject();
-    putString(setName, obj.toString());
+private void putJsonObjSafe(String setName, Object obj) {
+    if (obj == null) obj = new org.json.JSONObject();
+    putString(setName, obj == null ? "{}" : String.valueOf(obj));
 }
