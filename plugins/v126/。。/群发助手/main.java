@@ -60,11 +60,9 @@ import android.os.Build;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-// 引入 FastJSON 用于数据存储
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.TypeReference;
+import org.json.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONException;
 
 // === 文件/文件夹浏览与多选 ===
 final String DEFAULT_LAST_FOLDER_SP_AUTO = "last_folder_for_media_auto";
@@ -89,17 +87,17 @@ boolean gAllowFolderSelectAuto = false;
 // ==========================================
 
 // 全局变量 - 发送配置
-Set<String> massSendTargetWxids = new HashSet<>(); 
+Set<String> massSendTargetWxids = new HashSet<String>();
 int massSendType = 0; // 0:文本, 1:图片, 2:视频, 3:文件, 4:表情
 String massSendTextContent = "";
-List<String> massSendMediaPaths = new ArrayList<>();
+List<String> massSendMediaPaths = new ArrayList<String>();
 long massSendInterval = 0; // 发送对象间隔(秒)
 long massSendMediaInterval = 0; // 多媒体文件间隔(秒)
 int massSendRepeatType = 0; // 0:不重复(单次), 1:每天重复, 2:每周重复
 
 // 定时任务相关 - 改为多任务支持
-Map<String, JSONObject> scheduledTasks = new HashMap<>(); // taskId -> taskData
-Map<String, Runnable> scheduledRunnables = new HashMap<>(); // taskId -> Runnable
+Map scheduledTasks = new HashMap(); // taskId -> JSONObject
+Map scheduledRunnables = new HashMap(); // taskId -> Runnable
 boolean isTaskRunning = false;
 Handler scheduleHandler = new Handler(Looper.getMainLooper());
 
@@ -112,8 +110,8 @@ final int SEND_TYPE_EMOJI = 4;
 final int SEND_TYPE_VOICE = 5;
 
 // 存储Key
-final String CONFIG_KEY = "scheduled_send_multi_v2"; 
-final String KEY_LABELS = "saved_target_labels"; 
+final String CONFIG_KEY = "scheduled_send_multi_v2";
+final String KEY_LABELS = "saved_target_labels";
 final String KEY_TASKS = "scheduled_tasks"; // 存储多任务列表
 
 // 缓存列表
@@ -129,7 +127,6 @@ private List sCachedGroupList = null;
  * 用于恢复所有未完成的定时任务
  */
 public void onLoad() {
-    // 延时一点执行，确保环境就绪
     new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
         public void run() {
             restoreAllTasks();
@@ -143,35 +140,34 @@ public void onLoad() {
 private void restoreAllTasks() {
     try {
         String tasksJson = getString(CONFIG_KEY, KEY_TASKS, "{}");
-        JSONObject allTasks = JSON.parseObject(tasksJson);
-        
-        if (allTasks == null || allTasks.isEmpty()) return;
-        
+        JSONObject allTasks = parseJsonObjectSafe(tasksJson);
+
+        if (allTasks == null || allTasks.length() == 0) return;
+
         long now = System.currentTimeMillis();
         int restoredCount = 0;
-        
-        for (String taskId : allTasks.keySet()) {
-            JSONObject task = allTasks.getJSONObject(taskId);
-            long planTime = task.getLongValue("planTime");
-            
+
+        Iterator keys = allTasks.keys();
+        while (keys.hasNext()) {
+            String taskId = String.valueOf(keys.next());
+            JSONObject task = allTasks.optJSONObject(taskId);
+            if (task == null) continue;
+
+            long planTime = task.optLong("planTime", 0);
             if (planTime <= 0) continue;
-            
-            // 恢复内存变量
+
             scheduledTasks.put(taskId, task);
-            
+
             if (now >= planTime) {
-                // 时间已过，检查是否在容忍范围内（10分钟）
                 if (now - planTime < 10 * 60 * 1000) {
                     log("检测到错过的任务 " + taskId + "（10分钟内），准备补发...");
                     notify("定时发送补发", "检测到任务 " + taskId + " 即将补发...");
-                    scheduleTaskWithPrecision(taskId, task, 1000); // 延迟1秒补发
+                    scheduleTaskWithPrecision(taskId, task, 1000);
                     restoredCount++;
                 } else {
-                    // 判断是否是重复任务
-                    int repeatType = task.getIntValue("repeatType");
+                    int repeatType = task.optInt("repeatType", 0);
+                    JSONArray repeatDaysArray = task.optJSONArray("repeatDays");
                     if (repeatType > 0) {
-                        JSONArray repeatDaysArray = task.getJSONArray("repeatDays");
-                        // 重复任务过期，自动推算下一个有效周期
                         long nextTime = calculateNextPlanTime(planTime, repeatType, repeatDaysArray);
                         task.put("planTime", nextTime);
                         task.put("status", "pending");
@@ -179,23 +175,20 @@ private void restoreAllTasks() {
                         scheduleTaskWithPrecision(taskId, task, nextTime - now);
                         restoredCount++;
                     } else {
-                        // 单次过期任务标记为已过期
                         task.put("status", "expired");
                         log("任务 " + taskId + " 已过期");
                         continue;
                     }
                 }
             } else {
-                // 时间未到，重新加入定时器
                 long delay = planTime - now;
                 scheduleTaskWithPrecision(taskId, task, delay);
                 restoredCount++;
             }
         }
-        
-        // 保存更新后的状态
+
         saveAllTasks();
-        
+
         if (restoredCount > 0) {
             log("已恢复 " + restoredCount + " 个定时任务");
         }
@@ -206,8 +199,6 @@ private void restoreAllTasks() {
 
 /**
  * 【专为语音设计的同步锁】
- * 强制让指定的Runnable在主线程执行，并阻塞当前后台线程直到其执行完毕。
- * 完美解决微信发送语音必须在主线程，但异步发送会导致目标全部错乱的问题。
  */
 private void runOnMainSync(final Runnable runnable) {
     if (Looper.myLooper() == Looper.getMainLooper()) {
@@ -227,7 +218,6 @@ private void runOnMainSync(final Runnable runnable) {
         }
     });
     try {
-        // 最多等15秒防止彻底死锁
         latch.await(15, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
         e.printStackTrace();
@@ -238,11 +228,10 @@ private void runOnMainSync(final Runnable runnable) {
  * 高精度定时执行（精确到毫秒级，误差<100ms）
  */
 private void scheduleTaskWithPrecision(final String taskId, JSONObject task, long delayMillis) {
-    // 取消该任务旧的定时器
     cancelTaskTimer(taskId);
-    
-    final long targetTime = task.getLongValue("planTime");
-    
+
+    final long targetTime = task.optLong("planTime", 0);
+
     Runnable runnable = new Runnable() {
         public void run() {
             long now = System.currentTimeMillis();
@@ -251,11 +240,11 @@ private void scheduleTaskWithPrecision(final String taskId, JSONObject task, lon
                 return;
             }
             while (System.currentTimeMillis() < targetTime) {}
-            
+
             executeTaskSend(taskId);
         }
     };
-    
+
     scheduledRunnables.put(taskId, runnable);
     scheduleHandler.postDelayed(runnable, delayMillis);
 }
@@ -264,80 +253,84 @@ private void scheduleTaskWithPrecision(final String taskId, JSONObject task, lon
  * 精确执行单个任务
  */
 private void executeTaskSend(final String taskId) {
-    JSONObject task = scheduledTasks.get(taskId);
+    final JSONObject task = (JSONObject) scheduledTasks.get(taskId);
     if (task == null) return;
-    
-    // 检查是否已过期
-    long planTime = task.getLongValue("planTime");
+
+    long planTime = task.optLong("planTime", 0);
     if (System.currentTimeMillis() > planTime + 30000) {
-        task.put("status", "expired");
+        try {
+            task.put("status", "expired");
+        } catch (Exception e) {}
         saveAllTasks();
         return;
     }
-    
-    // 加载任务配置
-    int type = task.getIntValue("type");
-    String content = task.getString("content");
-    long interval = task.getLongValue("interval");
-    long mediaInterval = task.getLongValue("mediaInterval");
-    
-    JSONArray targetsJson = task.getJSONArray("targets");
-    List<String> targets = new ArrayList<>();
+
+    final int type = task.optInt("type", 0);
+    final String content = task.optString("content", "");
+    final long interval = task.optLong("interval", 0);
+    final long mediaInterval = task.optLong("mediaInterval", 0);
+
+    JSONArray targetsJson = task.optJSONArray("targets");
+    List<String> targets = new ArrayList<String>();
     if (targetsJson != null) {
-        for (int i = 0; i < targetsJson.size(); i++) {
-            targets.add(targetsJson.getString(i));
+        for (int i = 0; i < targetsJson.length(); i++) {
+            targets.add(targetsJson.optString(i));
         }
     }
-    
-    JSONArray mediasJson = task.getJSONArray("medias");
-    List<String> mediaPaths = new ArrayList<>();
+
+    JSONArray mediasJson = task.optJSONArray("medias");
+    List<String> mediaPaths = new ArrayList<String>();
     if (mediasJson != null) {
-        for (int i = 0; i < mediasJson.size(); i++) {
-            mediaPaths.add(mediasJson.getString(i));
+        for (int i = 0; i < mediasJson.length(); i++) {
+            mediaPaths.add(mediasJson.optString(i));
         }
     }
-    
-    // 标记任务执行中
-    task.put("status", "running");
+
+    try {
+        task.put("status", "running");
+    } catch (Exception e) {}
     saveAllTasks();
-    
+
     notify("定时发送开始", "任务 " + taskId.substring(0, 8) + " 开始执行\n目标数: " + targets.size());
-    
+
     final List<String> finalTargets = targets;
     final List<String> finalMediaPaths = mediaPaths;
-    final int finalType = type;
-    final String finalContent = content;
-    final long finalInterval = interval;
-    final long finalMediaInterval = mediaInterval;
     final JSONObject finalTask = task;
-    
+
     new Thread(new Runnable() {
         public void run() {
             int success = 0;
             int fail = 0;
-            
+
             for (int i = 0; i < finalTargets.size(); i++) {
                 final String target = finalTargets.get(i);
                 final String name = getContactName(target);
-                
+
                 boolean targetSuccess = true;
-                
+
                 try {
-                    if (finalType == SEND_TYPE_TEXT) {
-                        String contentToSend = finalContent.replace("%friendName%", name);
-                        sendText(target, contentToSend); // 文本保持在后台直接发，不错乱
+                    if (type == SEND_TYPE_TEXT) {
+                        String contentToSend = content.replace("%friendName%", name);
+                        sendText(target, contentToSend);
                     } else {
                         for (int j = 0; j < finalMediaPaths.size(); j++) {
                             final String path = finalMediaPaths.get(j);
                             final File f = new File(path);
                             if (f.exists()) {
-                                switch (finalType) {
-                                    case SEND_TYPE_IMAGE: sendImage(target, path); break; // 正常后台发
-                                    case SEND_TYPE_VIDEO: sendVideo(target, path); break; // 正常后台发
-                                    case SEND_TYPE_EMOJI: sendEmoji(target, path); break; // 正常后台发
-                                    case SEND_TYPE_FILE: shareFile(target, f.getName(), path, ""); break; // 正常后台发
-                                    case SEND_TYPE_VOICE: 
-                                        // 【核心逻辑】只有语音抛给主线程发，并且必须等它发完再走下一步，彻底防止目标错乱！
+                                switch (type) {
+                                    case SEND_TYPE_IMAGE:
+                                        sendImage(target, path);
+                                        break;
+                                    case SEND_TYPE_VIDEO:
+                                        sendVideo(target, path);
+                                        break;
+                                    case SEND_TYPE_EMOJI:
+                                        sendEmoji(target, path);
+                                        break;
+                                    case SEND_TYPE_FILE:
+                                        shareFile(target, f.getName(), path, "");
+                                        break;
+                                    case SEND_TYPE_VOICE:
                                         runOnMainSync(new Runnable() {
                                             public void run() {
                                                 sendVoice(target, path);
@@ -345,9 +338,8 @@ private void executeTaskSend(final String taskId) {
                                         });
                                         break;
                                 }
-                                // 多文件间隔
                                 if (j < finalMediaPaths.size() - 1) {
-                                    long mInterval = finalMediaInterval > 0 ? finalMediaInterval * 1000 : 500;
+                                    long mInterval = mediaInterval > 0 ? mediaInterval * 1000 : 500;
                                     Thread.sleep(mInterval);
                                 }
                             }
@@ -357,59 +349,62 @@ private void executeTaskSend(final String taskId) {
                     targetSuccess = false;
                     log("发送失败: " + target + " - " + e.getMessage());
                 }
-                
+
                 if (targetSuccess) success++; else fail++;
-                
-                // 目标之间的小间隔
-                if (i < finalTargets.size() - 1 && finalInterval > 0) {
-                    try { Thread.sleep(finalInterval * 1000); } catch (Exception e) {}
+
+                if (i < finalTargets.size() - 1 && interval > 0) {
+                    try { Thread.sleep(interval * 1000); } catch (Exception e) {}
                 }
             }
-            
+
             final int fSuccess = success;
             final int fFail = fail;
-            int repeatType = finalTask.getIntValue("repeatType");
-            JSONArray repeatDaysArray = finalTask.getJSONArray("repeatDays");
-            
-            if (repeatType > 0) {
-                long oldPlanTime = finalTask.getLongValue("planTime");
-                final long newPlanTime = calculateNextPlanTime(oldPlanTime, repeatType, repeatDaysArray);
-                
-                finalTask.put("planTime", newPlanTime);
-                finalTask.put("status", "pending"); // 回到等待状态
-                finalTask.put("lastSuccessCount", fSuccess);
-                finalTask.put("lastFailCount", fFail);
-                finalTask.put("lastExecutedTime", System.currentTimeMillis());
-                saveAllTasks();
-                
-                long delay = newPlanTime - System.currentTimeMillis();
-                scheduleTaskWithPrecision(taskId, finalTask, delay);
-                
-                notify("重复任务完成一轮", "任务 " + taskId.substring(0, 8) + " 已安排下一次: \n" + formatTimeWithSeconds(newPlanTime));
-                
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                    public void run() {
-                        toast("✅ 本轮任务执行完毕，已排期下一次\n时间: " + formatTimeWithSeconds(newPlanTime));
-                    }
-                });
-            } else {
-                finalTask.put("status", "completed");
-                finalTask.put("successCount", fSuccess);
-                finalTask.put("failCount", fFail);
-                finalTask.put("completedTime", System.currentTimeMillis());
-                saveAllTasks();
-                
-                cancelTaskTimer(taskId);
-                scheduledTasks.remove(taskId); 
-                
-                final String report = "成功: " + fSuccess + ", 失败: " + fFail;
-                notify("定时发送完成", "任务 " + taskId.substring(0, 8) + " 已完成\n" + report);
-                
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                    public void run() {
-                        toast("✅ 任务执行完毕\n" + report);
-                    }
-                });
+            int repeatType = finalTask.optInt("repeatType", 0);
+            JSONArray repeatDaysArray = finalTask.optJSONArray("repeatDays");
+
+            try {
+                if (repeatType > 0) {
+                    long oldPlanTime = finalTask.optLong("planTime", 0);
+                    final long newPlanTime = calculateNextPlanTime(oldPlanTime, repeatType, repeatDaysArray);
+
+                    finalTask.put("planTime", newPlanTime);
+                    finalTask.put("status", "pending");
+                    finalTask.put("lastSuccessCount", fSuccess);
+                    finalTask.put("lastFailCount", fFail);
+                    finalTask.put("lastExecutedTime", System.currentTimeMillis());
+                    saveAllTasks();
+
+                    long delay = newPlanTime - System.currentTimeMillis();
+                    scheduleTaskWithPrecision(taskId, finalTask, delay);
+
+                    notify("重复任务完成一轮", "任务 " + taskId.substring(0, 8) + " 已安排下一次: \n" + formatTimeWithSeconds(newPlanTime));
+
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        public void run() {
+                            toast("✅ 本轮任务执行完毕，已排期下一次\n时间: " + formatTimeWithSeconds(newPlanTime));
+                        }
+                    });
+                } else {
+                    finalTask.put("status", "completed");
+                    finalTask.put("successCount", fSuccess);
+                    finalTask.put("failCount", fFail);
+                    finalTask.put("completedTime", System.currentTimeMillis());
+                    saveAllTasks();
+
+                    cancelTaskTimer(taskId);
+                    scheduledTasks.remove(taskId);
+
+                    final String report = "成功: " + fSuccess + ", 失败: " + fFail;
+                    notify("定时发送完成", "任务 " + taskId.substring(0, 8) + " 已完成\n" + report);
+
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        public void run() {
+                            toast("✅ 任务执行完毕\n" + report);
+                        }
+                    });
+                }
+            } catch (Exception e) {
+                log("任务完成收尾失败: " + e.getMessage());
             }
         }
     }).start();
@@ -422,30 +417,30 @@ private long calculateNextPlanTime(long currentPlanTime, int repeatType, JSONArr
     Calendar cal = Calendar.getInstance();
     cal.setTimeInMillis(currentPlanTime);
     long now = System.currentTimeMillis();
-    
-    if (repeatType == 1) { // 每天
+
+    if (repeatType == 1) {
         do {
             cal.add(Calendar.DAY_OF_MONTH, 1);
         } while (cal.getTimeInMillis() <= now);
-    } else if (repeatType == 2) { // 每周指定天
-        List<Integer> days = new ArrayList<>();
+    } else if (repeatType == 2) {
+        List<Integer> days = new ArrayList<Integer>();
         if (repeatDaysArray != null) {
-            for (int i = 0; i < repeatDaysArray.size(); i++) {
-                days.add(repeatDaysArray.getIntValue(i));
+            for (int i = 0; i < repeatDaysArray.length(); i++) {
+                days.add(new Integer(repeatDaysArray.optInt(i)));
             }
         }
         if (days.isEmpty()) {
             cal.add(Calendar.DAY_OF_MONTH, 1);
             return cal.getTimeInMillis();
         }
-        
-        int safety = 365; // 防死循环
+
+        int safety = 365;
         do {
             cal.add(Calendar.DAY_OF_MONTH, 1);
             safety--;
-        } while (safety > 0 && (!days.contains(cal.get(Calendar.DAY_OF_WEEK)) || cal.getTimeInMillis() <= now));
+        } while (safety > 0 && (!days.contains(new Integer(cal.get(Calendar.DAY_OF_WEEK))) || cal.getTimeInMillis() <= now));
     }
-    
+
     return cal.getTimeInMillis();
 }
 
@@ -453,11 +448,11 @@ private long calculateNextPlanTime(long currentPlanTime, int repeatType, JSONArr
  * 格式化周天显示
  */
 private String formatRepeatDays(JSONArray arr) {
-    if (arr == null || arr.isEmpty()) return "未设置";
+    if (arr == null || arr.length() == 0) return "未设置";
     StringBuilder sb = new StringBuilder();
-    for (int i=0; i<arr.size(); i++) {
-        int d = arr.getIntValue(i);
-        switch(d) {
+    for (int i = 0; i < arr.length(); i++) {
+        int d = arr.optInt(i);
+        switch (d) {
             case Calendar.MONDAY: sb.append("一,"); break;
             case Calendar.TUESDAY: sb.append("二,"); break;
             case Calendar.WEDNESDAY: sb.append("三,"); break;
@@ -475,7 +470,7 @@ private String formatRepeatDays(JSONArray arr) {
  * 取消单个任务的定时器
  */
 private void cancelTaskTimer(String taskId) {
-    Runnable runnable = scheduledRunnables.get(taskId);
+    Runnable runnable = (Runnable) scheduledRunnables.get(taskId);
     if (runnable != null) {
         scheduleHandler.removeCallbacks(runnable);
         scheduledRunnables.remove(taskId);
@@ -486,7 +481,18 @@ private void cancelTaskTimer(String taskId) {
  * 保存所有任务到存储
  */
 private void saveAllTasks() {
-    putString(CONFIG_KEY, KEY_TASKS, JSON.toJSONString(scheduledTasks));
+    try {
+        JSONObject root = new JSONObject();
+        Iterator it = scheduledTasks.keySet().iterator();
+        while (it.hasNext()) {
+            String taskId = (String) it.next();
+            JSONObject task = (JSONObject) scheduledTasks.get(taskId);
+            root.put(taskId, task);
+        }
+        putString(CONFIG_KEY, KEY_TASKS, root.toString());
+    } catch (Exception e) {
+        log("保存任务失败: " + e.getMessage());
+    }
 }
 
 // 入口函数
@@ -511,16 +517,15 @@ private void showMainDialog() {
     root.setBackgroundColor(Color.parseColor("#FAFBF9"));
     scrollView.addView(root);
 
-    // --- 顶部：任务统计卡片 ---
     LinearLayout statsCard = createCardLayout();
     statsCard.setBackground(createGradientDrawable("#E8F5E9", 32));
     statsCard.addView(createSectionTitle("📊 任务概览"));
-    
+
     final TextView statsTv = new TextView(getTopActivity());
     updateStatsText(statsTv);
     statsTv.setTextSize(14);
     statsCard.addView(statsTv);
-    
+
     Button viewTasksBtn = new Button(getTopActivity());
     viewTasksBtn.setText("📋 查看所有任务");
     styleUtilityButton(viewTasksBtn);
@@ -536,7 +541,6 @@ private void showMainDialog() {
     statsCard.addView(viewTasksBtn);
     root.addView(statsCard);
 
-    // --- 快速创建任务卡片 ---
     LinearLayout quickCard = createCardLayout();
     quickCard.addView(createSectionTitle("🚀 快速创建定时任务"));
     Button newTaskBtn = new Button(getTopActivity());
@@ -545,7 +549,6 @@ private void showMainDialog() {
     quickCard.addView(newTaskBtn);
     root.addView(quickCard);
 
-    // --- 目标选择卡片 ---
     LinearLayout targetCard = createCardLayout();
     targetCard.addView(createSectionTitle("👥 发送目标"));
     final TextView targetCountTv = new TextView(getTopActivity());
@@ -568,7 +571,7 @@ private void showMainDialog() {
         }
     });
     targetCard.addView(selectTargetBtn);
-    
+
     Button labelManageBtn = new Button(getTopActivity());
     labelManageBtn.setText("🏷️ 标签分组管理 (新建/导入)");
     styleUtilityButton(labelManageBtn);
@@ -600,7 +603,6 @@ private void showMainDialog() {
     targetCard.addView(clearTargetBtn);
     root.addView(targetCard);
 
-    // --- 内容设置卡片 ---
     LinearLayout contentCard = createCardLayout();
     contentCard.addView(createSectionTitle("📝 编辑发送内容"));
 
@@ -614,7 +616,7 @@ private void showMainDialog() {
     row1Group.addView(rbText);
     row1Group.addView(rbImage);
     row1Group.addView(rbVideo);
-    
+
     RadioGroup row2Group = new RadioGroup(getTopActivity());
     row2Group.setOrientation(LinearLayout.HORIZONTAL);
     RadioButton rbFile = createRadioButton(getTopActivity(), "📁文件");
@@ -623,7 +625,7 @@ private void showMainDialog() {
     row2Group.addView(rbFile);
     row2Group.addView(rbEmoji);
     row2Group.addView(rbVoice);
-    
+
     LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
         LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
     );
@@ -640,10 +642,9 @@ private void showMainDialog() {
     contentCard.addView(contentContainer);
     root.addView(contentCard);
 
-    // --- 发送设置卡片 (含重复设置) ---
     LinearLayout settingCard = createCardLayout();
     settingCard.addView(createSectionTitle("⚙️ 发送参数设置"));
-    
+
     settingCard.addView(createTextView(getTopActivity(), "⏰ 循环发送设置:", 14, 8));
     RadioGroup repeatGroup = new RadioGroup(getTopActivity());
     repeatGroup.setOrientation(LinearLayout.HORIZONTAL);
@@ -653,31 +654,30 @@ private void showMainDialog() {
     repeatGroup.addView(rbOnce);
     repeatGroup.addView(rbDay);
     repeatGroup.addView(rbWeek);
-    
-    // 星期几选择器
+
     final LinearLayout weekDaysLayout = new LinearLayout(getTopActivity());
     weekDaysLayout.setOrientation(LinearLayout.HORIZONTAL);
     weekDaysLayout.setPadding(0, 16, 0, 16);
     weekDaysLayout.setVisibility(View.GONE);
-    
+
     final CheckBox[] weekCbs = new CheckBox[7];
     String[] weekNames = {"一", "二", "三", "四", "五", "六", "日"};
     int[] weekVals = {Calendar.MONDAY, Calendar.TUESDAY, Calendar.WEDNESDAY, Calendar.THURSDAY, Calendar.FRIDAY, Calendar.SATURDAY, Calendar.SUNDAY};
-    for (int i=0; i<7; i++) {
+    for (int i = 0; i < 7; i++) {
         CheckBox cb = new CheckBox(getTopActivity());
         cb.setText(weekNames[i]);
-        cb.setTag(weekVals[i]);
+        cb.setTag(new Integer(weekVals[i]));
         cb.setPadding(4, 0, 16, 0);
         weekCbs[i] = cb;
         weekDaysLayout.addView(cb);
     }
-    
+
     if (massSendRepeatType == 1) rbDay.setChecked(true);
     else if (massSendRepeatType == 2) {
         rbWeek.setChecked(true);
         weekDaysLayout.setVisibility(View.VISIBLE);
     } else rbOnce.setChecked(true);
-    
+
     repeatGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
         public void onCheckedChanged(RadioGroup group, int checkedId) {
             if (checkedId == rbDay.getId()) {
@@ -694,8 +694,7 @@ private void showMainDialog() {
     });
     settingCard.addView(repeatGroup);
     settingCard.addView(weekDaysLayout);
-    
-    // 间隔设置
+
     settingCard.addView(createTextView(getTopActivity(), "发送对象间隔 (秒):", 14, 8));
     final EditText intervalEdit = createStyledEditText("默认 0 秒", String.valueOf(massSendInterval));
     intervalEdit.setInputType(InputType.TYPE_CLASS_NUMBER);
@@ -705,10 +704,9 @@ private void showMainDialog() {
     final EditText mediaIntervalEdit = createStyledEditText("默认 0 秒", String.valueOf(massSendMediaInterval));
     mediaIntervalEdit.setInputType(InputType.TYPE_CLASS_NUMBER);
     settingCard.addView(mediaIntervalEdit);
-    
+
     root.addView(settingCard);
 
-    // UI 更新逻辑
     final Runnable updateContentUI = new Runnable() {
         public void run() {
             contentContainer.removeAllViews();
@@ -729,22 +727,22 @@ private void showMainDialog() {
                 if (massSendMediaPaths.isEmpty()) sb.append("🚫 未选择文件");
                 else {
                     sb.append("✅ 已选 ").append(massSendMediaPaths.size()).append(" 个文件:\n");
-                    for(int i=0; i<Math.min(massSendMediaPaths.size(), 5); i++) {
-                         sb.append(new File(massSendMediaPaths.get(i)).getName()).append("\n");
+                    for (int i = 0; i < Math.min(massSendMediaPaths.size(), 5); i++) {
+                        sb.append(new File((String) massSendMediaPaths.get(i)).getName()).append("\n");
                     }
-                    if(massSendMediaPaths.size() > 5) sb.append("...等");
+                    if (massSendMediaPaths.size() > 5) sb.append("...等");
                 }
                 pathTv.setText(sb.toString());
                 pathTv.setTextColor(Color.parseColor("#333333"));
                 pathTv.setPadding(0, 0, 0, 16);
                 contentContainer.addView(pathTv);
-                
+
                 if (massSendType == SEND_TYPE_VOICE) {
                     TextView voiceTip = createPromptText("提示: 语音文件需为 .silk 格式");
                     voiceTip.setTextColor(Color.parseColor("#FF9800"));
                     contentContainer.addView(voiceTip);
                 }
-                
+
                 Button selMediaBtn = new Button(getTopActivity());
                 selMediaBtn.setText("📂 选择文件 (支持多选)");
                 styleMediaSelectionButton(selMediaBtn);
@@ -758,30 +756,30 @@ private void showMainDialog() {
                             public void onSelected(ArrayList<String> selectedFiles) {
                                 massSendMediaPaths.clear();
                                 massSendMediaPaths.addAll(selectedFiles);
-                                updateContentUI.run(); 
+                                updateContentUI.run();
                             }
-                        }, false); 
+                        }, false);
                     }
                 });
                 contentContainer.addView(selMediaBtn);
-                
+
                 if (!massSendMediaPaths.isEmpty()) {
-                     Button clearMediaBtn = new Button(getTopActivity());
-                     clearMediaBtn.setText("清空已选文件");
-                     styleUtilityButton(clearMediaBtn);
-                     clearMediaBtn.setOnClickListener(new View.OnClickListener() {
-                         public void onClick(View v) {
-                             massSendMediaPaths.clear();
-                             updateContentUI.run();
-                         }
-                     });
-                     contentContainer.addView(clearMediaBtn);
+                    Button clearMediaBtn = new Button(getTopActivity());
+                    clearMediaBtn.setText("清空已选文件");
+                    styleUtilityButton(clearMediaBtn);
+                    clearMediaBtn.setOnClickListener(new View.OnClickListener() {
+                        public void onClick(View v) {
+                            massSendMediaPaths.clear();
+                            updateContentUI.run();
+                        }
+                    });
+                    contentContainer.addView(clearMediaBtn);
                 }
             }
         }
     };
-    
-    switch(massSendType) {
+
+    switch (massSendType) {
         case SEND_TYPE_TEXT: rbText.setChecked(true); break;
         case SEND_TYPE_IMAGE: rbImage.setChecked(true); break;
         case SEND_TYPE_VIDEO: rbVideo.setChecked(true); break;
@@ -819,51 +817,47 @@ private void showMainDialog() {
         }
     });
 
-    // ====== 核心的保存任务逻辑 ======
     final Runnable saveTaskAction = new Runnable() {
         public void run() {
             if (massSendTargetWxids.isEmpty()) { toast("请选择发送目标！"); return; }
             if (massSendType == SEND_TYPE_TEXT && TextUtils.isEmpty(massSendTextContent)) { toast("请输入文本内容！"); return; }
             if (massSendType != SEND_TYPE_TEXT && massSendType != SEND_TYPE_VOICE && massSendMediaPaths.isEmpty()) { toast("请选择发送文件！"); return; }
             if (massSendType == SEND_TYPE_VOICE && massSendMediaPaths.isEmpty()) { toast("请选择语音文件(.silk)！"); return; }
-            
-            final List<Integer> selectedDays = new ArrayList<>();
+
+            final List<Integer> selectedDays = new ArrayList<Integer>();
             if (massSendRepeatType == 2) {
-                for (CheckBox cb : weekCbs) {
-                    if (cb != null && cb.isChecked()) selectedDays.add((Integer)cb.getTag());
+                for (int i = 0; i < weekCbs.length; i++) {
+                    CheckBox cb = weekCbs[i];
+                    if (cb != null && cb.isChecked()) selectedDays.add((Integer) cb.getTag());
                 }
                 if (selectedDays.isEmpty()) {
                     toast("每周循环必须至少勾选一天！");
                     return;
                 }
             }
-            
+
             try {
                 massSendInterval = Long.parseLong(intervalEdit.getText().toString());
                 massSendMediaInterval = Long.parseLong(mediaIntervalEdit.getText().toString());
-            } catch(Exception e) {}
-            
+            } catch (Exception e) {}
+
             showDateTimePickerWithSeconds(new DatePickerCallback() {
                 public void onTimeSelected(long timestamp) {
                     createAndSaveTask(timestamp, selectedDays);
-                    // 任务创建成功后，不关闭窗口，仅自动刷新顶部的任务统计面板
                     updateStatsText(statsTv);
                 }
             });
         }
     };
 
-    // 绑定给顶部的快速新建按钮，点击此按钮完成保存后，窗口不会关闭
     newTaskBtn.setOnClickListener(new View.OnClickListener() {
         public void onClick(View v) {
             saveTaskAction.run();
         }
     });
 
-    // 底部的按钮
     AlertDialog dialog = buildCommonAlertDialog(getTopActivity(), "🕒 定时发送助手", scrollView, "💾 保存为新任务", new DialogInterface.OnClickListener() {
         public void onClick(DialogInterface dialog, int which) {
-            // 注意：AlertDialog的原生机制，点击PositiveButton后，对话框仍会自动关闭
             saveTaskAction.run();
         }
     }, "立即直接发送", new DialogInterface.OnClickListener() {
@@ -872,17 +866,16 @@ private void showMainDialog() {
             if (massSendType == SEND_TYPE_TEXT && TextUtils.isEmpty(massSendTextContent)) { toast("请输入文本内容！"); return; }
             if (massSendType != SEND_TYPE_TEXT && massSendType != SEND_TYPE_VOICE && massSendMediaPaths.isEmpty()) { toast("请选择发送文件！"); return; }
             if (massSendType == SEND_TYPE_VOICE && massSendMediaPaths.isEmpty()) { toast("请选择语音文件！"); return; }
-            
+
             try {
                 massSendInterval = Long.parseLong(intervalEdit.getText().toString());
                 massSendMediaInterval = Long.parseLong(mediaIntervalEdit.getText().toString());
-            } catch(Exception e) {}
-            
+            } catch (Exception e) {}
+
             toast("🚀 开始立即发送...");
             executeImmediateSend();
         }
     }, "关闭", null);
-    
     dialog.show();
 }
 
@@ -891,40 +884,45 @@ private void showMainDialog() {
  */
 private void createAndSaveTask(long planTime, List<Integer> repeatDays) {
     String taskId = UUID.randomUUID().toString();
-    
-    JSONObject task = new JSONObject();
-    task.put("taskId", taskId);
-    task.put("planTime", planTime);
-    task.put("type", massSendType);
-    task.put("content", massSendTextContent);
-    task.put("interval", massSendInterval);
-    task.put("mediaInterval", massSendMediaInterval);
-    task.put("repeatType", massSendRepeatType);
-    if (massSendRepeatType == 2 && repeatDays != null) {
-        task.put("repeatDays", repeatDays);
-    }
-    task.put("targets", new ArrayList<>(massSendTargetWxids));
-    task.put("medias", new ArrayList<>(massSendMediaPaths));
-    task.put("status", "pending");
-    task.put("createdTime", System.currentTimeMillis());
-    
-    scheduledTasks.put(taskId, task);
-    saveAllTasks();
-    
-    long delay = planTime - System.currentTimeMillis();
-    if (delay > 0) {
-        scheduleTaskWithPrecision(taskId, task, delay);
-        String msg = "✅ 任务已排期在:\n" + formatTimeWithSeconds(planTime);
-        if (massSendRepeatType == 1) msg += "\n(循环: 每天)";
-        else if (massSendRepeatType == 2) {
-            JSONArray arr = new JSONArray();
-            arr.addAll(repeatDays);
-            msg += "\n(循环: 每周 " + formatRepeatDays(arr) + ")";
+
+    try {
+        JSONObject task = new JSONObject();
+        task.put("taskId", taskId);
+        task.put("planTime", planTime);
+        task.put("type", massSendType);
+        task.put("content", massSendTextContent);
+        task.put("interval", massSendInterval);
+        task.put("mediaInterval", massSendMediaInterval);
+        task.put("repeatType", massSendRepeatType);
+
+        if (massSendRepeatType == 2 && repeatDays != null) {
+            task.put("repeatDays", listToJsonArray(repeatDays));
         }
-        toast(msg);
-    } else {
-        toast("⚠️ 时间已过");
-        scheduledTasks.remove(taskId);
+
+        task.put("targets", setToJsonArray(massSendTargetWxids));
+        task.put("medias", listToJsonArray(massSendMediaPaths));
+        task.put("status", "pending");
+        task.put("createdTime", System.currentTimeMillis());
+
+        scheduledTasks.put(taskId, task);
+        saveAllTasks();
+
+        long delay = planTime - System.currentTimeMillis();
+        if (delay > 0) {
+            scheduleTaskWithPrecision(taskId, task, delay);
+            String msg = "✅ 任务已排期在:\n" + formatTimeWithSeconds(planTime);
+            if (massSendRepeatType == 1) msg += "\n(循环: 每天)";
+            else if (massSendRepeatType == 2) {
+                JSONArray arr = listToJsonArray(repeatDays);
+                msg += "\n(循环: 每周 " + formatRepeatDays(arr) + ")";
+            }
+            toast(msg);
+        } else {
+            toast("⚠️ 时间已过");
+            scheduledTasks.remove(taskId);
+        }
+    } catch (Exception e) {
+        toast("创建任务失败: " + e.getMessage());
     }
 }
 
@@ -932,29 +930,29 @@ private void createAndSaveTask(long planTime, List<Integer> repeatDays) {
  * 立即执行发送
  */
 private void executeImmediateSend() {
-    final List<String> targets = new ArrayList<>(massSendTargetWxids);
+    final List<String> targets = new ArrayList<String>(massSendTargetWxids);
     final int type = massSendType;
     final String content = massSendTextContent;
-    final List<String> mediaPaths = new ArrayList<>(massSendMediaPaths);
+    final List<String> mediaPaths = new ArrayList<String>(massSendMediaPaths);
     final long interval = massSendInterval;
     final long mediaInterval = massSendMediaInterval;
-    
+
     new Thread(new Runnable() {
         public void run() {
             int success = 0;
             int fail = 0;
-            
+
             for (int i = 0; i < targets.size(); i++) {
                 final String target = targets.get(i);
                 final String name = getContactName(target);
                 boolean targetSuccess = true;
-                
+
                 try {
                     if (type == SEND_TYPE_TEXT) {
                         String finalContent = content.replace("%friendName%", name);
-                        sendText(target, finalContent); // 文本后台发不错乱
+                        sendText(target, finalContent);
                     } else {
-                        for (int j=0; j<mediaPaths.size(); j++) {
+                        for (int j = 0; j < mediaPaths.size(); j++) {
                             final String path = mediaPaths.get(j);
                             final File f = new File(path);
                             if (f.exists()) {
@@ -963,8 +961,7 @@ private void executeImmediateSend() {
                                     case SEND_TYPE_VIDEO: sendVideo(target, path); break;
                                     case SEND_TYPE_EMOJI: sendEmoji(target, path); break;
                                     case SEND_TYPE_FILE: shareFile(target, f.getName(), path, ""); break;
-                                    case SEND_TYPE_VOICE: 
-                                        // 【核心修复】发语音加同步锁
+                                    case SEND_TYPE_VOICE:
                                         runOnMainSync(new Runnable() {
                                             public void run() {
                                                 sendVoice(target, path);
@@ -980,14 +977,14 @@ private void executeImmediateSend() {
                     targetSuccess = false;
                     log("发送失败: " + target + " - " + e.getMessage());
                 }
-                
+
                 if (targetSuccess) success++; else fail++;
-                
+
                 if (i < targets.size() - 1 && interval > 0) {
                     try { Thread.sleep(interval * 1000); } catch (Exception e) {}
                 }
             }
-            
+
             final String report = "成功: " + success + ", 失败: " + fail;
             notify("发送完成", report);
             new Handler(Looper.getMainLooper()).post(new Runnable() {
@@ -1002,13 +999,19 @@ private void executeImmediateSend() {
  */
 private void updateStatsText(TextView tv) {
     if (tv == null) return;
-    int pending = 0; int running = 0; int completed = 0;
-    for (JSONObject task : scheduledTasks.values()) {
-        String status = task.getString("status");
+    int pending = 0;
+    int running = 0;
+    int completed = 0;
+
+    Iterator it = scheduledTasks.values().iterator();
+    while (it.hasNext()) {
+        JSONObject task = (JSONObject) it.next();
+        String status = task.optString("status", "");
         if ("pending".equals(status)) pending++;
         else if ("running".equals(status)) running++;
         else if ("completed".equals(status)) completed++;
     }
+
     StringBuilder sb = new StringBuilder();
     sb.append("待执行/循环中: ").append(pending).append(" 个\n");
     sb.append("执行中: ").append(running).append(" 个\n");
@@ -1036,27 +1039,37 @@ private void showTaskListDialog() {
     if (scheduledTasks.isEmpty()) {
         root.addView(createPromptText("暂无定时任务"));
     } else {
-        List<JSONObject> sortedTasks = new ArrayList<>(scheduledTasks.values());
+        List<JSONObject> sortedTasks = new ArrayList<JSONObject>();
+        Iterator it0 = scheduledTasks.values().iterator();
+        while (it0.hasNext()) {
+            sortedTasks.add((JSONObject) it0.next());
+        }
+
         Collections.sort(sortedTasks, new java.util.Comparator<JSONObject>() {
             public int compare(JSONObject t1, JSONObject t2) {
-                return Long.compare(t1.getLongValue("planTime"), t2.getLongValue("planTime"));
+                long p1 = t1.optLong("planTime", 0);
+                long p2 = t2.optLong("planTime", 0);
+                if (p1 == p2) return 0;
+                return p1 < p2 ? -1 : 1;
             }
         });
 
         final ListView taskListView = new ListView(getTopActivity());
         setupListViewTouchForScroll(taskListView);
-        
-        final List<String> taskIds = new ArrayList<>();
-        final List<String> taskDisplays = new ArrayList<>();
-        
-        for (JSONObject task : sortedTasks) {
-            String taskId = task.getString("taskId");
-            long planTime = task.getLongValue("planTime");
-            String status = task.getString("status");
-            int targetCount = task.getJSONArray("targets").size();
-            int type = task.getIntValue("type");
-            int repeatType = task.getIntValue("repeatType");
-            
+
+        final List<String> taskIds = new ArrayList<String>();
+        final List<String> taskDisplays = new ArrayList<String>();
+
+        for (int i = 0; i < sortedTasks.size(); i++) {
+            JSONObject task = sortedTasks.get(i);
+            String taskId = task.optString("taskId", "");
+            long planTime = task.optLong("planTime", 0);
+            String status = task.optString("status", "");
+            JSONArray targetsArr = task.optJSONArray("targets");
+            int targetCount = targetsArr != null ? targetsArr.length() : 0;
+            int type = task.optInt("type", 0);
+            int repeatType = task.optInt("repeatType", 0);
+
             String typeStr = "";
             switch (type) {
                 case SEND_TYPE_TEXT: typeStr = "📝文本"; break;
@@ -1066,45 +1079,45 @@ private void showTaskListDialog() {
                 case SEND_TYPE_EMOJI: typeStr = "😊表情"; break;
                 case SEND_TYPE_VOICE: typeStr = "🎤语音"; break;
             }
-            
+
             String statusEmoji = "";
             if ("pending".equals(status)) statusEmoji = "⏳";
             else if ("running".equals(status)) statusEmoji = "🔄";
             else if ("completed".equals(status)) statusEmoji = "✅";
             else if ("expired".equals(status)) statusEmoji = "❌";
-            
+
             String repeatStr = "";
             if (repeatType == 1) repeatStr = " [每天]";
             else if (repeatType == 2) {
-                repeatStr = " [每周 " + formatRepeatDays(task.getJSONArray("repeatDays")) + "]";
+                repeatStr = " [每周 " + formatRepeatDays(task.optJSONArray("repeatDays")) + "]";
             }
-            
+
             String display = statusEmoji + " " + formatTimeWithSeconds(planTime) + repeatStr + "\n" +
-                           typeStr + " | " + targetCount + " 个目标 | " + status;
-            
+                    typeStr + " | " + targetCount + " 个目标 | " + status;
+
             taskIds.add(taskId);
             taskDisplays.add(display);
         }
-        
-        final ArrayAdapter<String> adapter = new ArrayAdapter<String>(getTopActivity(), 
-            android.R.layout.simple_list_item_1, taskDisplays);
+
+        final ArrayAdapter<String> adapter = new ArrayAdapter<String>(getTopActivity(),
+                android.R.layout.simple_list_item_1, taskDisplays);
         taskListView.setAdapter(adapter);
-        
+
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT, 
-            dpToPx(Math.min(taskDisplays.size() * 80, 400))
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dpToPx(Math.min(taskDisplays.size() * 80, 400))
         );
         params.setMargins(0, 16, 0, 16);
         taskListView.setLayoutParams(params);
-        
+
         taskListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 String taskId = taskIds.get(position);
-                JSONObject task = scheduledTasks.get(taskId);
+                JSONObject task = (JSONObject) scheduledTasks.get(taskId);
                 if (task != null) showTaskOperationMenu(taskId, task, adapter, taskIds, taskDisplays);
             }
         });
-        
+
         root.addView(taskListView);
     }
 
@@ -1112,22 +1125,22 @@ private void showTaskListDialog() {
     dialog.show();
 }
 
-private void showTaskOperationMenu(final String taskId, JSONObject task, final ArrayAdapter<String> adapter, final List<String> taskIds, final List<String> taskDisplays) {
-    String status = task.getString("status");
-    int repeatType = task.getIntValue("repeatType");
-    String[] options;
-    
+private void showTaskOperationMenu(final String taskId, final JSONObject task, final ArrayAdapter<String> adapter, final List<String> taskIds, final List<String> taskDisplays) {
+    String status = task.optString("status", "");
+    int repeatType = task.optInt("repeatType", 0);
+    final String[] options;
+
     if ("pending".equals(status)) {
-        if (repeatType > 0 && task.containsKey("lastExecutedTime")) {
-            int s = task.getIntValue("lastSuccessCount");
-            int f = task.getIntValue("lastFailCount");
+        if (repeatType > 0 && task.has("lastExecutedTime")) {
+            int s = task.optInt("lastSuccessCount", 0);
+            int f = task.optInt("lastFailCount", 0);
             options = new String[]{"🛑 终止循环并删除", "▶️ 立即执行一轮", "📊 查看上轮结果 (成功" + s + " 失败" + f + ")"};
         } else {
             options = new String[]{"🛑 取消/删除此任务", "▶️ 立即执行"};
         }
     } else if ("completed".equals(status)) {
-        int success = task.getIntValue("successCount");
-        int fail = task.getIntValue("failCount");
+        int success = task.optInt("successCount", 0);
+        int fail = task.optInt("failCount", 0);
         options = new String[]{"📊 查看结果 (成功" + success + " 失败" + fail + ")", "🗑️ 删除记录"};
     } else {
         options = new String[]{"🗑️ 删除记录"};
@@ -1150,16 +1163,18 @@ private void showTaskOperationMenu(final String taskId, JSONObject task, final A
                 }
                 toast("任务已删除/取消");
             } else if (sel.contains("立即执行")) {
-                JSONObject t = scheduledTasks.get(taskId);
+                JSONObject t = (JSONObject) scheduledTasks.get(taskId);
                 if (t != null) {
-                    t.put("planTime", System.currentTimeMillis());
+                    try {
+                        t.put("planTime", System.currentTimeMillis());
+                    } catch (Exception e) {}
                     saveAllTasks();
                     executeTaskSend(taskId);
                 }
             } else if (sel.contains("结果")) {
-                int s = task.getIntValue(task.containsKey("lastSuccessCount") ? "lastSuccessCount" : "successCount");
-                int f = task.getIntValue(task.containsKey("lastFailCount") ? "lastFailCount" : "failCount");
-                long ct = task.getLongValue(task.containsKey("lastExecutedTime") ? "lastExecutedTime" : "completedTime");
+                int s = task.optInt(task.has("lastSuccessCount") ? "lastSuccessCount" : "successCount", 0);
+                int f = task.optInt(task.has("lastFailCount") ? "lastFailCount" : "failCount", 0);
+                long ct = task.optLong(task.has("lastExecutedTime") ? "lastExecutedTime" : "completedTime", 0);
                 String msg = "发送结果:\n成功: " + s + "\n失败: " + f + "\n执行时间: " + formatTimeWithSeconds(ct);
                 new AlertDialog.Builder(getTopActivity()).setTitle("📊 报告").setMessage(msg).setPositiveButton("确定", null).show();
             }
@@ -1193,9 +1208,9 @@ private void showDateTimePickerWithSeconds(final DatePickerCallback callback) {
     dateDialog.show();
 }
 
-private void showSecondPicker(final Calendar calendar, int year, int month, int day, int hour, int minute, final DatePickerCallback callback) {
+private void showSecondPicker(final Calendar calendar, final int year, final int month, final int day, final int hour, final int minute, final DatePickerCallback callback) {
     final String[] seconds = new String[60];
-    for (int i = 0; i < 60; i++) seconds[i] = String.format("%02d 秒", i);
+    for (int i = 0; i < 60; i++) seconds[i] = String.format("%02d 秒", new Object[]{new Integer(i)});
     AlertDialog.Builder builder = new AlertDialog.Builder(getTopActivity());
     builder.setTitle("选择秒数");
     builder.setItems(seconds, new DialogInterface.OnClickListener() {
@@ -1217,11 +1232,12 @@ private String formatTimeWithSeconds(long ts) {
 // ==========================================
 // ========== 🏷️ 标签管理功能 ==========
 // ==========================================
+
 private void showLabelManagementDialog(final Runnable onUpdateCallback) {
     try {
         String labelsJson = getString(CONFIG_KEY, KEY_LABELS, "{}");
-        JSONObject rawJson = JSON.parseObject(labelsJson);
-        final Map<String, Object> labelsMap = (rawJson != null) ? rawJson : new JSONObject();
+        final JSONObject labelsMap = parseJsonObjectSafe(labelsJson);
+        final JSONObject safeLabelsMap = labelsMap != null ? labelsMap : new JSONObject();
 
         ScrollView scrollView = new ScrollView(getTopActivity());
         LinearLayout root = new LinearLayout(getTopActivity());
@@ -1236,30 +1252,30 @@ private void showLabelManagementDialog(final Runnable onUpdateCallback) {
         btnBg.setColor(Color.parseColor("#E3F2FD"));
         btnBg.setStroke(2, Color.parseColor("#90CAF9"));
         createLabelBtn.setTextColor(Color.parseColor("#1976D2"));
-        
+
         final ListView labelList = new ListView(getTopActivity());
         setupListViewTouchForScroll(labelList);
-        
-        final List<String> labelNames = new ArrayList<>(labelsMap.keySet());
+
+        final List<String> labelNames = jsonObjectKeysToList(safeLabelsMap);
         final ArrayAdapter<String> adapter = new ArrayAdapter<String>(getTopActivity(), android.R.layout.simple_list_item_1, labelNames);
         labelList.setAdapter(adapter);
-        
+
         int count = labelNames.size();
         LinearLayout.LayoutParams listParams = new LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT, dpToPx(Math.max(count * 50, 100))
-        ); 
+                LinearLayout.LayoutParams.MATCH_PARENT, dpToPx(Math.max(count * 50, 100))
+        );
         listParams.setMargins(0, 16, 0, 16);
         labelList.setLayoutParams(listParams);
-        
+
         if (labelNames.isEmpty()) root.addView(createPromptText("暂无标签，请先添加。"));
         else root.addView(labelList);
-        
+
         final Runnable refreshLabelListRunnable = new Runnable() {
             public void run() { showLabelManagementDialog(onUpdateCallback); }
         };
-        
+
         createLabelBtn.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) { showCreateLabelDialog(labelsMap, refreshLabelListRunnable); }
+            public void onClick(View v) { showCreateLabelDialog(safeLabelsMap, refreshLabelListRunnable); }
         });
         root.addView(createLabelBtn);
         root.addView(createPromptText("点击上方按钮，选择好友/群聊并命名以创建新标签。"));
@@ -1268,17 +1284,17 @@ private void showLabelManagementDialog(final Runnable onUpdateCallback) {
         LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) listTitle.getLayoutParams();
         lp.setMargins(0, 32, 0, 16);
         root.addView(listTitle);
-        
+
         labelList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
                 final String labelName = labelNames.get(position);
                 String currentLabelsJson = getString(CONFIG_KEY, KEY_LABELS, "{}");
-                JSONObject currentMap = JSON.parseObject(currentLabelsJson);
-                final JSONArray labelWxidsJson = currentMap != null ? (JSONArray) currentMap.get(labelName) : new JSONArray();
-                
-                final List<String> labelWxids = new ArrayList<>();
+                JSONObject currentMap = parseJsonObjectSafe(currentLabelsJson);
+                final JSONArray labelWxidsJson = currentMap != null ? currentMap.optJSONArray(labelName) : new JSONArray();
+
+                final List<String> labelWxids = new ArrayList<String>();
                 if (labelWxidsJson != null) {
-                    for(int i=0; i<labelWxidsJson.size(); i++) labelWxids.add(labelWxidsJson.getString(i));
+                    for (int i = 0; i < labelWxidsJson.length(); i++) labelWxids.add(labelWxidsJson.optString(i));
                 }
 
                 String[] options = {"👁️ 管理成员 (查看/删除)", "📥 导入到当前发送列表", "➕ 追加成员 (选择好友/群聊)", "🗑️ 删除此标签"};
@@ -1286,13 +1302,16 @@ private void showLabelManagementDialog(final Runnable onUpdateCallback) {
                 builder.setTitle("操作标签: " + labelName);
                 builder.setItems(options, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-                        switch(which) {
-                            case 0: showLabelMembers(labelName, labelWxids); break;
+                        switch (which) {
+                            case 0:
+                                showLabelMembers(labelName, labelWxids);
+                                break;
                             case 1:
                                 if (labelWxids.isEmpty()) { toast("此标签没有成员"); return; }
                                 int importedCount = 0;
-                                for(String tid : labelWxids) {
-                                    if(!massSendTargetWxids.contains(tid)) {
+                                for (int i = 0; i < labelWxids.size(); i++) {
+                                    String tid = labelWxids.get(i);
+                                    if (!massSendTargetWxids.contains(tid)) {
                                         massSendTargetWxids.add(tid);
                                         importedCount++;
                                     }
@@ -1301,18 +1320,22 @@ private void showLabelManagementDialog(final Runnable onUpdateCallback) {
                                 toast("✅ 已导入 " + importedCount + " 个新目标");
                                 break;
                             case 2:
-                                final Set<String> tempSet = new HashSet<>(labelWxids);
+                                final Set<String> tempSet = new HashSet<String>(labelWxids);
                                 showTargetCategoryDialog(tempSet, new Runnable() {
                                     public void run() {
-                                        labelsMap.put(labelName, new ArrayList<>(tempSet));
-                                        putString(CONFIG_KEY, KEY_LABELS, JSON.toJSONString(labelsMap));
-                                        toast("✅ 标签 [" + labelName + "] 更新成功");
+                                        try {
+                                            safeLabelsMap.put(labelName, setToJsonArray(tempSet));
+                                            putString(CONFIG_KEY, KEY_LABELS, safeLabelsMap.toString());
+                                            toast("✅ 标签 [" + labelName + "] 更新成功");
+                                        } catch (Exception e) {
+                                            toast("更新标签失败: " + e.getMessage());
+                                        }
                                     }
                                 });
                                 break;
                             case 3:
-                                labelsMap.remove(labelName);
-                                putString(CONFIG_KEY, KEY_LABELS, JSON.toJSONString(labelsMap));
+                                removeJsonKey(safeLabelsMap, labelName);
+                                putString(CONFIG_KEY, KEY_LABELS, safeLabelsMap.toString());
                                 toast("标签已删除");
                                 labelNames.remove(position);
                                 adapter.notifyDataSetChanged();
@@ -1333,62 +1356,70 @@ private void showLabelManagementDialog(final Runnable onUpdateCallback) {
     }
 }
 
-private void showCreateLabelDialog(final Map<String, Object> labelsMap, final Runnable onCreated) {
-    final Set<String> newLabelMembers = new HashSet<>();
+private void showCreateLabelDialog(final JSONObject labelsMap, final Runnable onCreated) {
+    final Set<String> newLabelMembers = new HashSet<String>();
     final ScrollView scrollView = new ScrollView(getTopActivity());
     final LinearLayout root = new LinearLayout(getTopActivity());
     root.setOrientation(LinearLayout.VERTICAL);
     root.setPadding(32, 32, 32, 32);
     scrollView.addView(root);
-    
+
     root.addView(createSectionTitle("1. 添加标签成员"));
     final TextView countTv = createPromptText("当前已选: 0 人");
     countTv.setTextSize(14);
     countTv.setTextColor(Color.parseColor("#333333"));
     root.addView(countTv);
-    
+
     LinearLayout btnRow = new LinearLayout(getTopActivity());
     btnRow.setOrientation(LinearLayout.HORIZONTAL);
     Button addFriendBtn = new Button(getTopActivity());
     addFriendBtn.setText("👤 添加好友");
     styleUtilityButton(addFriendBtn);
     LinearLayout.LayoutParams p1 = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
-    p1.setMargins(0,0,8,0);
+    p1.setMargins(0, 0, 8, 0);
     addFriendBtn.setLayoutParams(p1);
-    
+
     Button addGroupBtn = new Button(getTopActivity());
     addGroupBtn.setText("🏠 添加群聊");
     styleUtilityButton(addGroupBtn);
     LinearLayout.LayoutParams p2 = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
-    p2.setMargins(8,0,0,0);
+    p2.setMargins(8, 0, 0, 0);
     addGroupBtn.setLayoutParams(p2);
-    
+
     btnRow.addView(addFriendBtn);
     btnRow.addView(addGroupBtn);
     root.addView(btnRow);
-    
-    final Runnable updateCount = new Runnable() { public void run() { countTv.setText("当前已选: " + newLabelMembers.size() + " 人"); } };
+
+    final Runnable updateCount = new Runnable() {
+        public void run() {
+            countTv.setText("当前已选: " + newLabelMembers.size() + " 人");
+        }
+    };
     addFriendBtn.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { showFriendSelectionDialog(newLabelMembers, updateCount); } });
     addGroupBtn.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { showGroupSelectionDialog(newLabelMembers, updateCount); } });
-    
+
     TextView title2 = createSectionTitle("2. 命名并保存");
     LinearLayout.LayoutParams lp2 = (LinearLayout.LayoutParams) title2.getLayoutParams();
     lp2.setMargins(0, 32, 0, 16);
     root.addView(title2);
-    
+
     final EditText nameEdit = createStyledEditText("输入标签名称 (如: 家人, 客户组)", "");
     root.addView(nameEdit);
-    
+
     AlertDialog dialog = buildCommonAlertDialog(getTopActivity(), "➕ 新建标签", scrollView, "💾 保存标签", new DialogInterface.OnClickListener() {
         public void onClick(DialogInterface dialog, int which) {
             String name = nameEdit.getText().toString().trim();
             if (TextUtils.isEmpty(name)) { toast("请输入标签名称"); return; }
             if (newLabelMembers.isEmpty()) { toast("请至少选择一个成员"); return; }
-            if (labelsMap.containsKey(name)) { toast("标签名 [" + name + "] 已存在"); return; }
-            labelsMap.put(name, new ArrayList<>(newLabelMembers));
-            putString(CONFIG_KEY, KEY_LABELS, JSON.toJSONString(labelsMap));
-            toast("✅ 标签 [" + name + "] 创建成功！");
-            if (onCreated != null) onCreated.run();
+            if (labelsMap.has(name)) { toast("标签名 [" + name + "] 已存在"); return; }
+            try {
+                labelsMap.put(name, setToJsonArray(newLabelMembers));
+                putString(CONFIG_KEY, KEY_LABELS, labelsMap.toString());
+                toast("✅ 标签 [" + name + "] 创建成功！");
+                if (onCreated != null) onCreated.run();
+            } catch (Exception e) {
+                toast("保存标签失败: " + e.getMessage());
+            }
         }
     }, "取消", null, null, null);
     dialog.show();
@@ -1405,25 +1436,28 @@ private void showLabelMembers(final String labelName, final List<String> wxids) 
                     LinearLayout layout = new LinearLayout(getTopActivity());
                     layout.setOrientation(LinearLayout.VERTICAL);
                     layout.setPadding(32, 32, 32, 32);
-                    
-                    if (wxids.isEmpty()) layout.addView(createPromptText("此标签暂无成员"));
-                    else {
+
+                    if (wxids.isEmpty()) {
+                        layout.addView(createPromptText("此标签暂无成员"));
+                    } else {
                         TextView tip = createPromptText("👇 点击成员可将其移除");
                         tip.setTextColor(Color.parseColor("#FF9800"));
                         layout.addView(tip);
 
                         final ListView listView = new ListView(getTopActivity());
                         setupListViewTouchForScroll(listView);
-                        
-                        final List<String> displayList = new ArrayList<>();
-                        final List<String> idList = new ArrayList<>(wxids);
-                        for (String wxid : idList) displayList.add(formatMemberDisplay(wxid));
-                        
+
+                        final List<String> displayList = new ArrayList<String>();
+                        final List<String> idList = new ArrayList<String>(wxids);
+                        for (int i = 0; i < idList.size(); i++) {
+                            displayList.add(formatMemberDisplay(idList.get(i)));
+                        }
+
                         final ArrayAdapter<String> adapter = new ArrayAdapter<String>(
-                            getTopActivity(), android.R.layout.simple_list_item_1, displayList
+                                getTopActivity(), android.R.layout.simple_list_item_1, displayList
                         );
                         listView.setAdapter(adapter);
-                        
+
                         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                             public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
                                 final String wxidToRemove = idList.get(position);
@@ -1433,16 +1467,18 @@ private void showLabelMembers(final String labelName, final List<String> wxids) 
                                 confirm.setMessage("确定要从标签 [" + labelName + "] 中移除:\n" + name + " 吗?");
                                 confirm.setPositiveButton("🗑️ 移除", new DialogInterface.OnClickListener() {
                                     public void onClick(DialogInterface d, int w) {
-                                        idList.remove(position); displayList.remove(position); adapter.notifyDataSetChanged();
+                                        idList.remove(position);
+                                        displayList.remove(position);
+                                        adapter.notifyDataSetChanged();
                                         try {
                                             String jsonStr = getString(CONFIG_KEY, KEY_LABELS, "{}");
-                                            JSONObject map = JSON.parseObject(jsonStr);
+                                            JSONObject map = parseJsonObjectSafe(jsonStr);
                                             if (map != null) {
-                                                map.put(labelName, idList);
-                                                putString(CONFIG_KEY, KEY_LABELS, JSON.toJSONString(map));
+                                                map.put(labelName, listToJsonArray(idList));
+                                                putString(CONFIG_KEY, KEY_LABELS, map.toString());
                                                 toast("已移除");
                                             }
-                                        } catch(Exception e) {}
+                                        } catch (Exception e) {}
                                     }
                                 });
                                 confirm.setNegativeButton("取消", null);
@@ -1451,14 +1487,14 @@ private void showLabelMembers(final String labelName, final List<String> wxids) 
                                 confirmDialog.show();
                             }
                         });
-                        
+
                         LinearLayout.LayoutParams listParams = new LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.MATCH_PARENT, dpToPx(400)
+                                LinearLayout.LayoutParams.MATCH_PARENT, dpToPx(400)
                         );
                         listView.setLayoutParams(listParams);
                         layout.addView(listView);
                     }
-                    
+
                     AlertDialog dialog = buildCommonAlertDialog(getTopActivity(), "👁️ [" + labelName + "] 成员列表", layout, "关闭", null, null, null, null, null);
                     dialog.show();
                 }
@@ -1469,14 +1505,17 @@ private void showLabelMembers(final String labelName, final List<String> wxids) 
 
 private String formatMemberDisplay(String wxid) {
     if (wxid.endsWith("@chatroom")) return "🏠 " + getGroupName(wxid);
-    String fName = "未知"; String fRemark = ""; boolean found = false;
+    String fName = "未知";
+    String fRemark = "";
+    boolean found = false;
     if (sCachedFriendList != null) {
-        for (Object obj : sCachedFriendList) {
-            FriendInfo f = (FriendInfo) obj;
+        for (int i = 0; i < sCachedFriendList.size(); i++) {
+            FriendInfo f = (FriendInfo) sCachedFriendList.get(i);
             if (f.getWxid().equals(wxid)) {
                 fName = TextUtils.isEmpty(f.getNickname()) ? "未知昵称" : f.getNickname();
                 fRemark = f.getRemark();
-                found = true; break;
+                found = true;
+                break;
             }
         }
     }
@@ -1500,7 +1539,7 @@ private void showTargetCategoryDialog(final Set<String> targetSet, final Runnabl
     });
     AlertDialog dialog = builder.create();
     dialog.setOnShowListener(new DialogInterface.OnShowListener() {
-        public void onShow(DialogInterface d) { setupUnifiedDialog((AlertDialog)d); }
+        public void onShow(DialogInterface d) { setupUnifiedDialog((AlertDialog) d); }
     });
     dialog.show();
 }
@@ -1511,17 +1550,21 @@ private void showFriendSelectionDialog(final Set<String> targetSet, final Runnab
             if (sCachedFriendList == null) sCachedFriendList = getFriendList();
             new Handler(Looper.getMainLooper()).post(new Runnable() {
                 public void run() {
-                    List<String> names = new ArrayList<>(); List<String> ids = new ArrayList<>();
+                    List<String> names = new ArrayList<String>();
+                    List<String> ids = new ArrayList<String>();
                     if (sCachedFriendList != null) {
-                        for (int i=0; i<sCachedFriendList.size(); i++) {
+                        for (int i = 0; i < sCachedFriendList.size(); i++) {
                             FriendInfo f = (FriendInfo) sCachedFriendList.get(i);
                             String nickname = TextUtils.isEmpty(f.getNickname()) ? "未知" : f.getNickname();
                             String displayName = !TextUtils.isEmpty(f.getRemark()) ? nickname + " (" + f.getRemark() + ")" : nickname;
-                            names.add("👤 " + displayName); ids.add(f.getWxid());
+                            names.add("👤 " + displayName);
+                            ids.add(f.getWxid());
                         }
                     }
                     showMultiSelectDialog("选择好友", names, ids, targetSet, "搜索昵称/备注...", new Runnable() {
-                        public void run() { if (onFinish != null) onFinish.run(); }
+                        public void run() {
+                            if (onFinish != null) onFinish.run();
+                        }
                     }, null);
                 }
             });
@@ -1535,16 +1578,19 @@ private void showGroupSelectionDialog(final Set<String> targetSet, final Runnabl
             if (sCachedGroupList == null) sCachedGroupList = getGroupList();
             new Handler(Looper.getMainLooper()).post(new Runnable() {
                 public void run() {
-                    List<String> names = new ArrayList<>(); List<String> ids = new ArrayList<>();
+                    List<String> names = new ArrayList<String>();
+                    List<String> ids = new ArrayList<String>();
                     if (sCachedGroupList != null) {
-                        for (int i=0; i<sCachedGroupList.size(); i++) {
+                        for (int i = 0; i < sCachedGroupList.size(); i++) {
                             GroupInfo g = (GroupInfo) sCachedGroupList.get(i);
                             names.add("🏠 " + (!TextUtils.isEmpty(g.getName()) ? g.getName() : "未命名群聊"));
                             ids.add(g.getRoomId());
                         }
                     }
                     showMultiSelectDialog("选择群聊", names, ids, targetSet, "搜索群名...", new Runnable() {
-                        public void run() { if (onFinish != null) onFinish.run(); }
+                        public void run() {
+                            if (onFinish != null) onFinish.run();
+                        }
                     }, null);
                 }
             });
@@ -1552,7 +1598,7 @@ private void showGroupSelectionDialog(final Set<String> targetSet, final Runnabl
     });
 }
 
-private void showMultiSelectDialog(String title, List allItems, List idList, Set selectedIds, String searchHint, final Runnable onConfirm, final Runnable updateList) {
+private void showMultiSelectDialog(final String title, final List allItems, final List idList, final Set selectedIds, String searchHint, final Runnable onConfirm, final Runnable updateList) {
     try {
         final Set tempSelected = new HashSet(selectedIds);
         ScrollView scrollView = new ScrollView(getTopActivity());
@@ -1560,95 +1606,114 @@ private void showMultiSelectDialog(String title, List allItems, List idList, Set
         mainLayout.setOrientation(LinearLayout.VERTICAL);
         mainLayout.setPadding(24, 24, 24, 24);
         scrollView.addView(mainLayout);
-        
+
         final EditText searchEditText = createStyledEditText(searchHint, "");
         searchEditText.setSingleLine(true);
         mainLayout.addView(searchEditText);
-        
+
         final ListView listView = new ListView(getTopActivity());
         setupListViewTouchForScroll(listView);
         listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
         LinearLayout.LayoutParams listParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dpToPx(300));
         listView.setLayoutParams(listParams);
         mainLayout.addView(listView);
-        
+
         final List currentFilteredIds = new ArrayList();
         final List currentFilteredNames = new ArrayList();
-        
+
         final Runnable updateListRunnable = new Runnable() {
             public void run() {
                 String searchText = searchEditText.getText().toString().toLowerCase();
-                currentFilteredIds.clear(); currentFilteredNames.clear();
+                currentFilteredIds.clear();
+                currentFilteredNames.clear();
                 for (int i = 0; i < allItems.size(); i++) {
                     String id = (String) idList.get(i);
                     String name = (String) allItems.get(i);
-                    if (searchText.isEmpty() || name.toLowerCase().contains(searchText) || id.toLowerCase().contains(searchText)) {
-                        currentFilteredIds.add(id); currentFilteredNames.add(name);
+                    if (searchText.length() == 0 || name.toLowerCase().contains(searchText) || id.toLowerCase().contains(searchText)) {
+                        currentFilteredIds.add(id);
+                        currentFilteredNames.add(name);
                     }
                 }
                 ArrayAdapter adapter = new ArrayAdapter(getTopActivity(), android.R.layout.simple_list_item_multiple_choice, currentFilteredNames);
-                listView.setAdapter(adapter); listView.clearChoices();
+                listView.setAdapter(adapter);
+                listView.clearChoices();
                 for (int j = 0; j < currentFilteredIds.size(); j++) {
                     listView.setItemChecked(j, tempSelected.contains(currentFilteredIds.get(j)));
                 }
                 if (updateList != null) updateList.run();
             }
         };
-        
+
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
                 String selected = (String) currentFilteredIds.get(pos);
-                if (listView.isItemChecked(pos)) tempSelected.add(selected); else tempSelected.remove(selected);
+                if (listView.isItemChecked(pos)) tempSelected.add(selected);
+                else tempSelected.remove(selected);
                 if (updateList != null) updateList.run();
             }
         });
-        
+
         searchEditText.addTextChangedListener(new TextWatcher() {
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             public void onTextChanged(CharSequence s, int start, int before, int count) {}
             public void afterTextChanged(Editable s) { updateListRunnable.run(); }
         });
-        
+
         final DialogInterface.OnClickListener fullSelectListener = new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
                 boolean allSelected = true;
-                for(Object id : currentFilteredIds) { if(!tempSelected.contains(id)) { allSelected = false; break; } }
-                if (allSelected) { for(Object id : currentFilteredIds) tempSelected.remove(id); } 
-                else { for(Object id : currentFilteredIds) tempSelected.add(id); }
+                for (int i = 0; i < currentFilteredIds.size(); i++) {
+                    Object idObj = currentFilteredIds.get(i);
+                    if (!tempSelected.contains(idObj)) {
+                        allSelected = false;
+                        break;
+                    }
+                }
+                if (allSelected) {
+                    for (int i = 0; i < currentFilteredIds.size(); i++) tempSelected.remove(currentFilteredIds.get(i));
+                } else {
+                    for (int i = 0; i < currentFilteredIds.size(); i++) tempSelected.add(currentFilteredIds.get(i));
+                }
                 updateListRunnable.run();
             }
         };
-        
+
         final AlertDialog dialog = buildCommonAlertDialog(getTopActivity(), title, scrollView, "✅ 确定", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
-                selectedIds.clear(); selectedIds.addAll(tempSelected);
+                selectedIds.clear();
+                selectedIds.addAll(tempSelected);
                 if (onConfirm != null) onConfirm.run();
                 dialog.dismiss();
             }
         }, "❌ 取消", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) { dialog.dismiss(); }
         }, "全选/反选", fullSelectListener);
-        
+
         dialog.setOnShowListener(new DialogInterface.OnShowListener() {
-             public void onShow(DialogInterface d) {
-                 setupUnifiedDialog((AlertDialog)d);
-                 Button neutral = ((AlertDialog)d).getButton(AlertDialog.BUTTON_NEUTRAL);
-                 neutral.setOnClickListener(new View.OnClickListener() {
-                     public void onClick(View v) { fullSelectListener.onClick(dialog, AlertDialog.BUTTON_NEUTRAL); }
-                 });
-             }
+            public void onShow(DialogInterface d) {
+                setupUnifiedDialog((AlertDialog) d);
+                Button neutral = ((AlertDialog) d).getButton(AlertDialog.BUTTON_NEUTRAL);
+                if (neutral != null) {
+                    neutral.setOnClickListener(new View.OnClickListener() {
+                        public void onClick(View v) {
+                            fullSelectListener.onClick(dialog, AlertDialog.BUTTON_NEUTRAL);
+                        }
+                    });
+                }
+            }
         });
-        dialog.show(); updateListRunnable.run();
-    } catch (Exception e) { e.printStackTrace(); }
+        dialog.show();
+        updateListRunnable.run();
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
 }
 
 // ==========================================
 // ========== 📁 媒体选择功能（单例模式） ==========
 // ==========================================
 
-/* ========== 打开文件夹浏览器（单例模式） ========== */
 void browseFolderForSelectionAuto(final File startFolder, final String wantedExtFilter, final String currentSelection, final MediaSelectionCallback callback, final boolean allowFolderSelect) {
-    // 保存回调参数
     gWantedExtFilterAuto = wantedExtFilter;
     gCurrentSelectionAuto = currentSelection;
     gMediaCallbackAuto = callback;
@@ -1659,16 +1724,13 @@ void browseFolderForSelectionAuto(final File startFolder, final String wantedExt
         putString(DEFAULT_LAST_FOLDER_SP_AUTO, startFolder.getAbsolutePath());
     }
 
-    // 如果已存在对话框，先关闭
     if (gFolderDialogAuto != null && gFolderDialogAuto.isShowing()) {
         gFolderDialogAuto.dismiss();
         gFolderDialogAuto = null;
     }
 
-    // 准备数据
     refreshFolderListAuto(startFolder);
 
-    // 创建对话框
     AlertDialog.Builder builder = new AlertDialog.Builder(getTopActivity());
     builder.setTitle("浏览：" + startFolder.getAbsolutePath());
 
@@ -1735,7 +1797,6 @@ void browseFolderForSelectionAuto(final File startFolder, final String wantedExt
     gFolderDialogAuto.show();
 }
 
-/* ========== 刷新文件夹列表数据（单例模式） ========== */
 void refreshFolderListAuto(File folder) {
     gFolderNamesAuto.clear();
     gFolderFilesAuto.clear();
@@ -1746,7 +1807,6 @@ void refreshFolderListAuto(File folder) {
         return;
     }
 
-    // 只要有父目录就允许上一级
     if (folder.getParentFile() != null) {
         gFolderNamesAuto.add("⬆ 上一级");
         gFolderFilesAuto.add(folder.getParentFile());
@@ -1765,7 +1825,6 @@ void refreshFolderListAuto(File folder) {
         return;
     }
 
-    // 目录优先排序
     Arrays.sort(subs, new java.util.Comparator<File>() {
         public int compare(File a, File b) {
             if (a.isDirectory() && !b.isDirectory()) return -1;
@@ -1790,8 +1849,7 @@ void refreshFolderListAuto(File folder) {
     }
 }
 
-private void showManualPathDialogAuto(final String wantedExtFilter, final String currentSelection,
-                                      final MediaSelectionCallback callback, final boolean allowFolderSelect) {
+private void showManualPathDialogAuto(final String wantedExtFilter, final String currentSelection, final MediaSelectionCallback callback, final boolean allowFolderSelect) {
     android.app.Activity act = getTopActivity();
     if (act == null) return;
 
@@ -1800,28 +1858,28 @@ private void showManualPathDialogAuto(final String wantedExtFilter, final String
     layout.setPadding(24, 24, 24, 24);
 
     final EditText pathEdit = createStyledEditText(
-        "输入目录路径（如 /storage/emulated/0/Download）",
-        getString(DEFAULT_LAST_FOLDER_SP_AUTO, ROOT_FOLDER)
+            "输入目录路径（如 /storage/emulated/0/Download）",
+            getString(DEFAULT_LAST_FOLDER_SP_AUTO, ROOT_FOLDER)
     );
     layout.addView(pathEdit);
 
     AlertDialog dialog = buildCommonAlertDialog(
-        act,
-        "手动输入路径",
-        layout,
-        "跳转",
-        new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface d, int w) {
-                String p = pathEdit.getText().toString().trim();
-                File f = new File(p);
-                if (f.exists() && f.isDirectory()) {
-                    browseFolderForSelectionAuto(f, wantedExtFilter, currentSelection, callback, allowFolderSelect);
-                } else {
-                    toast("路径无效或不可访问");
+            act,
+            "手动输入路径",
+            layout,
+            "跳转",
+            new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface d, int w) {
+                    String p = pathEdit.getText().toString().trim();
+                    File f = new File(p);
+                    if (f.exists() && f.isDirectory()) {
+                        browseFolderForSelectionAuto(f, wantedExtFilter, currentSelection, callback, allowFolderSelect);
+                    } else {
+                        toast("路径无效或不可访问");
+                    }
                 }
-            }
-        },
-        "取消", null, null, null
+            },
+            "取消", null, null, null
     );
     dialog.show();
 }
@@ -1833,17 +1891,28 @@ void scanFilesMulti(final File folder, final String extFilter, final String curr
     if (list != null) {
         Arrays.sort(list);
         String[] exts = TextUtils.isEmpty(extFilter) ? new String[0] : extFilter.split(",");
-        for (File f : list) {
+        for (int i = 0; i < list.length; i++) {
+            File f = list[i];
             if (f.isFile()) {
                 boolean matches = exts.length == 0;
-                for (String e : exts) {
-                    if (f.getName().toLowerCase().endsWith(e.trim().toLowerCase())) { matches = true; break; }
+                for (int k = 0; k < exts.length; k++) {
+                    String e = exts[k];
+                    if (f.getName().toLowerCase().endsWith(e.trim().toLowerCase())) {
+                        matches = true;
+                        break;
+                    }
                 }
-                if (matches) { names.add(f.getName()); files.add(f); }
+                if (matches) {
+                    names.add(f.getName());
+                    files.add(f);
+                }
             }
         }
     }
-    if (names.isEmpty()) { toast("该目录无匹配文件"); return; }
+    if (names.isEmpty()) {
+        toast("该目录无匹配文件");
+        return;
+    }
 
     AlertDialog.Builder builder = new AlertDialog.Builder(getTopActivity());
     builder.setTitle("选择文件（可多选）");
@@ -1884,16 +1953,19 @@ private Object[] getMediaSelectTagForMassSend(int type) {
 // ==========================================
 // ========== 👤 联系人和群聊辅助功能 ==========
 // ==========================================
+
 private String getContactName(String wxid) {
     try {
         if (wxid.endsWith("@chatroom")) {
             if (sCachedGroupList == null) sCachedGroupList = getGroupList();
-            for (Object obj : sCachedGroupList) {
-                GroupInfo g = (GroupInfo) obj;
+            for (int i = 0; i < sCachedGroupList.size(); i++) {
+                GroupInfo g = (GroupInfo) sCachedGroupList.get(i);
                 if (g.getRoomId().equals(wxid)) return g.getName();
             }
-        } else return getFriendDisplayName(wxid);
-    } catch(Exception e) {}
+        } else {
+            return getFriendDisplayName(wxid);
+        }
+    } catch (Exception e) {}
     return wxid;
 }
 
@@ -1935,6 +2007,7 @@ private void updateTargetCountText(TextView tv) {
 // ==========================================
 // ========== 🎨 UI 样式方法 ==========
 // ==========================================
+
 private LinearLayout createCardLayout() {
     LinearLayout layout = new LinearLayout(getTopActivity());
     layout.setOrientation(LinearLayout.VERTICAL);
@@ -2011,7 +2084,10 @@ private void styleMediaSelectionButton(Button button) {
 
 private TextView createPromptText(String text) {
     TextView tv = new TextView(getTopActivity());
-    tv.setText(text); tv.setTextSize(12); tv.setTextColor(Color.parseColor("#666666")); tv.setPadding(0, 0, 0, 16);
+    tv.setText(text);
+    tv.setTextSize(12);
+    tv.setTextColor(Color.parseColor("#666666"));
+    tv.setPadding(0, 0, 0, 16);
     return tv;
 }
 
@@ -2038,7 +2114,8 @@ private RadioButton createRadioButton(Context context, String text) {
 
 private AlertDialog buildCommonAlertDialog(Context context, String title, View view, String posBtn, DialogInterface.OnClickListener posLsn, String negBtn, DialogInterface.OnClickListener negLsn, String neuBtn, DialogInterface.OnClickListener neuLsn) {
     AlertDialog.Builder builder = new AlertDialog.Builder(context);
-    builder.setTitle(title); builder.setView(view);
+    builder.setTitle(title);
+    builder.setView(view);
     if (posBtn != null) builder.setPositiveButton(posBtn, posLsn);
     if (negBtn != null) builder.setNegativeButton(negBtn, negLsn);
     if (neuBtn != null) builder.setNeutralButton(neuBtn, neuLsn);
@@ -2053,7 +2130,7 @@ private void setupUnifiedDialog(AlertDialog dialog) {
     GradientDrawable dialogBg = new GradientDrawable();
     dialogBg.setCornerRadius(48);
     dialogBg.setColor(Color.parseColor("#FAFBF9"));
-    dialog.getWindow().setBackgroundDrawable(dialogBg);
+    if (dialog.getWindow() != null) dialog.getWindow().setBackgroundDrawable(dialogBg);
     styleDialogButtons(dialog);
 }
 
@@ -2062,15 +2139,19 @@ private void styleDialogButtons(AlertDialog dialog) {
     if (positiveButton != null) {
         positiveButton.setTextColor(Color.WHITE);
         GradientDrawable shape = new GradientDrawable();
-        shape.setCornerRadius(20); shape.setColor(Color.parseColor("#70A1B8"));
-        positiveButton.setBackground(shape); positiveButton.setAllCaps(false);
+        shape.setCornerRadius(20);
+        shape.setColor(Color.parseColor("#70A1B8"));
+        positiveButton.setBackground(shape);
+        positiveButton.setAllCaps(false);
     }
     Button negativeButton = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
     if (negativeButton != null) {
         negativeButton.setTextColor(Color.parseColor("#333333"));
         GradientDrawable shape = new GradientDrawable();
-        shape.setCornerRadius(20); shape.setColor(Color.parseColor("#F1F3F5"));
-        negativeButton.setBackground(shape); negativeButton.setAllCaps(false);
+        shape.setCornerRadius(20);
+        shape.setColor(Color.parseColor("#F1F3F5"));
+        negativeButton.setBackground(shape);
+        negativeButton.setAllCaps(false);
     }
 }
 
@@ -2082,7 +2163,8 @@ private void showLoadingDialog(String title, String message, final Runnable data
     ProgressBar progressBar = new ProgressBar(getTopActivity());
     initialLayout.addView(progressBar);
     TextView loadingText = new TextView(getTopActivity());
-    loadingText.setText(message); loadingText.setPadding(20, 0, 0, 0);
+    loadingText.setText(message);
+    loadingText.setPadding(20, 0, 0, 0);
     initialLayout.addView(loadingText);
     final AlertDialog loadingDialog = buildCommonAlertDialog(getTopActivity(), title, initialLayout, null, null, "❌ 取消", new DialogInterface.OnClickListener() {
         public void onClick(DialogInterface d, int w) { d.dismiss(); }
@@ -2091,23 +2173,34 @@ private void showLoadingDialog(String title, String message, final Runnable data
     loadingDialog.show();
     new Thread(new Runnable() {
         public void run() {
-            try { dataLoadTask.run(); } finally {
+            try {
+                dataLoadTask.run();
+            } finally {
                 new Handler(Looper.getMainLooper()).post(new Runnable() {
-                    public void run() { loadingDialog.dismiss(); }
+                    public void run() {
+                        try { loadingDialog.dismiss(); } catch (Exception e) {}
+                    }
                 });
             }
         }
     }).start();
 }
 
-private int dpToPx(int dp) { return (int) (dp * getTopActivity().getResources().getDisplayMetrics().density); }
+private int dpToPx(int dp) {
+    return (int) (dp * getTopActivity().getResources().getDisplayMetrics().density);
+}
 
 private void setupListViewTouchForScroll(ListView listView) {
     listView.setOnTouchListener(new View.OnTouchListener() {
         public boolean onTouch(View v, MotionEvent event) {
             switch (event.getAction()) {
-                case MotionEvent.ACTION_DOWN: v.getParent().requestDisallowInterceptTouchEvent(true); break;
-                case MotionEvent.ACTION_UP: case MotionEvent.ACTION_CANCEL: v.getParent().requestDisallowInterceptTouchEvent(false); break;
+                case MotionEvent.ACTION_DOWN:
+                    v.getParent().requestDisallowInterceptTouchEvent(true);
+                    break;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    v.getParent().requestDisallowInterceptTouchEvent(false);
+                    break;
             }
             return false;
         }
@@ -2117,24 +2210,104 @@ private void setupListViewTouchForScroll(ListView listView) {
 // ==========================================
 // ========== 💾 配置读写方法 ==========
 // ==========================================
+
 private void putString(String setName, String itemName, String value) {
     String existingData = getString(setName, "{}");
     try {
-        JSONObject json = JSON.parseObject(existingData);
+        JSONObject json = parseJsonObjectSafe(existingData);
+        if (json == null) json = new JSONObject();
         json.put(itemName, value);
         putString(setName, json.toString());
     } catch (Exception e) {
-        JSONObject json = new JSONObject();
-        json.put(itemName, value);
-        putString(setName, json.toString());
+        try {
+            JSONObject json = new JSONObject();
+            json.put(itemName, value);
+            putString(setName, json.toString());
+        } catch (Exception ex) {}
     }
 }
 
 private String getString(String setName, String itemName, String defaultValue) {
     String data = getString(setName, "{}");
     try {
-        JSONObject json = JSON.parseObject(data);
-        if (json != null && json.containsKey(itemName)) return json.getString(itemName);
+        JSONObject json = parseJsonObjectSafe(data);
+        if (json != null && json.has(itemName)) return json.optString(itemName, defaultValue);
     } catch (Exception e) {}
     return defaultValue;
+}
+
+// ==========================================
+// ========== 🧩 JSON辅助方法 ==========
+// ==========================================
+
+private JSONObject parseJsonObjectSafe(String text) {
+    try {
+        if (TextUtils.isEmpty(text)) return new JSONObject();
+        return new JSONObject(text);
+    } catch (Exception e) {
+        return new JSONObject();
+    }
+}
+
+private JSONArray listToJsonArray(List list) {
+    JSONArray arr = new JSONArray();
+    if (list == null) return arr;
+    for (int i = 0; i < list.size(); i++) {
+        try { arr.put(list.get(i)); } catch (Exception e) {}
+    }
+    return arr;
+}
+
+private JSONArray setToJsonArray(Set set) {
+    JSONArray arr = new JSONArray();
+    if (set == null) return arr;
+    Iterator it = set.iterator();
+    while (it.hasNext()) {
+        try { arr.put(it.next()); } catch (Exception e) {}
+    }
+    return arr;
+}
+
+private List<String> jsonObjectKeysToList(JSONObject obj) {
+    List<String> list = new ArrayList<String>();
+    if (obj == null) return list;
+    Iterator it = obj.keys();
+    while (it.hasNext()) {
+        list.add(String.valueOf(it.next()));
+    }
+    return list;
+}
+
+private void removeJsonKey(JSONObject obj, String key) {
+    if (obj == null || key == null) return;
+    try {
+        if (Build.VERSION.SDK_INT >= 19) {
+            obj.remove(key);
+            return;
+        }
+    } catch (Exception e) {}
+
+    try {
+        JSONObject newObj = new JSONObject();
+        Iterator it = obj.keys();
+        while (it.hasNext()) {
+            String k = String.valueOf(it.next());
+            if (!key.equals(k)) {
+                newObj.put(k, obj.opt(k));
+            }
+        }
+
+        Iterator it2 = obj.keys();
+        ArrayList<String> oldKeys = new ArrayList<String>();
+        while (it2.hasNext()) oldKeys.add(String.valueOf(it2.next()));
+        for (int i = 0; i < oldKeys.size(); i++) {
+            try { obj.remove(oldKeys.get(i)); } catch (Exception e) {}
+        }
+
+        Iterator it3 = newObj.keys();
+        while (it3.hasNext()) {
+            String k = String.valueOf(it3.next());
+            obj.put(k, newObj.opt(k));
+        }
+    } catch (Exception e) {}
 }
