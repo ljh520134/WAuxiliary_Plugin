@@ -6,12 +6,16 @@ hero:
   text: "WAuxiliary 插件"
 
 features:
+  - title: 分组管理@。。
+    details: 版本 1.1.1 | 更新于 20260411
+    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/。。/分组管理
+
   - title: 群发助手@。。
-    details: 版本 1.2.0 | 更新于 20260410
+    details: 版本 1.2.1 | 更新于 20260411
     link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/。。/群发助手
 
   - title: 自动回复配置版@。。
-    details: 版本 2.2.0 | 更新于 20260410
+    details: 版本 2.2.1 | 更新于 20260411
     link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/。。/自动回复配置版
 
   - title: 自动抢红包(模拟手动抢版)@。。
@@ -45,10 +49,6 @@ features:
   - title: Vocu ai文转音@。。
     details: 版本 1.0.0 | 更新于 20260318
     link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/。。/Vocu ai文转音
-
-  - title: 分组管理@。。
-    details: 版本 1.1.0 | 更新于 20260318
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/。。/分组管理
 
   - title: 自动收款@。。
     details: 版本 1.2.0 | 更新于 20260318
