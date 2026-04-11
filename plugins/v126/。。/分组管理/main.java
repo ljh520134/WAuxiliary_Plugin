@@ -32,14 +32,9 @@ import android.os.Environment;
 
 import me.hd.wauxv.data.bean.info.FriendInfo;
 import me.hd.wauxv.data.bean.info.GroupInfo;
-
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
-import com.alibaba.fastjson2.JSONArray;
+import org.json.JSONArray;
+import org.json.JSONObject;
 // 【新增导入】用于 JSON 格式化输出
-import com.alibaba.fastjson2.JSONWriter; 
-
-
 // 全局变量缓存
 private List sCachedFriendList = null;
 private List sCachedGroupList = null;
@@ -109,7 +104,7 @@ private JSONArray readGroupConfig() {
         fis.read(buffer);
         fis.close();
         String jsonStr = new String(buffer, "UTF-8");
-        JSONArray array = JSON.parseArray(jsonStr);
+        JSONArray array = new JSONArray(jsonStr);
         if (array == null) return new JSONArray();
         return array;
     } catch (Exception e) {
@@ -127,7 +122,7 @@ private void saveGroupConfig(JSONArray array) {
         }
         FileOutputStream fos = new FileOutputStream(file);
         // 【修改核心】：增加 JSONWriter.Feature.PrettyFormat 实现格式化输出（缩进与换行）
-        String jsonOutput = JSON.toJSONString(array, JSONWriter.Feature.PrettyFormat);
+        String jsonOutput = array.toString(2);
         fos.write(jsonOutput.getBytes("UTF-8"));
         fos.flush();
         fos.close();
@@ -166,14 +161,12 @@ private void showMainDialog(final String currentTalker) {
     setupListViewTouchForScroll(listView);
     
     final List<String> displayList = new ArrayList<>();
-    for (int i = 0; i < groupArray.size(); i++) {
-        JSONObject group = groupArray.getJSONObject(i);
-        String title = group.getString("title");
-        JSONArray idList = group.getJSONArray("idList");
-        int count = (idList != null) ? idList.size() : 0;
-        
-        Boolean enableObj = group.getBoolean("enable");
-        boolean isEnabled = (enableObj == null) ? true : enableObj;
+    for (int i = 0; i < groupArray.length(); i++) {
+        JSONObject group = groupArray.optJSONObject(i);
+        String title = group.optString("title");
+        JSONArray idList = group.optJSONArray("idList");
+        int count = (idList != null) ? idList.length() : 0;
+        boolean isEnabled = group.optBoolean("enable", true);
         String statusText = isEnabled ? "" : " [已停用]";
         
         displayList.add("📂 " + title + statusText + " (共 " + count + " 项)");
@@ -211,11 +204,9 @@ private void showMainDialog(final String currentTalker) {
 }
 
 private void showGroupOperationMenu(final JSONArray groupArray, final int position, final ArrayAdapter<String> adapter, final List<String> displayList, final String currentTalker) {
-    final JSONObject group = groupArray.getJSONObject(position);
-    final String title = group.getString("title");
-    
-    Boolean enableObj = group.getBoolean("enable");
-    final boolean isEnabled = (enableObj == null) ? true : enableObj;
+    final JSONObject group = groupArray.optJSONObject(position);
+    final String title = group.optString("title");
+    final boolean isEnabled = group.optBoolean("enable", true);
     String enableOption = isEnabled ? "🚫 停用此分组" : "✅ 启用此分组";
 
     String[] options = {"👥 管理分组成员", "✏️ 重命名分组", enableOption, "🔼 上移此分组", "🔽 下移此分组", "🗑️ 删除此分组"};
@@ -232,8 +223,8 @@ private void showGroupOperationMenu(final JSONArray groupArray, final int positi
                 saveGroupConfig(groupArray);
                 
                 String statusText = !isEnabled ? "" : " [已停用]";
-                JSONArray idList = group.getJSONArray("idList");
-                int count = idList != null ? idList.size() : 0;
+                JSONArray idList = group.optJSONArray("idList");
+                int count = idList != null ? idList.length() : 0;
                 displayList.set(position, "📂 " + title + statusText + " (共 " + count + " 项)");
                 adapter.notifyDataSetChanged();
                 toast((!isEnabled ? "已启用" : "已停用") + "分组: " + title);
@@ -244,7 +235,7 @@ private void showGroupOperationMenu(final JSONArray groupArray, final int positi
                 }
                 swapGroupItem(groupArray, position, position - 1, adapter, displayList);
             } else if (which == 4) {
-                if (position == groupArray.size() - 1) {
+                if (position == groupArray.length() - 1) {
                     toast("已经是最后一个了，无法下移");
                     return;
                 }
@@ -260,8 +251,8 @@ private void showGroupOperationMenu(final JSONArray groupArray, final int positi
                 confirm.setPositiveButton("🗑️ 删除", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface d, int w) {
                         groupArray.remove(position);
-                        for(int i = 0; i < groupArray.size(); i++) {
-                            groupArray.getJSONObject(i).put("order", i);
+                        for(int i = 0; i < groupArray.length(); i++) {
+                            groupArray.optJSONObject(i).put("order", i);
                         }
                         saveGroupConfig(groupArray);
                         displayList.remove(position);
@@ -284,11 +275,11 @@ private void showGroupOperationMenu(final JSONArray groupArray, final int positi
  */
 private void swapGroupItem(JSONArray groupArray, int pos1, int pos2, ArrayAdapter<String> adapter, List<String> displayList) {
     Object tempObj = groupArray.get(pos1);
-    groupArray.set(pos1, groupArray.get(pos2));
-    groupArray.set(pos2, tempObj);
+    groupArray.put(pos1, groupArray.get(pos2));
+    groupArray.put(pos2, tempObj);
 
-    for(int i = 0; i < groupArray.size(); i++) {
-        groupArray.getJSONObject(i).put("order", i);
+    for(int i = 0; i < groupArray.length(); i++) {
+        groupArray.optJSONObject(i).put("order", i);
     }
     saveGroupConfig(groupArray);
 
@@ -307,18 +298,18 @@ private void showManageMembersDialog(final JSONArray groupArray, final int posit
 
             new Handler(Looper.getMainLooper()).post(new Runnable() {
                 public void run() {
-                    final JSONObject group = groupArray.getJSONObject(position);
-                    final String title = group.getString("title");
+                    final JSONObject group = groupArray.optJSONObject(position);
+                    final String title = group.optString("title");
                     
-                    JSONArray idListArray = group.getJSONArray("idList");
+                    JSONArray idListArray = group.optJSONArray("idList");
                     if (idListArray == null) {
                         idListArray = new JSONArray();
                         group.put("idList", idListArray);
                     }
                     
                     final List<String> idList = new ArrayList<>();
-                    for (int i = 0; i < idListArray.size(); i++) {
-                        String id = idListArray.getString(i);
+                    for (int i = 0; i < idListArray.length(); i++) {
+                        String id = idListArray.optString(i);
                         if (!TextUtils.isEmpty(id)) idList.add(id);
                     }
 
@@ -354,7 +345,7 @@ private void showManageMembersDialog(final JSONArray groupArray, final int posit
                         public void run() {
                             JSONArray newIdListArray = new JSONArray();
                             for (String id : idList) {
-                                newIdListArray.add(id);
+                                newIdListArray.put(id);
                             }
                             group.put("idList", newIdListArray);
                             saveGroupConfig(groupArray);
@@ -423,12 +414,10 @@ private void showManageMembersDialog(final JSONArray groupArray, final int posit
                                 memberDisplayList.add(formatMemberDisplay(id));
                             }
                             adapter.notifyDataSetChanged();
-                            
-                            Boolean enableObj = group.getBoolean("enable");
-                            boolean isEnabled = (enableObj == null) ? true : enableObj;
+                            boolean isEnabled = group.optBoolean("enable", true);
                             String statusText = isEnabled ? "" : " [已停用]";
                             
-                            mainDisplayList.set(position, "📂 " + title + statusText + " (共 " + idList.size() + " 项)");
+                            mainDisplayList.set(position, "📂 " + title + statusText + " (共 " + idList.length() + " 项)");
                             mainAdapter.notifyDataSetChanged();
                         }
                     };
@@ -550,8 +539,8 @@ private void showCreateGroupDialog(final JSONArray groupArray, final ArrayAdapte
             }
             
             int maxOrder = 0;
-            for (int i=0; i<groupArray.size(); i++) {
-                int o = groupArray.getJSONObject(i).getIntValue("order");
+            for (int i=0; i<groupArray.length(); i++) {
+                int o = groupArray.optJSONObject(i).optInt("order");
                 if (o > maxOrder) maxOrder = o;
             }
             
@@ -562,7 +551,7 @@ private void showCreateGroupDialog(final JSONArray groupArray, final ArrayAdapte
             newGroup.put("enable", true);
             newGroup.put("idList", new JSONArray());
             
-            groupArray.add(newGroup);
+            groupArray.put(newGroup);
             saveGroupConfig(groupArray);
             
             displayList.add("📂 " + name + " (共 0 项)");
@@ -574,8 +563,8 @@ private void showCreateGroupDialog(final JSONArray groupArray, final ArrayAdapte
 }
 
 private void showRenameGroupDialog(final JSONArray groupArray, final int position, final ArrayAdapter<String> adapter, final List<String> displayList) {
-    final JSONObject group = groupArray.getJSONObject(position);
-    final String oldName = group.getString("title");
+    final JSONObject group = groupArray.optJSONObject(position);
+    final String oldName = group.optString("title");
     
     final EditText nameEdit = createStyledEditText("输入新名称", oldName);
     LinearLayout root = new LinearLayout(getTopActivity());
@@ -592,11 +581,9 @@ private void showRenameGroupDialog(final JSONArray groupArray, final int positio
             group.put("title", name);
             saveGroupConfig(groupArray);
             
-            JSONArray idList = group.getJSONArray("idList");
-            int count = idList != null ? idList.size() : 0;
-            
-            Boolean enableObj = group.getBoolean("enable");
-            boolean isEnabled = (enableObj == null) ? true : enableObj;
+            JSONArray idList = group.optJSONArray("idList");
+            int count = idList != null ? idList.length() : 0;
+            boolean isEnabled = group.optBoolean("enable", true);
             String statusText = isEnabled ? "" : " [已停用]";
             
             displayList.set(position, "📂 " + name + statusText + " (共 " + count + " 项)");
@@ -1001,6 +988,3 @@ private void setupListViewTouchForScroll(ListView listView) {
         }
     });
 }
-
-
-
