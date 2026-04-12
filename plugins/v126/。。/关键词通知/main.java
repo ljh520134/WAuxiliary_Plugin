@@ -71,6 +71,8 @@ import com.alibaba.fastjson2.TypeReference;
 // 全局配置
 Map<String, Boolean> keywordMap = new HashMap<>(); // 关键词集合，key=关键词，value=是否全字匹配
 Set<String> excludeContactSet = new HashSet<>(); // 排除联系人ID集合
+Set<String> includeContactSet = new HashSet<>(); // 仅生效联系人ID集合
+boolean filterMode = false; // false=排除模式, true=仅生效模式
 boolean enabled = true; // 总开关
 boolean notifyEnabled = true; // 通知开关
 boolean toastEnabled = true; // Toast开关
@@ -104,10 +106,19 @@ private List<String> excludeContactList = null;
 private List<String> excludeDisplayList = null;
 private Button excludeClearBtn = null;
 
+private TextView includeCountTv = null;
+private ListView includeListView = null;
+private ArrayAdapter<String> includeAdapter = null;
+private List<String> includeContactList = null;
+private List<String> includeDisplayList = null;
+private Button includeClearBtn = null;
+
 // 存储Key
 final String CONFIG_KEY = "keyword_notifier_v1";
 final String KEY_KEYWORDS = "keywords";
 final String KEY_EXCLUDE_CONTACTS = "exclude_contacts";
+final String KEY_INCLUDE_CONTACTS = "include_contacts";
+final String KEY_FILTER_MODE = "filter_mode";
 final String KEY_ENABLED = "enabled";
 final String KEY_NOTIFY = "notify_enabled";
 final String KEY_TOAST = "toast_enabled";
@@ -183,7 +194,7 @@ private void loadConfig() {
                 }
             }
         }
-        
+
         // 加载其他配置
         enabled = getLong(CONFIG_KEY, KEY_ENABLED, 1) == 1;
         notifyEnabled = getLong(CONFIG_KEY, KEY_NOTIFY, 1) == 1;
@@ -191,11 +202,12 @@ private void loadConfig() {
         atMeEnabled = getLong(CONFIG_KEY, KEY_AT_ME, 1) == 1;
         atAllEnabled = getLong(CONFIG_KEY, KEY_AT_ALL, 1) == 1;
         quietHoursEnabled = getLong(CONFIG_KEY, KEY_QUIET, 0) == 1;
+        filterMode = getLong(CONFIG_KEY, KEY_FILTER_MODE, 0) == 1;
         quietStartHour = (int) getLong(CONFIG_KEY, KEY_QUIET_START, 22);
         quietEndHour = (int) getLong(CONFIG_KEY, KEY_QUIET_END, 8);
         lastMatchTime = getLong(CONFIG_KEY, KEY_LAST_TIME, 0);
         lastMatchedKeyword = getString(CONFIG_KEY, KEY_LAST_KEYWORD, "");
-        
+
         // 加载自定义文字配置
         customKeywordNotifyTitle = getString(CONFIG_KEY, KEY_CUSTOM_KEYWORD_NOTIFY_TITLE, "");
         customKeywordNotifyContent = getString(CONFIG_KEY, KEY_CUSTOM_KEYWORD_NOTIFY_CONTENT, "");
@@ -206,7 +218,7 @@ private void loadConfig() {
         customAtAllNotifyTitle = getString(CONFIG_KEY, KEY_CUSTOM_AT_ALL_NOTIFY_TITLE, "");
         customAtAllNotifyContent = getString(CONFIG_KEY, KEY_CUSTOM_AT_ALL_NOTIFY_CONTENT, "");
         customAtAllToastText = getString(CONFIG_KEY, KEY_CUSTOM_AT_ALL_TOAST, "");
-        
+
         // 加载排除联系人列表
         String excludesJson = getString(CONFIG_KEY, KEY_EXCLUDE_CONTACTS, "[]");
         if (excludesJson != null && !excludesJson.isEmpty()) {
@@ -222,8 +234,25 @@ private void loadConfig() {
                 log("解析排除联系人配置出错，使用默认配置: " + e.getMessage());
             }
         }
+
         
-        log("关键词通知已加载，关键词: " + keywordMap.size() + "，排除联系人: " + excludeContactSet.size());
+        // 加载仅生效联系人列表
+        String includesJson = getString(CONFIG_KEY, KEY_INCLUDE_CONTACTS, "[]");
+        if (includesJson != null && !includesJson.isEmpty()) {
+            try {
+                JSONArray includesArray = JSON.parseArray(includesJson);
+                if (includesArray != null) {
+                    includeContactSet.clear();
+                    for (int i = 0; i < includesArray.size(); i++) {
+                        includeContactSet.add(includesArray.getString(i));
+                    }
+                }
+            } catch (Exception e) {
+                log("解析仅生效联系人配置出错，使用默认配置: " + e.getMessage());
+            }
+        }
+
+        log("关键词通知已加载，关键词: " + keywordMap.size() + "，排除联系人: " + excludeContactSet.size() + "，仅生效联系人: " + includeContactSet.size());
     } catch (Exception e) {
         log("加载配置失败: " + e.getMessage());
     }
@@ -240,18 +269,19 @@ private void saveConfig() {
         putLong(CONFIG_KEY, KEY_AT_ME, atMeEnabled ? 1 : 0);
         putLong(CONFIG_KEY, KEY_AT_ALL, atAllEnabled ? 1 : 0);
         putLong(CONFIG_KEY, KEY_QUIET, quietHoursEnabled ? 1 : 0);
+        putLong(CONFIG_KEY, KEY_FILTER_MODE, filterMode ? 1 : 0);
         putLong(CONFIG_KEY, KEY_QUIET_START, quietStartHour);
         putLong(CONFIG_KEY, KEY_QUIET_END, quietEndHour);
         putLong(CONFIG_KEY, KEY_LAST_TIME, lastMatchTime);
         putString(CONFIG_KEY, KEY_LAST_KEYWORD, lastMatchedKeyword);
-        
+
         // 保存关键词（新版格式：JSON对象，key=关键词，value=是否全字匹配）
         JSONObject keywordsObj = new JSONObject();
         for (String keyword : keywordMap.keySet()) {
             keywordsObj.put(keyword, keywordMap.get(keyword));
         }
         putString(CONFIG_KEY, KEY_KEYWORDS, keywordsObj.toString());
-        
+
         // 保存自定义文字配置
         putString(CONFIG_KEY, KEY_CUSTOM_KEYWORD_NOTIFY_TITLE, customKeywordNotifyTitle);
         putString(CONFIG_KEY, KEY_CUSTOM_KEYWORD_NOTIFY_CONTENT, customKeywordNotifyContent);
@@ -262,13 +292,19 @@ private void saveConfig() {
         putString(CONFIG_KEY, KEY_CUSTOM_AT_ALL_NOTIFY_TITLE, customAtAllNotifyTitle);
         putString(CONFIG_KEY, KEY_CUSTOM_AT_ALL_NOTIFY_CONTENT, customAtAllNotifyContent);
         putString(CONFIG_KEY, KEY_CUSTOM_AT_ALL_TOAST, customAtAllToastText);
-        
+
         // 保存排除联系人列表
         JSONArray excludesArray = new JSONArray();
         for (String contactId : excludeContactSet) {
             excludesArray.add(contactId);
         }
         putString(CONFIG_KEY, KEY_EXCLUDE_CONTACTS, excludesArray.toString());
+        // 保存仅生效联系人列表
+        JSONArray includesArray = new JSONArray();
+        for (String contactId : includeContactSet) {
+            includesArray.add(contactId);
+        }
+        putString(CONFIG_KEY, KEY_INCLUDE_CONTACTS, includesArray.toString());
     } catch (Exception e) {
         log("保存配置失败: " + e.getMessage());
     }
@@ -279,7 +315,7 @@ private void saveConfig() {
  */
 public void onHandleMsg(Object msgInfoBean) {
     if (!enabled) return;
-    
+
     try {
         // 获取消息内容
         String content = "";
@@ -289,44 +325,54 @@ public void onHandleMsg(Object msgInfoBean) {
         } catch (Exception e) {
             return;
         }
-        
+
         if (TextUtils.isEmpty(content)) return;
-        
+
         // 检查是否是群聊
         boolean isGroupChat = false;
         try {
             Method isGroupChatMethod = msgInfoBean.getClass().getMethod("isGroupChat");
             isGroupChat = (Boolean) isGroupChatMethod.invoke(msgInfoBean);
         } catch (Exception e) {}
-        
+
         // 检查是否是自己发的消息
         boolean isSend = false;
         try {
             Method isSendMethod = msgInfoBean.getClass().getMethod("isSend");
             isSend = (Boolean) isSendMethod.invoke(msgInfoBean);
         } catch (Exception e) {}
-        
+
         if (isSend) return; // 忽略自己发的消息
-        
+
         // 获取发送者的wxid
         String senderWxid = "";
         try {
             Method getTalkerMethod = msgInfoBean.getClass().getMethod("getTalker");
             senderWxid = (String) getTalkerMethod.invoke(msgInfoBean);
         } catch (Exception e) {}
-        
-        // 检查发送者是否在排除联系人列表中
-        if (!TextUtils.isEmpty(senderWxid) && excludeContactSet.contains(senderWxid)) {
-            return; // 排除该联系人的消息，不进行关键词匹配
+
+        // 根据过滤模式判断是否处理该联系人的消息
+        if (!TextUtils.isEmpty(senderWxid)) {
+            if (filterMode) {
+                // 仅生效模式：只处理白名单中的联系人
+                if (!includeContactSet.contains(senderWxid)) {
+                    return;
+                }
+            } else {
+                // 排除模式：排除黑名单中的联系人
+                if (excludeContactSet.contains(senderWxid)) {
+                    return;
+                }
+            }
         }
-        
+
         // 匹配关键词（如果有关键词）
         if (!keywordMap.isEmpty()) {
             String matchedKeyword = null;
             for (String keyword : keywordMap.keySet()) {
                 Boolean isWholeWord = keywordMap.get(keyword);
                 boolean matched = false;
-                
+
                 if (isWholeWord != null && isWholeWord) {
                     // 全字匹配：使用正则表达式匹配完整单词
                     try {
@@ -340,20 +386,20 @@ public void onHandleMsg(Object msgInfoBean) {
                     // 模糊匹配：关键词包含在消息中即可
                     matched = content.contains(keyword);
                 }
-                
+
                 if (matched) {
                     matchedKeyword = keyword;
                     break;
                 }
             }
-            
+
             if (matchedKeyword != null) {
                 // 获取发送者信息
                 String senderInfo = getSenderInfo(msgInfoBean, isGroupChat);
-                
+
                 // 触发通知
                 triggerNotification(matchedKeyword, content, senderInfo, senderWxid, isGroupChat);
-                
+
                 // 更新最后匹配时间
                 lastMatchTime = System.currentTimeMillis();
                 lastMatchedKeyword = matchedKeyword;
@@ -391,10 +437,10 @@ public void onHandleMsg(Object msgInfoBean) {
             if (atType != null) {
                 // 获取发送者信息
                 String senderInfo = getSenderInfo(msgInfoBean, isGroupChat);
-                
+
                 // 触发通知
                 triggerNotification(atType, content, senderInfo, senderWxid, isGroupChat);
-                
+
                 // 更新最后匹配时间
                 lastMatchTime = System.currentTimeMillis();
                 lastMatchedKeyword = atType;
@@ -414,30 +460,30 @@ private String getSenderInfo(Object msgInfoBean, boolean isGroupChat) {
         String talker = "";
         String sendTalker = "";
         String displayName = "";
-        
+
         // 获取talker
         try {
             Method getTalkerMethod = msgInfoBean.getClass().getMethod("getTalker");
             talker = (String) getTalkerMethod.invoke(msgInfoBean);
         } catch (Exception e) {}
-        
+
         // 获取发送者ID
         try {
             Method getSendTalkerMethod = msgInfoBean.getClass().getMethod("getSendTalker");
             sendTalker = (String) getSendTalkerMethod.invoke(msgInfoBean);
         } catch (Exception e) {}
-        
+
         // 优先从反射获取displayName
         try {
             Method getDisplayNameMethod = msgInfoBean.getClass().getMethod("getDisplayName");
             displayName = (String) getDisplayNameMethod.invoke(msgInfoBean);
         } catch (Exception e) {}
-        
+
         // 如果是群聊，优先尝试获取群成员名称
         if (isGroupChat && !TextUtils.isEmpty(sendTalker)) {
             // 获取群名称
             String groupName = getGroupName(talker);
-            
+
             // 获取群成员名称
             String memberName = "";
             if (sendTalker.endsWith("@chatroom")) {
@@ -449,7 +495,7 @@ private String getSenderInfo(Object msgInfoBean, boolean isGroupChat) {
                     memberName = getFriendDisplayName(sendTalker);
                 }
             }
-            
+
             return groupName + " | " + memberName;
         } else {
             // 私聊
@@ -476,10 +522,10 @@ private String getGroupMemberDisplayName(String groupWxid, String memberWxid) {
                 try {
                     String wxid = "";
                     String displayName = "";
-                    
+
                     Method getWxidMethod = obj.getClass().getMethod("getWxid");
                     wxid = (String) getWxidMethod.invoke(obj);
-                    
+
                     if (wxid.equals(memberWxid)) {
                         // 获取显示名称
                         try {
@@ -489,7 +535,7 @@ private String getGroupMemberDisplayName(String groupWxid, String memberWxid) {
                                 return displayName;
                             }
                         } catch (Exception e) {}
-                        
+
                         // 获取群内昵称
                         try {
                             Method getGroupNickMethod = obj.getClass().getMethod("getGroupNick");
@@ -498,7 +544,7 @@ private String getGroupMemberDisplayName(String groupWxid, String memberWxid) {
                                 return groupNick;
                             }
                         } catch (Exception e) {}
-                        
+
                         break;
                     }
                 } catch (Exception e) {}
@@ -527,7 +573,7 @@ private void triggerNotification(String keyword, String content, String senderIn
             return; // 免打扰时间段，不发送通知
         }
     }
-    
+
     final String finalSenderInfo = senderInfo;
     final String finalContent = content;
     final String finalKeyword = keyword;
@@ -535,7 +581,7 @@ private void triggerNotification(String keyword, String content, String senderIn
     final boolean finalIsGroupChat = isGroupChat;
     final boolean isAtMe = finalKeyword.equals("@我");
     final boolean isAtAll = finalKeyword.equals("@所有人");
-    
+
     // 发送系统通知
     if (notifyEnabled) {
         new Handler(Looper.getMainLooper()).post(new Runnable() {
@@ -544,7 +590,7 @@ private void triggerNotification(String keyword, String content, String senderIn
                     String typeStr = finalIsGroupChat ? "群消息" : "好友";
                     String title;
                     String body;
-                    
+
                     String notifyTitleTemplate;
                     String notifyContentTemplate;
                     if (isAtMe) {
@@ -557,7 +603,7 @@ private void triggerNotification(String keyword, String content, String senderIn
                         notifyTitleTemplate = customKeywordNotifyTitle;
                         notifyContentTemplate = customKeywordNotifyContent;
                     }
-                    
+
                     // 使用自定义通知文字
                     if (!TextUtils.isEmpty(notifyTitleTemplate)) {
                         // 支持变量替换: %keyword% 关键词, %sender% 发送者, %content% 内容, %type% 类型, %wxid% 发送者ID
@@ -569,7 +615,7 @@ private void triggerNotification(String keyword, String content, String senderIn
                     } else {
                         title = (isAtMe || isAtAll) ? "🔔 被" + finalKeyword + "通知" : "🔔 命中关键词: " + finalKeyword;
                     }
-                    
+
                     if (!TextUtils.isEmpty(notifyContentTemplate)) {
                         body = notifyContentTemplate
                             .replace("%keyword%", finalKeyword)
@@ -580,7 +626,7 @@ private void triggerNotification(String keyword, String content, String senderIn
                     } else {
                         body = typeStr + " [" + finalSenderInfo + "]: " + finalContent;
                     }
-                    
+
                     notify(title, body);
                 } catch (Exception e) {
                     log("发送通知失败: " + e.getMessage());
@@ -588,7 +634,7 @@ private void triggerNotification(String keyword, String content, String senderIn
             }
         });
     }
-    
+
     // 发送Toast
     if (toastEnabled) {
         new Handler(Looper.getMainLooper()).post(new Runnable() {
@@ -648,14 +694,20 @@ private void showMainDialog() {
     LinearLayout statusCard = createCardLayout();
     statusCard.setBackground(createGradientDrawable("#E3F2FD", 32));
     statusCard.addView(createSectionTitle("📊 监控状态"));
-    
+
     // 状态文本
     final TextView statusTv = new TextView(getTopActivity());
     StringBuilder statusSb = new StringBuilder();
     statusSb.append("监控状态: ").append(enabled ? "✅ 开启" : "❌ 关闭").append("\n");
     statusSb.append("关键词数量: ").append(keywordMap.size()).append("\n");
+    statusSb.append("过滤模式: ").append(filterMode ? "🎯 仅生效模式" : "🚫 排除模式").append("\n");
+    if (filterMode) {
+        statusSb.append("仅生效联系人: ").append(includeContactSet.size()).append(" 个\n");
+    } else {
+        statusSb.append("排除联系人: ").append(excludeContactSet.size()).append(" 个\n");
+    }
     statusSb.append("━━━━━━━━━━━━━\n");
-    
+
     if (lastMatchTime > 0) {
         String lastTimeStr = formatTimeWithSeconds(lastMatchTime);
         statusSb.append("上次匹配: ").append(lastTimeStr).append("\n");
@@ -663,12 +715,12 @@ private void showMainDialog() {
     } else {
         statusSb.append("暂无匹配记录");
     }
-    
+
     statusTv.setText(statusSb.toString());
     statusTv.setTextSize(14);
     statusTv.setTextColor(Color.parseColor("#1565C0"));
     statusCard.addView(statusTv);
-    
+
     // 刷新状态按钮
     Button refreshBtn = new Button(getTopActivity());
     refreshBtn.setText("🔄 刷新状态");
@@ -679,8 +731,14 @@ private void showMainDialog() {
             StringBuilder sb = new StringBuilder();
             sb.append("监控状态: ").append(enabled ? "✅ 开启" : "❌ 关闭").append("\n");
             sb.append("关键词数量: ").append(keywordMap.size()).append("\n");
+            sb.append("过滤模式: ").append(filterMode ? "🎯 仅生效模式" : "🚫 排除模式").append("\n");
+            if (filterMode) {
+                sb.append("仅生效联系人: ").append(includeContactSet.size()).append(" 个\n");
+            } else {
+                sb.append("排除联系人: ").append(excludeContactSet.size()).append(" 个\n");
+            }
             sb.append("━━━━━━━━━━━━━\n");
-            
+
             if (lastMatchTime > 0) {
                 String lastTimeStr = formatTimeWithSeconds(lastMatchTime);
                 sb.append("上次匹配: ").append(lastTimeStr).append("\n");
@@ -688,7 +746,7 @@ private void showMainDialog() {
             } else {
                 sb.append("暂无匹配记录");
             }
-            
+
             statusTv.setText(sb.toString());
             toast("状态已刷新");
         }
@@ -699,7 +757,7 @@ private void showMainDialog() {
     // --- 1. 关键词管理卡片 ---
     LinearLayout keywordCard = createCardLayout();
     keywordCard.addView(createSectionTitle("🔑 关键词管理"));
-    
+
     // 关键词列表
     keywordCountTv = new TextView(getTopActivity());
     keywordCountTv.setText("当前关键词: " + keywordMap.size() + " 个");
@@ -707,7 +765,7 @@ private void showMainDialog() {
     keywordCountTv.setTextColor(Color.parseColor("#666666"));
     keywordCountTv.setPadding(0, 0, 0, 16);
     keywordCard.addView(keywordCountTv);
-    
+
     Button addKeywordBtn = new Button(getTopActivity());
     addKeywordBtn.setText("➕ 添加关键词");
     styleMediaSelectionButton(addKeywordBtn);
@@ -717,7 +775,7 @@ private void showMainDialog() {
         }
     });
     keywordCard.addView(addKeywordBtn);
-    
+
     Button viewKeywordsBtn = new Button(getTopActivity());
     viewKeywordsBtn.setText("📋 查看/管理关键词");
     styleUtilityButton(viewKeywordsBtn);
@@ -727,7 +785,7 @@ private void showMainDialog() {
         }
     });
     keywordCard.addView(viewKeywordsBtn);
-    
+
     Button clearKeywordsBtn = new Button(getTopActivity());
     clearKeywordsBtn.setText("🗑️ 清空所有关键词");
     styleUtilityButton(clearKeywordsBtn);
@@ -738,191 +796,70 @@ private void showMainDialog() {
         }
     });
     keywordCard.addView(clearKeywordsBtn);
-    
-    root.addView(keywordCard);
 
-    // --- 1.5 排除联系人管理卡片 ---
-    LinearLayout excludeCard = createCardLayout();
-    excludeCard.addView(createSectionTitle("🚫 排除联系人"));
-    
-    // 当前已排除数量
-    excludeCountTv = new TextView(getTopActivity());
-    excludeCountTv.setText("已排除 " + excludeContactSet.size() + " 个联系人");
-    excludeCountTv.setTextSize(14);
-    excludeCountTv.setTextColor(Color.parseColor("#666666"));
-    excludeCountTv.setPadding(0, 0, 0, 12);
-    excludeCard.addView(excludeCountTv);
-    
-    // 添加按钮行
-    LinearLayout addRow = new LinearLayout(getTopActivity());
-    addRow.setOrientation(LinearLayout.HORIZONTAL);
-    addRow.setWeightSum(3);
-    
-    Button addFriendBtn = new Button(getTopActivity());
-    addFriendBtn.setText("👤 好友");
-    styleUtilityButton(addFriendBtn);
-    addFriendBtn.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
-    addFriendBtn.setOnClickListener(new View.OnClickListener() {
-        public void onClick(View v) {
-            selectFriendToExclude();
-        }
-    });
-    
-    Button addGroupBtn = new Button(getTopActivity());
-    addGroupBtn.setText("💬 群聊");
-    styleUtilityButton(addGroupBtn);
-    addGroupBtn.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
-    addGroupBtn.setOnClickListener(new View.OnClickListener() {
-        public void onClick(View v) {
-            selectGroupToExclude();
-        }
-    });
-    
-    Button manualBtn = new Button(getTopActivity());
-    manualBtn.setText("📝 手动");
-    styleUtilityButton(manualBtn);
-    manualBtn.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
-    manualBtn.setOnClickListener(new View.OnClickListener() {
-        public void onClick(View v) {
-            showManualAddExcludeDialog();
-        }
-    });
-    
-    addRow.addView(addFriendBtn);
-    addRow.addView(addGroupBtn);
-    addRow.addView(manualBtn);
-    excludeCard.addView(addRow);
-    
-    // 排除列表（始终显示）
-    TextView listTitle = new TextView(getTopActivity());
-    listTitle.setText("已排除列表（点击可移除）:");
-    listTitle.setTextSize(12);
-    listTitle.setTextColor(Color.parseColor("#999999"));
-    listTitle.setPadding(0, 16, 0, 8);
-    excludeCard.addView(listTitle);
-    
-    excludeListView = new ListView(getTopActivity());
-    setupListViewTouchForScroll(excludeListView);
-    
-    excludeContactList = new ArrayList<>(excludeContactSet);
-    excludeDisplayList = new ArrayList<>();
-    
-    // 生成显示列表
-    for (String contactId : excludeContactList) {
-        String displayName = contactId;
-        if (contactId.endsWith("@chatroom")) {
-            displayName = "💬 群聊: " + getGroupName(contactId);
-        } else {
-            displayName = "👤 " + getFriendDisplayName(contactId);
-        }
-        excludeDisplayList.add(displayName);
-    }
-    
-    excludeAdapter = new ArrayAdapter<>(getTopActivity(), android.R.layout.simple_list_item_1, excludeDisplayList);
-    excludeListView.setAdapter(excludeAdapter);
-    
-    // 刷新列表的方法
-    final Runnable refreshListRunnable = new Runnable() {
-        public void run() {
-            excludeContactList.clear();
-            excludeContactList.addAll(excludeContactSet);
-            excludeDisplayList.clear();
-            for (String contactId : excludeContactList) {
-                String displayName = contactId;
-                if (contactId.endsWith("@chatroom")) {
-                    displayName = "💬 群聊: " + getGroupName(contactId);
+    root.addView(keywordCard);
+    // --- 1.5 过滤模式切换卡片 ---
+    LinearLayout filterModeCard = createCardLayout();
+    filterModeCard.addView(createSectionTitle("🎯 过滤模式"));
+
+    final TextView modeTip = new TextView(getTopActivity());
+    modeTip.setText(filterMode ? 
+        "当前: 仅生效模式 - 只对指定联系人生效\n其他联系人的消息将被忽略" : 
+        "当前: 排除模式 - 排除指定联系人\n其他联系人的消息正常检测");
+    modeTip.setTextSize(12);
+    modeTip.setTextColor(Color.parseColor("#666666"));
+    modeTip.setPadding(0, 0, 0, 16);
+    filterModeCard.addView(modeTip);
+
+    // 创建一个容器来放置动态切换的联系人管理卡片
+    final LinearLayout contactCardContainer = new LinearLayout(getTopActivity());
+    contactCardContainer.setOrientation(LinearLayout.VERTICAL);
+
+    final LinearLayout filterModeRow = createSwitchRow(
+        filterMode ? "🎯 仅生效模式" : "🚫 排除模式", 
+        filterMode, 
+        14, 
+        new ToggleCallback() {
+            public void onToggle(boolean checked) {
+                filterMode = checked;
+                saveConfig();
+                toast(filterMode ? "已切换到仅生效模式" : "已切换到排除模式");
+                
+                // 更新提示文字
+                modeTip.setText(filterMode ? 
+                    "当前: 仅生效模式 - 只对指定联系人生效\n其他联系人的消息将被忽略" : 
+                    "当前: 排除模式 - 排除指定联系人\n其他联系人的消息正常检测");
+                
+                // 更新开关文字
+                TextView label = (TextView) filterModeRow.getChildAt(0);
+                label.setText(filterMode ? "🎯 仅生效模式" : "🚫 排除模式");
+                
+                // 动态切换联系人管理卡片
+                contactCardContainer.removeAllViews();
+                if (filterMode) {
+                    contactCardContainer.addView(createIncludeContactCard());
                 } else {
-                    displayName = "👤 " + getFriendDisplayName(contactId);
+                    contactCardContainer.addView(createExcludeContactCard());
                 }
-                excludeDisplayList.add(displayName);
-            }
-            excludeAdapter.notifyDataSetChanged();
-            excludeCountTv.setText("已排除 " + excludeContactSet.size() + " 个联系人");
-            
-            // 动态调整列表高度
-            int itemHeight = dpToPx(48);
-            int listHeight = Math.max(Math.min(excludeContactList.size() * itemHeight, dpToPx(200)), dpToPx(48));
-            LinearLayout.LayoutParams listParams = (LinearLayout.LayoutParams) excludeListView.getLayoutParams();
-            if (listParams == null) {
-                listParams = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT, listHeight
-                );
-                listParams.setMargins(0, 8, 0, 0);
-                excludeListView.setLayoutParams(listParams);
-            } else {
-                listParams.height = listHeight;
             }
         }
-    };
-    
-    excludeListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            if (position < excludeContactList.size()) {
-                String contactId = excludeContactList.get(position);
-                String displayName = excludeDisplayList.get(position);
-                showRemoveExcludeContactDialog(contactId, displayName, refreshListRunnable);
-            }
-        }
-    });
-    
-    // 初始化列表高度
-    int itemHeight = dpToPx(48);
-    int listHeight = Math.max(Math.min(excludeContactList.size() * itemHeight, dpToPx(200)), dpToPx(48));
-    LinearLayout.LayoutParams listParams = new LinearLayout.LayoutParams(
-        LinearLayout.LayoutParams.MATCH_PARENT, listHeight
     );
-    listParams.setMargins(0, 8, 0, 0);
-    excludeListView.setLayoutParams(listParams);
-    
-    excludeCard.addView(excludeListView);
-    
-    // 清空按钮（始终创建，通过可见性控制显示）
-    excludeClearBtn = new Button(getTopActivity());
-    excludeClearBtn.setText("🗑️ 清空全部");
-    styleUtilityButton(excludeClearBtn);
-    excludeClearBtn.setTextColor(Color.parseColor("#D32F2F"));
-    excludeClearBtn.setOnClickListener(new View.OnClickListener() {
-        public void onClick(View v) {
-            showClearExcludeContactsConfirmDialog();
-        }
-    });
-    // 初始时如果不足2个则隐藏
-    excludeClearBtn.setVisibility(excludeContactSet.size() > 1 ? View.VISIBLE : View.GONE);
-    excludeCard.addView(excludeClearBtn);
-    
-    // 保存清空按钮引用以便刷新时更新可见性
-    final Button finalClearBtn = excludeClearBtn;
-    Runnable updateClearBtnVisibility = new Runnable() {
-        public void run() {
-            finalClearBtn.setVisibility(excludeContactSet.size() > 1 ? View.VISIBLE : View.GONE);
-        }
-    };
-    
-    // 修改 refreshExcludeDisplay 以包含清空按钮可见性更新
-    Runnable fullRefreshRunnable = new Runnable() {
-        public void run() {
-            refreshListRunnable.run();
-            updateClearBtnVisibility.run();
-        }
-    };
-    
-    // 更新移除回调以使用完整刷新
-    excludeListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            if (position < excludeContactList.size()) {
-                String contactId = excludeContactList.get(position);
-                String displayName = excludeDisplayList.get(position);
-                showRemoveExcludeContactDialog(contactId, displayName, fullRefreshRunnable);
-            }
-        }
-    });
-    
-    root.addView(excludeCard);
+    filterModeCard.addView(filterModeRow);
+
+    root.addView(filterModeCard);
+
+    // 初始化显示对应的联系人管理卡片
+    if (filterMode) {
+        contactCardContainer.addView(createIncludeContactCard());
+    } else {
+        contactCardContainer.addView(createExcludeContactCard());
+    }
+    root.addView(contactCardContainer);
 
     // --- 2. 通知设置卡片 ---
     LinearLayout notifyCard = createCardLayout();
     notifyCard.addView(createSectionTitle("🔔 通知设置"));
-    
+
     // 总开关
     final LinearLayout enableRow = createSwitchRow("启用关键词监控", enabled, 16, new ToggleCallback() {
         public void onToggle(boolean checked) {
@@ -932,7 +869,7 @@ private void showMainDialog() {
         }
     });
     notifyCard.addView(enableRow);
-    
+
     // 通知开关
     final LinearLayout notifyRow = createSwitchRow("系统通知", notifyEnabled, 14, new ToggleCallback() {
         public void onToggle(boolean checked) {
@@ -941,7 +878,7 @@ private void showMainDialog() {
         }
     });
     notifyCard.addView(notifyRow);
-    
+
     // Toast开关
     final LinearLayout toastRow = createSwitchRow("Toast提示", toastEnabled, 14, new ToggleCallback() {
         public void onToggle(boolean checked) {
@@ -968,7 +905,7 @@ private void showMainDialog() {
         }
     });
     notifyCard.addView(atAllRow);
-    
+
     // 自定义文字设置按钮
     Button customTextBtn = new Button(getTopActivity());
     customTextBtn.setText("📝 自定义通知/Toast文字");
@@ -979,7 +916,7 @@ private void showMainDialog() {
         }
     });
     notifyCard.addView(customTextBtn);
-    
+
     // 显示当前是否使用了自定义文字
     TextView customTextTip = new TextView(getTopActivity());
     boolean hasCustomText = !TextUtils.isEmpty(customKeywordNotifyTitle) || !TextUtils.isEmpty(customKeywordNotifyContent) || !TextUtils.isEmpty(customKeywordToastText) || 
@@ -990,13 +927,13 @@ private void showMainDialog() {
     customTextTip.setTextColor(hasCustomText ? Color.parseColor("#4CAF50") : Color.parseColor("#999999"));
     customTextTip.setPadding(0, 8, 0, 16);
     notifyCard.addView(customTextTip);
-    
+
     root.addView(notifyCard);
 
     // --- 3. 免打扰设置卡片 ---
     LinearLayout quietCard = createCardLayout();
     quietCard.addView(createSectionTitle("🌙 免打扰设置"));
-    
+
     final LinearLayout quietRow = createSwitchRow("启用免打扰", quietHoursEnabled, 14, new ToggleCallback() {
         public void onToggle(boolean checked) {
             quietHoursEnabled = checked;
@@ -1004,14 +941,14 @@ private void showMainDialog() {
         }
     });
     quietCard.addView(quietRow);
-    
+
     final TextView quietTimeTv = new TextView(getTopActivity());
     quietTimeTv.setText("免打扰时间: " + quietStartHour + ":00 - " + quietEndHour + ":00");
     quietTimeTv.setTextSize(12);
     quietTimeTv.setTextColor(Color.parseColor("#999999"));
     quietTimeTv.setPadding(0, 8, 0, 16);
     quietCard.addView(quietTimeTv);
-    
+
     Button setQuietTimeBtn = new Button(getTopActivity());
     setQuietTimeBtn.setText("⏰ 设置免打扰时间");
     styleUtilityButton(setQuietTimeBtn);
@@ -1021,7 +958,7 @@ private void showMainDialog() {
         }
     });
     quietCard.addView(setQuietTimeBtn);
-    
+
     root.addView(quietCard);
 
     // --- 底部按钮 ---
@@ -1031,8 +968,353 @@ private void showMainDialog() {
             toast("✅ 设置已保存");
         }
     }, "关闭", null, null, null);
-    
+
     dialog.show();
+}
+
+
+/**
+ * 创建仅生效联系人管理卡片（白名单）
+ */
+private LinearLayout createIncludeContactCard() {
+    LinearLayout includeCard = createCardLayout();
+    includeCard.addView(createSectionTitle("🎯 仅生效联系人（白名单）"));
+
+    // 当前已添加数量
+    includeCountTv = new TextView(getTopActivity());
+    includeCountTv.setText("已添加 " + includeContactSet.size() + " 个联系人");
+    includeCountTv.setTextSize(14);
+    includeCountTv.setTextColor(Color.parseColor("#666666"));
+    includeCountTv.setPadding(0, 0, 0, 12);
+    includeCard.addView(includeCountTv);
+
+    // 添加按钮行
+    LinearLayout addRow = new LinearLayout(getTopActivity());
+    addRow.setOrientation(LinearLayout.HORIZONTAL);
+    addRow.setWeightSum(3);
+
+    Button addFriendBtn = new Button(getTopActivity());
+    addFriendBtn.setText("👤 好友");
+    styleUtilityButton(addFriendBtn);
+    addFriendBtn.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+    addFriendBtn.setOnClickListener(new View.OnClickListener() {
+        public void onClick(View v) {
+            selectFriendToInclude();
+        }
+    });
+
+    Button addGroupBtn = new Button(getTopActivity());
+    addGroupBtn.setText("💬 群聊");
+    styleUtilityButton(addGroupBtn);
+    addGroupBtn.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+    addGroupBtn.setOnClickListener(new View.OnClickListener() {
+        public void onClick(View v) {
+            selectGroupToInclude();
+        }
+    });
+
+    Button manualBtn = new Button(getTopActivity());
+    manualBtn.setText("📝 手动");
+    styleUtilityButton(manualBtn);
+    manualBtn.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+    manualBtn.setOnClickListener(new View.OnClickListener() {
+        public void onClick(View v) {
+            showManualAddIncludeDialog();
+        }
+    });
+
+    addRow.addView(addFriendBtn);
+    addRow.addView(addGroupBtn);
+    addRow.addView(manualBtn);
+    includeCard.addView(addRow);
+
+    // 仅生效列表
+    TextView listTitle = new TextView(getTopActivity());
+    listTitle.setText("仅生效列表（点击可移除）:");
+    listTitle.setTextSize(12);
+    listTitle.setTextColor(Color.parseColor("#999999"));
+    listTitle.setPadding(0, 16, 0, 8);
+    includeCard.addView(listTitle);
+
+    includeListView = new ListView(getTopActivity());
+    setupListViewTouchForScroll(includeListView);
+
+    includeContactList = new ArrayList<>(includeContactSet);
+    includeDisplayList = new ArrayList<>();
+
+    for (String contactId : includeContactList) {
+        String displayName = contactId;
+        if (contactId.endsWith("@chatroom")) {
+            displayName = "💬 群聊: " + getGroupName(contactId);
+        } else {
+            displayName = "👤 " + getFriendDisplayName(contactId);
+        }
+        includeDisplayList.add(displayName);
+    }
+
+    includeAdapter = new ArrayAdapter<>(getTopActivity(), android.R.layout.simple_list_item_1, includeDisplayList);
+    includeListView.setAdapter(includeAdapter);
+
+    final Runnable refreshListRunnable = new Runnable() {
+        public void run() {
+            includeContactList.clear();
+            includeContactList.addAll(includeContactSet);
+            includeDisplayList.clear();
+            for (String contactId : includeContactList) {
+                String displayName = contactId;
+                if (contactId.endsWith("@chatroom")) {
+                    displayName = "💬 群聊: " + getGroupName(contactId);
+                } else {
+                    displayName = "👤 " + getFriendDisplayName(contactId);
+                }
+                includeDisplayList.add(displayName);
+            }
+            includeAdapter.notifyDataSetChanged();
+            includeCountTv.setText("已添加 " + includeContactSet.size() + " 个联系人");
+
+            int itemHeight = dpToPx(48);
+            int listHeight = Math.max(Math.min(includeContactList.size() * itemHeight, dpToPx(200)), dpToPx(48));
+            LinearLayout.LayoutParams listParams = (LinearLayout.LayoutParams) includeListView.getLayoutParams();
+            if (listParams == null) {
+                listParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, listHeight
+                );
+                listParams.setMargins(0, 8, 0, 0);
+                includeListView.setLayoutParams(listParams);
+            } else {
+                listParams.height = listHeight;
+            }
+        }
+    };
+
+    includeListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            if (position < includeContactList.size()) {
+                String contactId = includeContactList.get(position);
+                String displayName = includeDisplayList.get(position);
+                showRemoveIncludeContactDialog(contactId, displayName, refreshListRunnable);
+            }
+        }
+    });
+
+    int itemHeight = dpToPx(48);
+    int listHeight = Math.max(Math.min(includeContactList.size() * itemHeight, dpToPx(200)), dpToPx(48));
+    LinearLayout.LayoutParams listParams = new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT, listHeight
+    );
+    listParams.setMargins(0, 8, 0, 0);
+    includeListView.setLayoutParams(listParams);
+
+    includeCard.addView(includeListView);
+
+    includeClearBtn = new Button(getTopActivity());
+    includeClearBtn.setText("🗑️ 清空全部");
+    styleUtilityButton(includeClearBtn);
+    includeClearBtn.setTextColor(Color.parseColor("#D32F2F"));
+    includeClearBtn.setOnClickListener(new View.OnClickListener() {
+        public void onClick(View v) {
+            showClearIncludeContactsConfirmDialog();
+        }
+    });
+    includeClearBtn.setVisibility(includeContactSet.size() > 1 ? View.VISIBLE : View.GONE);
+    includeCard.addView(includeClearBtn);
+
+    final Button finalClearBtn = includeClearBtn;
+    Runnable updateClearBtnVisibility = new Runnable() {
+        public void run() {
+            finalClearBtn.setVisibility(includeContactSet.size() > 1 ? View.VISIBLE : View.GONE);
+        }
+    };
+
+    Runnable fullRefreshRunnable = new Runnable() {
+        public void run() {
+            refreshListRunnable.run();
+            updateClearBtnVisibility.run();
+        }
+    };
+
+    includeListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            if (position < includeContactList.size()) {
+                String contactId = includeContactList.get(position);
+                String displayName = includeDisplayList.get(position);
+                showRemoveIncludeContactDialog(contactId, displayName, fullRefreshRunnable);
+            }
+        }
+    });
+
+    return includeCard;
+}
+
+
+/**
+ * 创建排除联系人管理卡片（黑名单）
+ */
+private LinearLayout createExcludeContactCard() {
+    LinearLayout excludeCard = createCardLayout();
+    excludeCard.addView(createSectionTitle("🚫 排除联系人（黑名单）"));
+
+    excludeCountTv = new TextView(getTopActivity());
+    excludeCountTv.setText("已排除 " + excludeContactSet.size() + " 个联系人");
+    excludeCountTv.setTextSize(14);
+    excludeCountTv.setTextColor(Color.parseColor("#666666"));
+    excludeCountTv.setPadding(0, 0, 0, 12);
+    excludeCard.addView(excludeCountTv);
+
+    LinearLayout addRow = new LinearLayout(getTopActivity());
+    addRow.setOrientation(LinearLayout.HORIZONTAL);
+    addRow.setWeightSum(3);
+
+    Button addFriendBtn = new Button(getTopActivity());
+    addFriendBtn.setText("👤 好友");
+    styleUtilityButton(addFriendBtn);
+    addFriendBtn.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+    addFriendBtn.setOnClickListener(new View.OnClickListener() {
+        public void onClick(View v) {
+            selectFriendToExclude();
+        }
+    });
+
+    Button addGroupBtn = new Button(getTopActivity());
+    addGroupBtn.setText("💬 群聊");
+    styleUtilityButton(addGroupBtn);
+    addGroupBtn.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+    addGroupBtn.setOnClickListener(new View.OnClickListener() {
+        public void onClick(View v) {
+            selectGroupToExclude();
+        }
+    });
+
+    Button manualBtn = new Button(getTopActivity());
+    manualBtn.setText("📝 手动");
+    styleUtilityButton(manualBtn);
+    manualBtn.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+    manualBtn.setOnClickListener(new View.OnClickListener() {
+        public void onClick(View v) {
+            showManualAddExcludeDialog();
+        }
+    });
+
+    addRow.addView(addFriendBtn);
+    addRow.addView(addGroupBtn);
+    addRow.addView(manualBtn);
+    excludeCard.addView(addRow);
+
+    TextView listTitle = new TextView(getTopActivity());
+    listTitle.setText("已排除列表（点击可移除）:");
+    listTitle.setTextSize(12);
+    listTitle.setTextColor(Color.parseColor("#999999"));
+    listTitle.setPadding(0, 16, 0, 8);
+    excludeCard.addView(listTitle);
+
+    excludeListView = new ListView(getTopActivity());
+    setupListViewTouchForScroll(excludeListView);
+
+    excludeContactList = new ArrayList<>(excludeContactSet);
+    excludeDisplayList = new ArrayList<>();
+
+    for (String contactId : excludeContactList) {
+        String displayName = contactId;
+        if (contactId.endsWith("@chatroom")) {
+            displayName = "💬 群聊: " + getGroupName(contactId);
+        } else {
+            displayName = "👤 " + getFriendDisplayName(contactId);
+        }
+        excludeDisplayList.add(displayName);
+    }
+
+    excludeAdapter = new ArrayAdapter<>(getTopActivity(), android.R.layout.simple_list_item_1, excludeDisplayList);
+    excludeListView.setAdapter(excludeAdapter);
+
+    final Runnable refreshListRunnable = new Runnable() {
+        public void run() {
+            excludeContactList.clear();
+            excludeContactList.addAll(excludeContactSet);
+            excludeDisplayList.clear();
+            for (String contactId : excludeContactList) {
+                String displayName = contactId;
+                if (contactId.endsWith("@chatroom")) {
+                    displayName = "💬 群聊: " + getGroupName(contactId);
+                } else {
+                    displayName = "👤 " + getFriendDisplayName(contactId);
+                }
+                excludeDisplayList.add(displayName);
+            }
+            excludeAdapter.notifyDataSetChanged();
+            excludeCountTv.setText("已排除 " + excludeContactSet.size() + " 个联系人");
+
+            int itemHeight = dpToPx(48);
+            int listHeight = Math.max(Math.min(excludeContactList.size() * itemHeight, dpToPx(200)), dpToPx(48));
+            LinearLayout.LayoutParams listParams = (LinearLayout.LayoutParams) excludeListView.getLayoutParams();
+            if (listParams == null) {
+                listParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, listHeight
+                );
+                listParams.setMargins(0, 8, 0, 0);
+                excludeListView.setLayoutParams(listParams);
+            } else {
+                listParams.height = listHeight;
+            }
+        }
+    };
+
+    excludeListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            if (position < excludeContactList.size()) {
+                String contactId = excludeContactList.get(position);
+                String displayName = excludeDisplayList.get(position);
+                showRemoveExcludeContactDialog(contactId, displayName, refreshListRunnable);
+            }
+        }
+    });
+
+    int itemHeight = dpToPx(48);
+    int listHeight = Math.max(Math.min(excludeContactList.size() * itemHeight, dpToPx(200)), dpToPx(48));
+    LinearLayout.LayoutParams listParams = new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT, listHeight
+    );
+    listParams.setMargins(0, 8, 0, 0);
+    excludeListView.setLayoutParams(listParams);
+
+    excludeCard.addView(excludeListView);
+
+    excludeClearBtn = new Button(getTopActivity());
+    excludeClearBtn.setText("🗑️ 清空全部");
+    styleUtilityButton(excludeClearBtn);
+    excludeClearBtn.setTextColor(Color.parseColor("#D32F2F"));
+    excludeClearBtn.setOnClickListener(new View.OnClickListener() {
+        public void onClick(View v) {
+            showClearExcludeContactsConfirmDialog();
+        }
+    });
+    excludeClearBtn.setVisibility(excludeContactSet.size() > 1 ? View.VISIBLE : View.GONE);
+    excludeCard.addView(excludeClearBtn);
+
+    final Button finalClearBtn = excludeClearBtn;
+    Runnable updateClearBtnVisibility = new Runnable() {
+        public void run() {
+            finalClearBtn.setVisibility(excludeContactSet.size() > 1 ? View.VISIBLE : View.GONE);
+        }
+    };
+
+    Runnable fullRefreshRunnable = new Runnable() {
+        public void run() {
+            refreshListRunnable.run();
+            updateClearBtnVisibility.run();
+        }
+    };
+
+    excludeListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            if (position < excludeContactList.size()) {
+                String contactId = excludeContactList.get(position);
+                String displayName = excludeDisplayList.get(position);
+                showRemoveExcludeContactDialog(contactId, displayName, fullRefreshRunnable);
+            }
+        }
+    });
+
+    return excludeCard;
 }
 
 /**
@@ -1044,13 +1326,13 @@ private void showAddKeywordDialog() {
     root.setOrientation(LinearLayout.VERTICAL);
     root.setPadding(32, 32, 32, 32);
     scrollView.addView(root);
-    
+
     // 关键词输入框
     final EditText input = new EditText(getTopActivity());
     input.setHint("输入要监控的关键词");
     input.setPadding(24, 24, 24, 24);
     root.addView(input);
-    
+
     // 匹配模式选择 - 使用按钮点击切换
     TextView modeLabel = new TextView(getTopActivity());
     modeLabel.setText("匹配模式:");
@@ -1058,13 +1340,13 @@ private void showAddKeywordDialog() {
     modeLabel.setTextColor(Color.parseColor("#666666"));
     modeLabel.setPadding(0, 24, 0, 12);
     root.addView(modeLabel);
-    
+
     // 匹配模式按钮容器
     LinearLayout buttonContainer = new LinearLayout(getTopActivity());
     buttonContainer.setOrientation(LinearLayout.HORIZONTAL);
     buttonContainer.setWeightSum(2);
     buttonContainer.setPadding(0, 0, 0, 16);
-    
+
     // 模糊匹配按钮
     final TextView fuzzyBtn = new TextView(getTopActivity());
     fuzzyBtn.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
@@ -1075,7 +1357,7 @@ private void showAddKeywordDialog() {
     fuzzyBtn.setBackgroundResource(android.R.drawable.btn_default);
     fuzzyBtn.setBackgroundColor(Color.parseColor("#4CAF50"));
     fuzzyBtn.setTextColor(Color.WHITE);
-    
+
     // 全字匹配按钮
     final TextView wholeWordBtn = new TextView(getTopActivity());
     wholeWordBtn.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
@@ -1086,17 +1368,17 @@ private void showAddKeywordDialog() {
     wholeWordBtn.setBackgroundResource(android.R.drawable.btn_default);
     wholeWordBtn.setBackgroundColor(Color.parseColor("#E0E0E0"));
     wholeWordBtn.setTextColor(Color.parseColor("#333333"));
-    
+
     // 匹配模式说明
     final TextView modeDesc = new TextView(getTopActivity());
     modeDesc.setText("🔍 模糊匹配 - 关键词包含在消息中即可触发");
     modeDesc.setTextSize(12);
     modeDesc.setTextColor(Color.parseColor("#888888"));
     modeDesc.setPadding(0, 0, 0, 16);
-    
+
     // 选中模式: 0=模糊匹配, 1=全字匹配
     final int[] selectedMode = {0};
-    
+
     // 更新按钮样式的函数
     Runnable updateButtonStyle = new Runnable() {
         public void run() {
@@ -1117,7 +1399,7 @@ private void showAddKeywordDialog() {
             }
         }
     };
-    
+
     // 模糊匹配按钮点击
     fuzzyBtn.setOnClickListener(new View.OnClickListener() {
         public void onClick(View v) {
@@ -1125,7 +1407,7 @@ private void showAddKeywordDialog() {
             updateButtonStyle.run();
         }
     });
-    
+
     // 全字匹配按钮点击
     wholeWordBtn.setOnClickListener(new View.OnClickListener() {
         public void onClick(View v) {
@@ -1133,12 +1415,12 @@ private void showAddKeywordDialog() {
             updateButtonStyle.run();
         }
     });
-    
+
     buttonContainer.addView(fuzzyBtn);
     buttonContainer.addView(wholeWordBtn);
     root.addView(buttonContainer);
     root.addView(modeDesc);
-    
+
     AlertDialog dialog = new AlertDialog.Builder(getTopActivity())
         .setTitle("➕ 添加关键词")
         .setView(scrollView)
@@ -1162,7 +1444,7 @@ private void showAddKeywordDialog() {
         })
         .setNegativeButton("取消", null)
         .create();
-    
+
     dialog.setOnShowListener(new DialogInterface.OnShowListener() {
         public void onShow(DialogInterface d) {
             setupUnifiedDialog((AlertDialog)d);
@@ -1181,15 +1463,15 @@ private void showKeywordListDialog() {
     root.setPadding(24, 24, 24, 24);
     root.setBackgroundColor(Color.parseColor("#FAFBF9"));
     scrollView.addView(root);
-    
+
     root.addView(createSectionTitle("📋 关键词列表 (" + keywordMap.size() + ")"));
-    
+
     if (keywordMap.isEmpty()) {
         root.addView(createPromptText("暂无关键词，请先添加"));
     } else {
         final ListView keywordListView = new ListView(getTopActivity());
         setupListViewTouchForScroll(keywordListView);
-        
+
         final List<String> keywordList = new ArrayList<>(keywordMap.keySet());
         final List<String> displayList = new ArrayList<>();
         for (String keyword : keywordList) {
@@ -1199,14 +1481,14 @@ private void showKeywordListDialog() {
         }
         final ArrayAdapter<String> adapter = new ArrayAdapter<String>(getTopActivity(), android.R.layout.simple_list_item_1, displayList);
         keywordListView.setAdapter(adapter);
-        
+
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT, 
             dpToPx(Math.min(keywordList.size() * 70, 350))
         );
         params.setMargins(0, 16, 0, 16);
         keywordListView.setLayoutParams(params);
-        
+
         // 更新显示列表的方法
         final Runnable updateDisplayList = new Runnable() {
             public void run() {
@@ -1221,12 +1503,12 @@ private void showKeywordListDialog() {
                 adapter.notifyDataSetChanged();
             }
         };
-        
+
         keywordListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 final String keyword = keywordList.get(position);
                 String[] options = {"✏️ 编辑关键词", "🗑️ 删除关键词"};
-                
+
                 AlertDialog.Builder builder = new AlertDialog.Builder(getTopActivity());
                 builder.setTitle("操作关键词");
                 builder.setItems(options, new DialogInterface.OnClickListener() {
@@ -1241,11 +1523,11 @@ private void showKeywordListDialog() {
                 builder.show();
             }
         });
-        
+
         root.addView(keywordListView);
         root.addView(createPromptText("点击关键词可进行编辑或删除"));
     }
-    
+
     Button addBtn = new Button(getTopActivity());
     addBtn.setText("➕ 添加新关键词");
     styleMediaSelectionButton(addBtn);
@@ -1255,7 +1537,7 @@ private void showKeywordListDialog() {
         }
     });
     root.addView(addBtn);
-    
+
     AlertDialog dialog = buildCommonAlertDialog(getTopActivity(), "📋 关键词管理", scrollView, "关闭", null, null, null, null, null);
     dialog.show();
 }
@@ -1269,17 +1551,17 @@ private void showEditKeywordDialog(final String oldKeyword, final ArrayAdapter<S
     root.setOrientation(LinearLayout.VERTICAL);
     root.setPadding(32, 32, 32, 32);
     scrollView.addView(root);
-    
+
     // 关键词输入框
     final EditText input = new EditText(getTopActivity());
     input.setText(oldKeyword);
     input.setPadding(24, 24, 24, 24);
     root.addView(input);
-    
+
     // 当前匹配模式
     Boolean isWholeWord = keywordMap.get(oldKeyword);
     final boolean currentWholeWord = (isWholeWord != null && isWholeWord);
-    
+
     // 匹配模式选择 - 使用按钮点击切换
     TextView modeLabel = new TextView(getTopActivity());
     modeLabel.setText("匹配模式:");
@@ -1287,13 +1569,13 @@ private void showEditKeywordDialog(final String oldKeyword, final ArrayAdapter<S
     modeLabel.setTextColor(Color.parseColor("#666666"));
     modeLabel.setPadding(0, 24, 0, 12);
     root.addView(modeLabel);
-    
+
     // 匹配模式按钮容器
     LinearLayout buttonContainer = new LinearLayout(getTopActivity());
     buttonContainer.setOrientation(LinearLayout.HORIZONTAL);
     buttonContainer.setWeightSum(2);
     buttonContainer.setPadding(0, 0, 0, 16);
-    
+
     // 模糊匹配按钮
     final TextView fuzzyBtn = new TextView(getTopActivity());
     fuzzyBtn.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
@@ -1303,7 +1585,7 @@ private void showEditKeywordDialog(final String oldKeyword, final ArrayAdapter<S
     fuzzyBtn.setPadding(16, 20, 16, 20);
     fuzzyBtn.setBackgroundResource(android.R.drawable.btn_default);
     fuzzyBtn.setTextColor(Color.WHITE);
-    
+
     // 全字匹配按钮
     final TextView wholeWordBtn = new TextView(getTopActivity());
     wholeWordBtn.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
@@ -1313,17 +1595,17 @@ private void showEditKeywordDialog(final String oldKeyword, final ArrayAdapter<S
     wholeWordBtn.setPadding(16, 20, 16, 20);
     wholeWordBtn.setBackgroundResource(android.R.drawable.btn_default);
     wholeWordBtn.setTextColor(Color.parseColor("#333333"));
-    
+
     // 匹配模式说明
     final TextView modeDesc = new TextView(getTopActivity());
     modeDesc.setText(currentWholeWord ? "📝 全字匹配 - 只有完整单词匹配才触发" : "🔍 模糊匹配 - 关键词包含在消息中即可触发");
     modeDesc.setTextSize(12);
     modeDesc.setTextColor(Color.parseColor("#888888"));
     modeDesc.setPadding(0, 0, 0, 16);
-    
+
     // 选中模式: 初始值为当前保存的模式
     final int[] selectedMode = {currentWholeWord ? 1 : 0};
-    
+
     // 更新按钮样式的函数
     Runnable updateButtonStyle = new Runnable() {
         public void run() {
@@ -1344,10 +1626,10 @@ private void showEditKeywordDialog(final String oldKeyword, final ArrayAdapter<S
             }
         }
     };
-    
+
     // 初始化按钮样式
     updateButtonStyle.run();
-    
+
     // 模糊匹配按钮点击
     fuzzyBtn.setOnClickListener(new View.OnClickListener() {
         public void onClick(View v) {
@@ -1355,7 +1637,7 @@ private void showEditKeywordDialog(final String oldKeyword, final ArrayAdapter<S
             updateButtonStyle.run();
         }
     });
-    
+
     // 全字匹配按钮点击
     wholeWordBtn.setOnClickListener(new View.OnClickListener() {
         public void onClick(View v) {
@@ -1363,12 +1645,12 @@ private void showEditKeywordDialog(final String oldKeyword, final ArrayAdapter<S
             updateButtonStyle.run();
         }
     });
-    
+
     buttonContainer.addView(fuzzyBtn);
     buttonContainer.addView(wholeWordBtn);
     root.addView(buttonContainer);
     root.addView(modeDesc);
-    
+
     AlertDialog dialog = new AlertDialog.Builder(getTopActivity())
         .setTitle("✏️ 编辑关键词")
         .setView(scrollView)
@@ -1384,13 +1666,13 @@ private void showEditKeywordDialog(final String oldKeyword, final ArrayAdapter<S
                     toast("该关键词已存在");
                     return;
                 }
-                
+
                 Boolean oldWholeWord = keywordMap.get(oldKeyword);
                 boolean isWholeWord = (oldWholeWord != null && oldWholeWord);
-                
+
                 // 判断新模式是否为全字匹配
                 boolean newIsWholeWord = (selectedMode[0] == 1);
-                
+
                 // 如果新关键词和旧关键词不同，或者匹配模式改变了
                 if (!newKeyword.equals(oldKeyword) || newIsWholeWord != isWholeWord) {
                     keywordMap.remove(oldKeyword);
@@ -1398,14 +1680,14 @@ private void showEditKeywordDialog(final String oldKeyword, final ArrayAdapter<S
                     saveConfig();
                     refreshKeywordCount();
                 }
-                
+
                 updateDisplayList.run();
                 toast("✅ 关键词已更新");
             }
         })
         .setNegativeButton("取消", null)
         .create();
-    
+
     dialog.setOnShowListener(new DialogInterface.OnShowListener() {
         public void onShow(DialogInterface d) {
             setupUnifiedDialog((AlertDialog)d);
@@ -1426,7 +1708,7 @@ private void showDeleteKeywordConfirmDialog(final String keyword, final ArrayAda
                 keywordMap.remove(keyword);
                 saveConfig();
                 refreshKeywordCount();
-                
+
                 int pos = keywordList.indexOf(keyword);
                 if (pos >= 0) {
                     keywordList.remove(pos);
@@ -1438,7 +1720,7 @@ private void showDeleteKeywordConfirmDialog(final String keyword, final ArrayAda
         })
         .setNegativeButton("取消", null)
         .create();
-    
+
     dialog.setOnShowListener(new DialogInterface.OnShowListener() {
         public void onShow(DialogInterface d) {
             setupUnifiedDialog((AlertDialog)d);
@@ -1464,7 +1746,7 @@ private void showClearKeywordsConfirmDialog() {
         })
         .setNegativeButton("取消", null)
         .create();
-    
+
     dialog.setOnShowListener(new DialogInterface.OnShowListener() {
         public void onShow(DialogInterface d) {
             setupUnifiedDialog((AlertDialog)d);
@@ -1474,28 +1756,28 @@ private void showClearKeywordsConfirmDialog() {
 }
 
 /**
- * 选择好友添加到排除列表 (改进版：支持搜索、全选)
+ * 选择好友添加到排除列表 (改进版:支持搜索、全选)
  */
 private void selectFriendToExclude() {
     showLoadingDialog("加载好友列表", "正在获取好友...", new Runnable() {
         public void run() {
             try {
                 if (sCachedFriendList == null) sCachedFriendList = getFriendList();
-                
+
                 new Handler(Looper.getMainLooper()).post(new Runnable() {
                     public void run() {
                         List<String> names = new ArrayList<>();
                         List<String> ids = new ArrayList<>();
-                        
+
                         if (sCachedFriendList != null) {
                             for (int i = 0; i < sCachedFriendList.size(); i++) {
                                 FriendInfo f = (FriendInfo) sCachedFriendList.get(i);
-                                
+
                                 String nickname = TextUtils.isEmpty(f.getNickname()) ? "未知昵称" : f.getNickname();
                                 String remark = f.getRemark();
                                 String displayName = !TextUtils.isEmpty(remark) ? nickname + " (" + remark + ")" : nickname;
                                 String wxid = f.getWxid();
-                                
+
                                 // 过滤掉群聊ID和文件助手
                                 if (!TextUtils.isEmpty(wxid) && !wxid.endsWith("@chatroom") && !wxid.equals("filehelper")) {
                                     // 显示格式：👤 昵称 (备注) - wxid
@@ -1504,7 +1786,7 @@ private void selectFriendToExclude() {
                                 }
                             }
                         }
-                        
+
                         // 使用多选对话框，支持搜索和全选
                         showMultiSelectDialog("👤 选择要排除的好友 (支持搜索)", names, ids, excludeContactSet, "搜索昵称/备注/wxid...", new Runnable() {
                             public void run() {
@@ -1529,25 +1811,25 @@ private void selectFriendToExclude() {
 }
 
 /**
- * 选择群聊添加到排除列表 (改进版：支持搜索、全选)
+ * 选择群聊添加到排除列表 (改进版:支持搜索、全选)
  */
 private void selectGroupToExclude() {
     showLoadingDialog("加载群聊列表", "正在获取群聊...", new Runnable() {
         public void run() {
             try {
                 if (sCachedGroupList == null) sCachedGroupList = getGroupList();
-                
+
                 new Handler(Looper.getMainLooper()).post(new Runnable() {
                     public void run() {
                         List<String> names = new ArrayList<>();
                         List<String> ids = new ArrayList<>();
-                        
+
                         if (sCachedGroupList != null) {
                             for (int i = 0; i < sCachedGroupList.size(); i++) {
                                 GroupInfo g = (GroupInfo) sCachedGroupList.get(i);
                                 String name = !TextUtils.isEmpty(g.getName()) ? g.getName() : "未命名群聊";
                                 String roomId = g.getRoomId();
-                                
+
                                 if (!TextUtils.isEmpty(roomId)) {
                                     // 显示格式：🏠 群名称 - roomid
                                     names.add("🏠 " + name + " - " + roomId);
@@ -1555,7 +1837,7 @@ private void selectGroupToExclude() {
                                 }
                             }
                         }
-                        
+
                         // 使用多选对话框，支持搜索和全选
                         showMultiSelectDialog("💬 选择要排除的群聊 (支持搜索)", names, ids, excludeContactSet, "搜索群名/wxid...", new Runnable() {
                             public void run() {
@@ -1588,18 +1870,18 @@ private void showManualAddExcludeDialog() {
     root.setOrientation(LinearLayout.VERTICAL);
     root.setPadding(32, 32, 32, 32);
     scrollView.addView(root);
-    
+
     TextView hint = new TextView(getTopActivity());
     hint.setText("输入要排除的wxid（好友wxid或群聊ID）：");
     hint.setTextSize(14);
     hint.setTextColor(Color.parseColor("#666666"));
     root.addView(hint);
-    
+
     final EditText input = new EditText(getTopActivity());
     input.setHint("例如: wxid_abc123 或 123456789@chatroom");
     input.setPadding(24, 24, 24, 24);
     root.addView(input);
-    
+
     AlertDialog dialog = new AlertDialog.Builder(getTopActivity())
         .setTitle("📝 手动添加")
         .setView(scrollView)
@@ -1622,7 +1904,161 @@ private void showManualAddExcludeDialog() {
         })
         .setNegativeButton("取消", null)
         .create();
-    
+
+    dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+        public void onShow(DialogInterface d) {
+            setupUnifiedDialog((AlertDialog)d);
+        }
+    });
+    dialog.show();
+}
+
+
+/**
+ * 选择好友添加到仅生效列表
+ */
+private void selectFriendToInclude() {
+    showLoadingDialog("加载好友列表", "正在获取好友...", new Runnable() {
+        public void run() {
+            try {
+                if (sCachedFriendList == null) sCachedFriendList = getFriendList();
+
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    public void run() {
+                        List<String> names = new ArrayList<>();
+                        List<String> ids = new ArrayList<>();
+
+                        if (sCachedFriendList != null) {
+                            for (int i = 0; i < sCachedFriendList.size(); i++) {
+                                FriendInfo f = (FriendInfo) sCachedFriendList.get(i);
+
+                                String nickname = TextUtils.isEmpty(f.getNickname()) ? "未知昵称" : f.getNickname();
+                                String remark = f.getRemark();
+                                String displayName = !TextUtils.isEmpty(remark) ? nickname + " (" + remark + ")" : nickname;
+                                String wxid = f.getWxid();
+
+                                if (!TextUtils.isEmpty(wxid) && !wxid.endsWith("@chatroom") && !wxid.equals("filehelper")) {
+                                    names.add("👤 " + displayName + " - " + wxid);
+                                    ids.add(wxid);
+                                }
+                            }
+                        }
+
+                        showMultiSelectDialog("👤 选择仅生效的好友 (支持搜索)", names, ids, includeContactSet, "搜索昵称/备注/wxid...", new Runnable() {
+                            public void run() {
+                                saveConfig();
+                                refreshIncludeDisplay();
+                                int addedCount = includeContactSet.size();
+                                toast("✅ 已更新仅生效列表，当前 " + addedCount + " 个联系人");
+                            }
+                        }, null);
+                    }
+                });
+            } catch (Exception e) {
+                log("选择好友失败: " + e.getMessage());
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    public void run() {
+                        toast("无法获取好友列表");
+                    }
+                });
+            }
+        }
+    });
+}
+
+/**
+ * 选择群聊添加到仅生效列表
+ */
+private void selectGroupToInclude() {
+    showLoadingDialog("加载群聊列表", "正在获取群聊...", new Runnable() {
+        public void run() {
+            try {
+                if (sCachedGroupList == null) sCachedGroupList = getGroupList();
+
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    public void run() {
+                        List<String> names = new ArrayList<>();
+                        List<String> ids = new ArrayList<>();
+
+                        if (sCachedGroupList != null) {
+                            for (int i = 0; i < sCachedGroupList.size(); i++) {
+                                GroupInfo g = (GroupInfo) sCachedGroupList.get(i);
+                                String name = !TextUtils.isEmpty(g.getName()) ? g.getName() : "未命名群聊";
+                                String roomId = g.getRoomId();
+
+                                if (!TextUtils.isEmpty(roomId)) {
+                                    names.add("🏠 " + name + " - " + roomId);
+                                    ids.add(roomId);
+                                }
+                            }
+                        }
+
+                        showMultiSelectDialog("💬 选择仅生效的群聊 (支持搜索)", names, ids, includeContactSet, "搜索群名/wxid...", new Runnable() {
+                            public void run() {
+                                saveConfig();
+                                refreshIncludeDisplay();
+                                int addedCount = includeContactSet.size();
+                                toast("✅ 已更新仅生效列表，当前 " + addedCount + " 个联系人");
+                            }
+                        }, null);
+                    }
+                });
+            } catch (Exception e) {
+                log("选择群聊失败: " + e.getMessage());
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    public void run() {
+                        toast("无法获取群聊列表");
+                    }
+                });
+            }
+        }
+    });
+}
+
+/**
+ * 手动输入wxid添加到仅生效列表
+ */
+private void showManualAddIncludeDialog() {
+    ScrollView scrollView = new ScrollView(getTopActivity());
+    LinearLayout root = new LinearLayout(getTopActivity());
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(32, 32, 32, 32);
+    scrollView.addView(root);
+
+    TextView hint = new TextView(getTopActivity());
+    hint.setText("输入仅生效的wxid（好友wxid或群聊ID）:");
+    hint.setTextSize(14);
+    hint.setTextColor(Color.parseColor("#666666"));
+    root.addView(hint);
+
+    final EditText input = new EditText(getTopActivity());
+    input.setHint("例如: wxid_abc123 或 123456789@chatroom");
+    input.setPadding(24, 24, 24, 24);
+    root.addView(input);
+
+    AlertDialog dialog = new AlertDialog.Builder(getTopActivity())
+        .setTitle("📝 手动添加")
+        .setView(scrollView)
+        .setPositiveButton("添加", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                String wxid = input.getText().toString().trim();
+                if (TextUtils.isEmpty(wxid)) {
+                    toast("请输入wxid");
+                    return;
+                }
+                if (includeContactSet.contains(wxid)) {
+                    toast("该wxid已在仅生效列表中");
+                    return;
+                }
+                includeContactSet.add(wxid);
+                saveConfig();
+                refreshIncludeDisplay();
+                toast("✅ 已添加仅生效: " + wxid);
+            }
+        })
+        .setNegativeButton("取消", null)
+        .create();
+
     dialog.setOnShowListener(new DialogInterface.OnShowListener() {
         public void onShow(DialogInterface d) {
             setupUnifiedDialog((AlertDialog)d);
@@ -1632,11 +2068,105 @@ private void showManualAddExcludeDialog() {
 }
 
 /**
+ * 移除仅生效联系人确认对话框
+ */
+private void showRemoveIncludeContactDialog(final String contactId, final String displayName, final Runnable onRemoved) {
+    String type = contactId.endsWith("@chatroom") ? "群聊" : "好友";
+
+    AlertDialog dialog = new AlertDialog.Builder(getTopActivity())
+        .setTitle("移除仅生效")
+        .setMessage("确定要移除仅生效" + type + " [" + displayName + "] 吗?\n移除后，来自该" + type + "的消息将不再触发通知。")
+        .setPositiveButton("移除", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                includeContactSet.remove(contactId);
+                saveConfig();
+                onRemoved.run();
+                toast("✅ 已移除仅生效");
+            }
+        })
+        .setNegativeButton("取消", null)
+        .create();
+
+    dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+        public void onShow(DialogInterface d) {
+            setupUnifiedDialog((AlertDialog)d);
+        }
+    });
+    dialog.show();
+}
+
+/**
+ * 清空所有仅生效联系人确认对话框
+ */
+private void showClearIncludeContactsConfirmDialog() {
+    AlertDialog dialog = new AlertDialog.Builder(getTopActivity())
+        .setTitle("🗑️ 清空仅生效列表")
+        .setMessage("确定要清空所有仅生效联系人吗?")
+        .setPositiveButton("清空", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                includeContactSet.clear();
+                saveConfig();
+                refreshIncludeDisplay();
+                toast("✅ 已清空仅生效列表");
+            }
+        })
+        .setNegativeButton("取消", null)
+        .create();
+
+    dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+        public void onShow(DialogInterface d) {
+            setupUnifiedDialog((AlertDialog)d);
+        }
+    });
+    dialog.show();
+}
+
+/**
+ * 刷新仅生效列表显示
+ */
+private void refreshIncludeDisplay() {
+    try {
+        if (includeCountTv != null) {
+            includeCountTv.setText("已添加 " + includeContactSet.size() + " 个联系人");
+        }
+        if (includeListView != null && includeAdapter != null && includeContactList != null && includeDisplayList != null) {
+            includeContactList.clear();
+            includeContactList.addAll(includeContactSet);
+            includeDisplayList.clear();
+            for (String contactId : includeContactList) {
+                String displayName = contactId;
+                if (contactId.endsWith("@chatroom")) {
+                    displayName = "💬 群聊: " + getGroupName(contactId);
+                } else {
+                    displayName = "👤 " + getFriendDisplayName(contactId);
+                }
+                includeDisplayList.add(displayName);
+            }
+            includeAdapter.notifyDataSetChanged();
+
+            int itemHeight = dpToPx(48);
+            int listHeight = Math.max(Math.min(includeContactList.size() * itemHeight, dpToPx(200)), dpToPx(48));
+            LinearLayout.LayoutParams listParams = (LinearLayout.LayoutParams) includeListView.getLayoutParams();
+            if (listParams != null) {
+                listParams.height = listHeight;
+                includeListView.setLayoutParams(listParams);
+            }
+        }
+        if (includeClearBtn != null) {
+            includeClearBtn.setVisibility(includeContactSet.size() > 1 ? View.VISIBLE : View.GONE);
+        }
+    } catch (Exception e) {
+        log("刷新仅生效列表显示失败: " + e.getMessage());
+    }
+}
+
+
+/**
  * 移除排除联系人确认对话框
  */
 private void showRemoveExcludeContactDialog(final String contactId, final String displayName, final Runnable onRemoved) {
     String type = contactId.endsWith("@chatroom") ? "群聊" : "好友";
-    
+
     AlertDialog dialog = new AlertDialog.Builder(getTopActivity())
         .setTitle("移除排除")
         .setMessage("确定要移除排除" + type + " [" + displayName + "] 吗？\n移除后，来自该" + type + "的消息将正常检查关键词。")
@@ -1650,7 +2180,7 @@ private void showRemoveExcludeContactDialog(final String contactId, final String
         })
         .setNegativeButton("取消", null)
         .create();
-    
+
     dialog.setOnShowListener(new DialogInterface.OnShowListener() {
         public void onShow(DialogInterface d) {
             setupUnifiedDialog((AlertDialog)d);
@@ -1676,7 +2206,7 @@ private void showClearExcludeContactsConfirmDialog() {
         })
         .setNegativeButton("取消", null)
         .create();
-    
+
     dialog.setOnShowListener(new DialogInterface.OnShowListener() {
         public void onShow(DialogInterface d) {
             setupUnifiedDialog((AlertDialog)d);
@@ -1702,10 +2232,10 @@ private void showQuietTimeDialog() {
     for (int i = 0; i < 24; i++) {
         hours[i] = String.format("%02d:00", i);
     }
-    
+
     final String[] selectedStart = {String.format("%02d:00", quietStartHour)};
     final String[] selectedEnd = {String.format("%02d:00", quietEndHour)};
-    
+
     AlertDialog.Builder builder = new AlertDialog.Builder(getTopActivity());
     builder.setTitle("⏰ 设置免打扰时间");
     builder.setMessage("开始时间: " + selectedStart[0] + "\n结束时间: " + selectedEnd[0]);
@@ -1734,7 +2264,7 @@ private void showQuietTimeDialog() {
         }
     });
     builder.setNegativeButton("关闭", null);
-    
+
     AlertDialog dialog = builder.create();
     dialog.setOnShowListener(new DialogInterface.OnShowListener() {
         public void onShow(DialogInterface d) {
@@ -1753,7 +2283,7 @@ private void showCustomTextDialog() {
     root.setOrientation(LinearLayout.VERTICAL);
     root.setPadding(32, 32, 32, 32);
     scrollView.addView(root);
-    
+
     // 提示信息
     TextView tip = new TextView(getTopActivity());
     tip.setText("支持变量替换：%keyword% (关键词), %sender% (发送者), %wxid% (发送者ID), %content% (内容), %type% (好友/群消息)\n留空则使用默认文字");
@@ -1761,10 +2291,10 @@ private void showCustomTextDialog() {
     tip.setTextColor(Color.parseColor("#666666"));
     tip.setPadding(0, 0, 0, 16);
     root.addView(tip);
-    
+
     // ========== 关键词部分 ==========
     root.addView(createSectionTitle("🔑 关键词自定义"));
-    
+
     // 通知标题
     root.addView(createTextView(getTopActivity(), "通知标题模板:", 14, 8));
     final EditText keywordTitleInput = createStyledEditText("例如: 监控提醒", customKeywordNotifyTitle);
@@ -1773,7 +2303,7 @@ private void showCustomTextDialog() {
         "%keyword%", "%sender%", "%wxid%", "%content%", "%type%"
     }, keywordTitleInput);
     root.addView(keywordTitleVarRow);
-    
+
     // 通知内容
     root.addView(createTextView(getTopActivity(), "通知内容模板:", 14, 8));
     final EditText keywordContentInput = createStyledEditText("例如: [%sender%] %content%", customKeywordNotifyContent);
@@ -1782,7 +2312,7 @@ private void showCustomTextDialog() {
         "%keyword%", "%sender%", "%wxid%", "%content%", "%type%"
     }, keywordContentInput);
     root.addView(keywordContentVarRow);
-    
+
     // Toast文字
     root.addView(createTextView(getTopActivity(), "Toast文字模板:", 14, 8));
     final EditText keywordToastInput = createStyledEditText("例如: 命中关键词: %keyword%", customKeywordToastText);
@@ -1791,10 +2321,10 @@ private void showCustomTextDialog() {
         "%keyword%", "%sender%", "%wxid%", "%content%", "%type%"
     }, keywordToastInput);
     root.addView(keywordToastVarRow);
-    
+
     // ========== @我部分 ==========
     root.addView(createSectionTitle("@我自定义"));
-    
+
     // 通知标题
     root.addView(createTextView(getTopActivity(), "通知标题模板:", 14, 8));
     final EditText atMeTitleInput = createStyledEditText("例如: @我提醒", customAtMeNotifyTitle);
@@ -1803,7 +2333,7 @@ private void showCustomTextDialog() {
         "%keyword%", "%sender%", "%wxid%", "%content%", "%type%"
     }, atMeTitleInput);
     root.addView(atMeTitleVarRow);
-    
+
     // 通知内容
     root.addView(createTextView(getTopActivity(), "通知内容模板:", 14, 8));
     final EditText atMeContentInput = createStyledEditText("例如: [%sender%] %content%", customAtMeNotifyContent);
@@ -1812,7 +2342,7 @@ private void showCustomTextDialog() {
         "%keyword%", "%sender%", "%wxid%", "%content%", "%type%"
     }, atMeContentInput);
     root.addView(atMeContentVarRow);
-    
+
     // Toast文字
     root.addView(createTextView(getTopActivity(), "Toast文字模板:", 14, 8));
     final EditText atMeToastInput = createStyledEditText("例如: @我通知: %keyword%", customAtMeToastText);
@@ -1821,10 +2351,10 @@ private void showCustomTextDialog() {
         "%keyword%", "%sender%", "%wxid%", "%content%", "%type%"
     }, atMeToastInput);
     root.addView(atMeToastVarRow);
-    
+
     // ========== @所有人部分 ==========
     root.addView(createSectionTitle("@所有人/群公告自定义"));
-    
+
     // 通知标题
     root.addView(createTextView(getTopActivity(), "通知标题模板:", 14, 8));
     final EditText atAllTitleInput = createStyledEditText("例如: @所有人提醒", customAtAllNotifyTitle);
@@ -1833,7 +2363,7 @@ private void showCustomTextDialog() {
         "%keyword%", "%sender%", "%wxid%", "%content%", "%type%"
     }, atAllTitleInput);
     root.addView(atAllTitleVarRow);
-    
+
     // 通知内容
     root.addView(createTextView(getTopActivity(), "通知内容模板:", 14, 8));
     final EditText atAllContentInput = createStyledEditText("例如: [%sender%] %content%", customAtAllNotifyContent);
@@ -1842,7 +2372,7 @@ private void showCustomTextDialog() {
         "%keyword%", "%sender%", "%wxid%", "%content%", "%type%"
     }, atAllContentInput);
     root.addView(atAllContentVarRow);
-    
+
     // Toast文字
     root.addView(createTextView(getTopActivity(), "Toast文字模板:", 14, 8));
     final EditText atAllToastInput = createStyledEditText("例如: @所有人通知: %keyword%", customAtAllToastText);
@@ -1851,12 +2381,12 @@ private void showCustomTextDialog() {
         "%keyword%", "%sender%", "%wxid%", "%content%", "%type%"
     }, atAllToastInput);
     root.addView(atAllToastVarRow);
-    
+
     // 按钮区域
     LinearLayout btnRow = new LinearLayout(getTopActivity());
     btnRow.setOrientation(LinearLayout.HORIZONTAL);
     btnRow.setGravity(Gravity.CENTER);
-    
+
     // 恢复默认按钮
     Button resetBtn = new Button(getTopActivity());
     resetBtn.setText("恢复默认");
@@ -1881,7 +2411,7 @@ private void showCustomTextDialog() {
         }
     });
     btnRow.addView(resetBtn);
-    
+
     // 清除模板按钮
     Button clearBtn = new Button(getTopActivity());
     clearBtn.setText("清除模板");
@@ -1902,9 +2432,9 @@ private void showCustomTextDialog() {
         }
     });
     btnRow.addView(clearBtn);
-    
+
     root.addView(btnRow);
-    
+
     AlertDialog dialog = new AlertDialog.Builder(getTopActivity())
         .setTitle("自定义通知/Toast文字")
         .setView(scrollView)
@@ -1925,7 +2455,7 @@ private void showCustomTextDialog() {
         })
         .setNegativeButton("取消", null)
         .create();
-    
+
     dialog.setOnShowListener(new DialogInterface.OnShowListener() {
         public void onShow(DialogInterface d) {
             setupUnifiedDialog((AlertDialog)d);
@@ -1941,12 +2471,12 @@ private LinearLayout createVariableButtons(String[] variables, final EditText ta
     LinearLayout row = new LinearLayout(getTopActivity());
     row.setOrientation(LinearLayout.HORIZONTAL);
     row.setWeightSum(variables.length);
-    
+
     for (int i = 0; i < variables.length; i++) {
         Button btn = createVarButton(variables[i], targetEditText);
         row.addView(btn);
     }
-    
+
     return row;
 }
 
@@ -1958,7 +2488,7 @@ private Button createVarButton(final String variable, final EditText targetEditT
     btn.setText(variable);
     btn.setTextSize(11);
     btn.setAllCaps(false);
-    
+
     // 样式
     GradientDrawable shape = new GradientDrawable();
     shape.setCornerRadius(12);
@@ -1966,13 +2496,13 @@ private Button createVarButton(final String variable, final EditText targetEditT
     shape.setStroke(1, Color.parseColor("#90CAF9"));
     btn.setBackground(shape);
     btn.setTextColor(Color.parseColor("#1976D2"));
-    
+
     LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
         0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
     );
     params.setMargins(4, 4, 4, 4);
     btn.setLayoutParams(params);
-    
+
     btn.setOnClickListener(new View.OnClickListener() {
         public void onClick(View v) {
             int cursor = targetEditText.getSelectionStart();
@@ -1982,7 +2512,7 @@ private Button createVarButton(final String variable, final EditText targetEditT
             targetEditText.setSelection(cursor + variable.length());
         }
     });
-    
+
     return btn;
 }
 
@@ -1995,7 +2525,7 @@ private void showHourPicker(String title, int currentHour, final HourPickerCallb
     for (int i = 0; i < 24; i++) {
         hours[i] = String.format("%02d:00", i);
     }
-    
+
     AlertDialog.Builder builder = new AlertDialog.Builder(getTopActivity());
     builder.setTitle(title);
     builder.setSingleChoiceItems(hours, currentHour, new DialogInterface.OnClickListener() {
@@ -2074,7 +2604,7 @@ private void refreshExcludeDisplay() {
                 excludeDisplayList.add(displayName);
             }
             excludeAdapter.notifyDataSetChanged();
-            
+
             // 动态调整列表高度
             int itemHeight = dpToPx(48);
             int listHeight = Math.max(Math.min(excludeContactList.size() * itemHeight, dpToPx(200)), dpToPx(48));
@@ -2132,12 +2662,12 @@ interface ToggleCallback {
  */
 private LinearLayout createSwitchRow(String text, boolean initialChecked, int textSize, final ToggleCallback callback) {
     final boolean[] isChecked = {initialChecked};
-    
+
     LinearLayout row = new LinearLayout(getTopActivity());
     row.setOrientation(LinearLayout.HORIZONTAL);
     row.setGravity(android.view.Gravity.CENTER_VERTICAL);
     row.setPadding(0, 12, 0, 12);
-    
+
     // 文字标签
     TextView label = new TextView(getTopActivity());
     label.setText(text);
@@ -2148,21 +2678,21 @@ private LinearLayout createSwitchRow(String text, boolean initialChecked, int te
     );
     label.setLayoutParams(labelParams);
     row.addView(label);
-    
+
     // 开关容器
     android.widget.FrameLayout switchContainer = new android.widget.FrameLayout(getTopActivity());
     LinearLayout.LayoutParams switchParams = new LinearLayout.LayoutParams(
         dpToPx(52), dpToPx(30)
     );
     switchContainer.setLayoutParams(switchParams);
-    
+
     // 开关背景
     final GradientDrawable switchBg = new GradientDrawable();
     switchBg.setShape(GradientDrawable.OVAL);
     switchBg.setCornerRadius(dpToPx(15));
     switchBg.setColor(Color.parseColor(isChecked[0] ? "#4CAF50" : "#E0E0E0"));
     switchContainer.setBackground(switchBg);
-    
+
     // 开关圆点
     final android.widget.ImageView thumb = new android.widget.ImageView(getTopActivity());
     int thumbSize = dpToPx(26);
@@ -2174,35 +2704,35 @@ private LinearLayout createSwitchRow(String text, boolean initialChecked, int te
     int margin = isChecked[0] ? dpToPx(22) : dpToPx(2);
     thumbParams.setMargins(margin, 0, 0, 0);
     thumb.setLayoutParams(thumbParams);
-    
+
     GradientDrawable thumbBg = new GradientDrawable();
     thumbBg.setShape(GradientDrawable.OVAL);
     thumbBg.setColor(Color.WHITE);
     thumbBg.setCornerRadius(dpToPx(13));
     thumb.setImageDrawable(thumbBg);
     thumb.setElevation(2);
-    
+
     switchContainer.addView(thumb);
     row.addView(switchContainer);
-    
+
     // 点击切换状态
     row.setOnClickListener(new View.OnClickListener() {
         public void onClick(View v) {
             isChecked[0] = !isChecked[0];
-            
+
             // 动画效果
             int targetMargin = isChecked[0] ? dpToPx(22) : dpToPx(2);
             switchBg.setColor(Color.parseColor(isChecked[0] ? "#4CAF50" : "#E0E0E0"));
-            
+
             // 更新圆点位置
             android.widget.FrameLayout.LayoutParams tp = (android.widget.FrameLayout.LayoutParams) thumb.getLayoutParams();
             tp.setMargins(targetMargin, 0, 0, 0);
             thumb.setLayoutParams(tp);
-            
+
             callback.onToggle(isChecked[0]);
         }
     });
-    
+
     return row;
 }
 
@@ -2384,12 +2914,12 @@ private void showMultiSelectDialog(String title, List allItems, List idList, Set
         mainLayout.setPadding(24, 24, 24, 24);
         mainLayout.setBackgroundColor(Color.parseColor("#FAFBF9"));
         scrollView.addView(mainLayout);
-        
+
         // 搜索框
         final EditText searchEditText = createStyledEditText(searchHint, "");
         searchEditText.setSingleLine(true);
         mainLayout.addView(searchEditText);
-        
+
         // 列表
         final ListView listView = new ListView(getTopActivity());
         setupListViewTouchForScroll(listView);
@@ -2397,11 +2927,11 @@ private void showMultiSelectDialog(String title, List allItems, List idList, Set
         LinearLayout.LayoutParams listParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dpToPx(300));
         listView.setLayoutParams(listParams);
         mainLayout.addView(listView);
-        
+
         // 当前过滤后的数据
         final List currentFilteredIds = new ArrayList();
         final List currentFilteredNames = new ArrayList();
-        
+
         // 更新列表的Runnable
         final Runnable updateListRunnable = new Runnable() {
             public void run() {
@@ -2426,7 +2956,7 @@ private void showMultiSelectDialog(String title, List allItems, List idList, Set
                 if (updateList != null) updateList.run();
             }
         };
-        
+
         // 点击列表项切换选择状态
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
@@ -2436,7 +2966,7 @@ private void showMultiSelectDialog(String title, List allItems, List idList, Set
                 if (updateList != null) updateList.run();
             }
         });
-        
+
         // 搜索框文字变化时更新列表
         searchEditText.addTextChangedListener(new TextWatcher() {
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -2445,7 +2975,7 @@ private void showMultiSelectDialog(String title, List allItems, List idList, Set
                 updateListRunnable.run();
             }
         });
-        
+
         // 全选/反选按钮点击事件
         final DialogInterface.OnClickListener fullSelectListener = new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
@@ -2456,7 +2986,7 @@ private void showMultiSelectDialog(String title, List allItems, List idList, Set
                         break;
                     }
                 }
-                
+
                 if (allSelected) {
                     // 当前全部选中，则取消全选
                     for (Object id : currentFilteredIds) {
@@ -2471,7 +3001,7 @@ private void showMultiSelectDialog(String title, List allItems, List idList, Set
                 updateListRunnable.run();
             }
         };
-        
+
         // 创建对话框
         final AlertDialog dialog = buildCommonAlertDialog(getTopActivity(), title, scrollView, "✅ 确定", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
@@ -2485,7 +3015,7 @@ private void showMultiSelectDialog(String title, List allItems, List idList, Set
                 dialog.dismiss();
             }
         }, "全选/反选", fullSelectListener);
-        
+
         // 设置中性按钮的点击事件
         dialog.setOnShowListener(new DialogInterface.OnShowListener() {
             public void onShow(DialogInterface d) {
@@ -2498,7 +3028,7 @@ private void showMultiSelectDialog(String title, List allItems, List idList, Set
                 });
             }
         });
-        
+
         dialog.show();
         updateListRunnable.run();
     } catch (Exception e) {
