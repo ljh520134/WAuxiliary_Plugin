@@ -183,6 +183,7 @@ private final String ZHILIA_MULTI_CONFIGS_KEY = "zhilia_multi_configs_v1";
 private final String ZHILIA_ACTIVE_CONFIG_NAME_KEY = "zhilia_active_config_name_v1";
 private final String ZHILIA_AI_STREAM_ENABLED_KEY = "zhilia_ai_stream_enabled_v1";
 private final String ZHILIA_MODEL_FAVORITES_KEY = "zhilia_model_favorites_v1";
+private final String ZHILIA_CLEAR_CONTEXT_ON_SAVE_KEY = "zhilia_clear_context_on_save_v1";
 
 // 匹配类型常量
 private final static int MATCH_TYPE_FUZZY = 0;      // 模糊匹配
@@ -2702,13 +2703,25 @@ private String callZhiliaStreamOnce(String apiUrl, String apiKey, String modelNa
 
                 org.json.JSONObject delta = c0 == null ? null : c0.optJSONObject("delta");
                 if (delta != null) {
-                    String piece = delta == null ? "" : delta.optString("content", "");
-                    if (!TextUtils.isEmpty(piece)) out.append(piece);
+                    String piece = "";
+                    if (delta != null && jHas(delta, "content")) {
+                        Object cObj = delta.opt("content");
+                        if (cObj != null && cObj != org.json.JSONObject.NULL) {
+                            piece = String.valueOf(cObj);
+                        }
+                    }
+                    if (!TextUtils.isEmpty(piece) && !"null".equalsIgnoreCase(piece.trim())) out.append(piece);
                 } else {
                     org.json.JSONObject msg = c0 == null ? null : c0.optJSONObject("message");
                     if (msg != null) {
-                        String piece2 = msg == null ? "" : msg.optString("content", "");
-                        if (!TextUtils.isEmpty(piece2)) out.append(piece2);
+                        String piece2 = "";
+                        if (msg != null && jHas(msg, "content")) {
+                            Object cObj2 = msg.opt("content");
+                            if (cObj2 != null && cObj2 != org.json.JSONObject.NULL) {
+                                piece2 = String.valueOf(cObj2);
+                            }
+                        }
+                        if (!TextUtils.isEmpty(piece2) && !"null".equalsIgnoreCase(piece2.trim())) out.append(piece2);
                     }
                 }
             } catch (Exception ignore) {}
@@ -2725,6 +2738,19 @@ private String callZhiliaStreamOnce(String apiUrl, String apiKey, String modelNa
     }
 }
 
+
+
+
+private void clearZhiliaConversationHistories() {
+    try {
+        if (zhiliaConversationHistories != null) {
+            zhiliaConversationHistories.clear();
+        }
+        debugLog("[智聊AI] 已清空全部会话上下文缓存");
+    } catch (Exception e) {
+        debugLog("[异常] 清空智聊会话缓存失败: " + e.getMessage());
+    }
+}
 
 private void sendZhiliaAiReply(final String talker, String userContent, final boolean replyAsQuote, final long quoteMsgId) {
     String apiKey = getString(ZHILIA_AI_API_KEY, "");
@@ -2751,6 +2777,35 @@ private void sendZhiliaAiReply(final String talker, String userContent, final bo
             history.add(systemMsg);
         }
         zhiliaConversationHistories.put(talker, history);
+    } else {
+        // 兜底：已存在会话时，若system prompt与当前配置不一致，立即替换（保留上下文）
+        boolean handled = false;
+        if (!history.isEmpty()) {
+            Object first = history.get(0);
+            if (first instanceof Map) {
+                Map firstMap = (Map) first;
+                String role = firstMap.get("role") == null ? "" : String.valueOf(firstMap.get("role"));
+                if ("system".equals(role)) {
+                    String oldPrompt = firstMap.get("content") == null ? "" : String.valueOf(firstMap.get("content"));
+                    if (!TextUtils.equals(oldPrompt, systemPrompt)) {
+                        if (TextUtils.isEmpty(systemPrompt)) {
+                            history.remove(0);
+                        } else {
+                            firstMap.put("content", systemPrompt);
+                        }
+                        debugLog("[智聊AI] 检测到人设变化，当前会话已立即更新");
+                    }
+                    handled = true;
+                }
+            }
+        }
+        if (!handled && !TextUtils.isEmpty(systemPrompt)) {
+            Map systemMsg = new HashMap();
+            systemMsg.put("role", "system");
+            systemMsg.put("content", systemPrompt);
+            history.add(0, systemMsg);
+            debugLog("[智聊AI] 当前会话补充最新system prompt");
+        }
     }
 
     userContent = userContent.replaceAll("@[^\\s]+\\s+", "").trim();
@@ -2803,6 +2858,15 @@ private void sendZhiliaAiReply(final String talker, String userContent, final bo
                     insertSystemMsg(talker, "智聊AI响应失败（流式/非流式都不可用）", System.currentTimeMillis());
                                         return;
                 }
+
+                // 兜底清洗，避免个别供应商把 null 串入文本
+                try {
+                    msgContent = msgContent.replace("\u0000", "");
+                    msgContent = msgContent.replaceAll("(?i)^null", "");
+                    msgContent = msgContent.replaceAll("(?i)null$", "");
+                    msgContent = msgContent.trim();
+                } catch (Exception ignore) {}
+
 
                 debugLog("[智聊AI] 获取回复成功(" + modeUsed + ") -> " + msgContent);
                 if (replyAsQuote) {
@@ -4878,6 +4942,47 @@ private void ensureZhiliaDefaultMigrated() {
 }
 
 
+
+
+private void refreshZhiliaSystemPromptForAllConversations(String newSystemPrompt) {
+    try {
+        if (zhiliaConversationHistories == null || zhiliaConversationHistories.isEmpty()) {
+            return;
+        }
+
+        for (Map.Entry<String, List> entry : zhiliaConversationHistories.entrySet()) {
+            List history = entry.getValue();
+            if (history == null) continue;
+
+            // 移除开头连续的system消息（通常只有1条）
+            while (!history.isEmpty()) {
+                Object first = history.get(0);
+                if (!(first instanceof Map)) break;
+                Map firstMap = (Map) first;
+                Object roleObj = firstMap.get("role");
+                String role = roleObj == null ? "" : String.valueOf(roleObj);
+                if ("system".equals(role)) {
+                    history.remove(0);
+                } else {
+                    break;
+                }
+            }
+
+            // 插入最新system prompt（为空则不插）
+            if (!TextUtils.isEmpty(newSystemPrompt)) {
+                Map systemMsg = new HashMap();
+                systemMsg.put("role", "system");
+                systemMsg.put("content", newSystemPrompt);
+                history.add(0, systemMsg);
+            }
+        }
+
+        debugLog("[智聊AI] 已刷新所有会话的人设提示词（上下文保留）");
+    } catch (Exception e) {
+        debugLog("[异常] 刷新智聊人设失败: " + e.getMessage());
+    }
+}
+
 private void syncLegacyZhiliaKeysFromConfig(Object cfg) {
     try {
         if (cfg == null) return;
@@ -5782,7 +5887,16 @@ private void showZhiliaAIConfigDialog() {
 
 
 
-        advancedCard.addView(createTextView(getTopActivity(), "系统指令 (AI角色设定):", 14, 0));
+        
+        final LinearLayout clearCtxOnSaveSwitchRow = createSwitchRow(
+            getTopActivity(),
+            "保存配置后清空智聊上下文",
+            getBoolean(ZHILIA_CLEAR_CONTEXT_ON_SAVE_KEY, true),
+            new View.OnClickListener() { public void onClick(View v) {} }
+        );
+        advancedCard.addView(clearCtxOnSaveSwitchRow);
+
+advancedCard.addView(createTextView(getTopActivity(), "系统指令 (AI角色设定):", 14, 0));
         final EditText systemPromptEdit = createStyledEditText("设定AI的身份和回复风格", jStr((org.json.JSONObject) activeCfg, "systemPrompt"));
         systemPromptEdit.setMinLines(3);
         systemPromptEdit.setGravity(Gravity.TOP);
@@ -6073,14 +6187,26 @@ btnCard.addView(testBtn);
                 putBoolean(ZHILIA_AI_STREAM_ENABLED_KEY, streamCheck != null && streamCheck.isChecked());
 
                 
-                String checkKey = getString(ZHILIA_AI_API_KEY, "");
+                
+                
+                
+                CheckBox clearCtxCheck = (CheckBox) clearCtxOnSaveSwitchRow.getChildAt(1);
+                boolean clearOnSave = (clearCtxCheck != null && clearCtxCheck.isChecked());
+                putBoolean(ZHILIA_CLEAR_CONTEXT_ON_SAVE_KEY, clearOnSave);
+                if (clearOnSave) {
+                    clearZhiliaConversationHistories();
+                }
+
+refreshZhiliaSystemPromptForAllConversations(systemPromptEdit.getText().toString().trim());
+refreshZhiliaSystemPromptForAllConversations(systemPromptEdit.getText().toString().trim());
+String checkKey = getString(ZHILIA_AI_API_KEY, "");
                 String checkUrl = getString(ZHILIA_AI_API_URL, "");
                 String checkModel = getString(ZHILIA_AI_MODEL_NAME, "");
                 int checkCtx = getInt(ZHILIA_AI_CONTEXT_LIMIT, -1);
                 debugLog("[智聊AI] 保存后回读: keyLen=" + (checkKey == null ? -1 : checkKey.length())
                     + ", url=" + checkUrl + ", model=" + checkModel + ", ctx=" + checkCtx);
                 current.setText("当前启用: " + cfgName);
-                toast("已保存并切换到配置: " + cfgName);
+                toast("已保存并切换到配置: " + cfgName + "（是否清空上下文按开关设置）");
                 dialog.dismiss();
             }
         }, "❌ 取消", null, null, null);
