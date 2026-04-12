@@ -1,7 +1,23 @@
 {
-  "generatedAt": "2026-04-11",
+  "generatedAt": "2026-04-12",
   "totalPlugins": 51,
   "plugins": [
+    {
+      "name": "关键词通知",
+      "author": "。。",
+      "version": "1.1.0",
+      "updateTime": 20260412,
+      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/。。/关键词通知",
+      "downloadUrl": "https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/。。/关键词通知"
+    },
+    {
+      "name": "自动回复配置版",
+      "author": "。。",
+      "version": "2.2.2",
+      "updateTime": 20260412,
+      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/。。/自动回复配置版",
+      "downloadUrl": "https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/。。/自动回复配置版"
+    },
     {
       "name": "分组管理",
       "author": "。。",
@@ -17,14 +33,6 @@
       "updateTime": 20260411,
       "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/。。/群发助手",
       "downloadUrl": "https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/。。/群发助手"
-    },
-    {
-      "name": "自动回复配置版",
-      "author": "。。",
-      "version": "2.2.1",
-      "updateTime": 20260411,
-      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/。。/自动回复配置版",
-      "downloadUrl": "https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/。。/自动回复配置版"
     },
     {
       "name": "自动抢红包(模拟手动抢版)",
@@ -113,14 +121,6 @@
       "updateTime": 20260303,
       "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/vhukze/AITextToVoice",
       "downloadUrl": "https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/vhukze/AITextToVoice"
-    },
-    {
-      "name": "关键词通知",
-      "author": "。。",
-      "version": "1.0.0",
-      "updateTime": 20260302,
-      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/。。/关键词通知",
-      "downloadUrl": "https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/。。/关键词通知"
     },
     {
       "name": "定时发送助手",
