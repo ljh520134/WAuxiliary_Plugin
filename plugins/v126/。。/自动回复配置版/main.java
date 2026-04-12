@@ -1228,7 +1228,7 @@ private void performExportBackup(String backupInfo) {
 
         if (getBoolean(BACKUP_ZHILIA_ENABLED_KEY, true)) {
             config.zhiliaApiKey = getString(ZHILIA_AI_API_KEY, "");
-            config.zhiliaApiUrl = getString(ZHILIA_AI_API_URL, "https://api.siliconflow.cn/v1/chat/completions");
+            config.zhiliaApiUrl = getString(ZHILIA_AI_API_URL, "https://api.siliconflow.cn/v1");
             config.zhiliaModelName = getString(ZHILIA_AI_MODEL_NAME, "deepseek-ai/DeepSeek-V3");
             config.zhiliaSystemPrompt = getString(ZHILIA_AI_SYSTEM_PROMPT, "你是个宝宝");
             config.zhiliaContextLimit = getInt(ZHILIA_AI_CONTEXT_LIMIT, 10);
@@ -2580,6 +2580,32 @@ private String buildZhiliaFinalApiUrl(String baseUrl, String apiPath) {
     return b + p;
 }
 
+
+private org.json.JSONArray buildZhiliaMessagesJson(List history) {
+    org.json.JSONArray arr = new org.json.JSONArray();
+    if (history == null) return arr;
+
+    try {
+        for (int i = 0; i < history.size(); i++) {
+            Object item = history.get(i);
+            if (!(item instanceof Map)) continue;
+
+            Map map = (Map) item;
+            org.json.JSONObject one = new org.json.JSONObject();
+            Object roleObj = map.get("role");
+            Object contentObj = map.get("content");
+
+            jPut(one, "role", roleObj == null ? "" : String.valueOf(roleObj));
+            jPut(one, "content", contentObj == null ? "" : String.valueOf(contentObj));
+            jAAdd(arr, one);
+        }
+    } catch (Exception e) {
+        debugLog("[异常] buildZhiliaMessagesJson失败: " + e.getMessage());
+    }
+
+    return arr;
+}
+
 private String extractSseData(String line) {
     if (line == null) return "";
     line = line.trim();
@@ -2591,10 +2617,13 @@ private String extractSseData(String line) {
 private String callZhiliaNonStreamOnce(String apiUrl, String apiKey, String modelName, List history) {
     try {
         org.json.JSONObject jsonBody = new org.json.JSONObject();
-        jsonBody.put("model", modelName);
-        jsonBody.put("messages", history);
-        jsonBody.put("temperature", 0.7);
-        jsonBody.put("stream", false);
+        jPut(jsonBody, "model", modelName);
+        jPut(jsonBody, "messages", buildZhiliaMessagesJson(history));
+        jPut(jsonBody, "temperature", 0.7);
+        jPut(jsonBody, "stream", false);
+
+        debugLog("[智聊AI-非流式请求] url=" + apiUrl);
+        debugLog("[智聊AI-非流式请求] body=" + jsonBody.toString());
 
         RequestBody body = RequestBody.create(MediaType.parse("application/json"), String.valueOf(jsonBody));
         Request.Builder reqBuilder = new Request.Builder().url(apiUrl).post(body);
@@ -2603,6 +2632,10 @@ private String callZhiliaNonStreamOnce(String apiUrl, String apiKey, String mode
 
         Response response = aiClient.newCall(reqBuilder.build()).execute();
         String responseContent = response.body() != null ? response.body().string() : null;
+
+        debugLog("[智聊AI-非流式响应] code=" + response.code());
+        debugLog("[智聊AI-非流式响应] body=" + responseContent);
+
         if (TextUtils.isEmpty(responseContent) || !responseContent.trim().startsWith("{")) return null;
 
         org.json.JSONObject jsonObj = jo(responseContent);
@@ -2610,8 +2643,15 @@ private String callZhiliaNonStreamOnce(String apiUrl, String apiKey, String mode
         if (!jHas(jsonObj, "choices")) return null;
 
         Object choices = jArr(jsonObj, "choices");
-        if (choices == null || jsonIsEmpty(choices)) return null;
-        return jAObj((org.json.JSONArray) choices, 0).optJSONObject("message").optString("content", "");
+        if (choices == null || jSize((org.json.JSONArray) choices) <= 0) return null;
+
+        org.json.JSONObject firstChoice = jAObj((org.json.JSONArray) choices, 0);
+        if (firstChoice == null) return null;
+
+        org.json.JSONObject messageObj = firstChoice.optJSONObject("message");
+        if (messageObj == null) return null;
+
+        return messageObj.optString("content", "");
     } catch (Exception e) {
         debugLog("[异常] 非流式请求失败: " + e.getMessage());
         return null;
@@ -2622,10 +2662,13 @@ private String callZhiliaStreamOnce(String apiUrl, String apiKey, String modelNa
     java.io.BufferedReader br = null;
     try {
         org.json.JSONObject jsonBody = new org.json.JSONObject();
-        jsonBody.put("model", modelName);
-        jsonBody.put("messages", history);
-        jsonBody.put("temperature", 0.7);
-        jsonBody.put("stream", true);
+        jPut(jsonBody, "model", modelName);
+        jPut(jsonBody, "messages", buildZhiliaMessagesJson(history));
+        jPut(jsonBody, "temperature", 0.7);
+        jPut(jsonBody, "stream", true);
+
+        debugLog("[智聊AI-流式请求] url=" + apiUrl);
+        debugLog("[智聊AI-流式请求] body=" + jsonBody.toString());
 
         RequestBody body = RequestBody.create(MediaType.parse("application/json"), String.valueOf(jsonBody));
         Request request = new Request.Builder()
@@ -2636,6 +2679,7 @@ private String callZhiliaStreamOnce(String apiUrl, String apiKey, String modelNa
             .build();
 
         Response response = aiClient.newCall(request).execute();
+        debugLog("[智聊AI-流式响应] code=" + response.code());
         if (!response.isSuccessful() || response.body() == null) {
             return null;
         }
@@ -2652,8 +2696,9 @@ private String callZhiliaStreamOnce(String apiUrl, String apiKey, String modelNa
             try {
                 org.json.JSONObject obj = jo(data);
                 Object choices = jArr(obj, "choices");
-                if (choices == null || jsonIsEmpty(choices)) continue;
+                if (choices == null || jSize((org.json.JSONArray) choices) <= 0) continue;
                 org.json.JSONObject c0 = jAObj((org.json.JSONArray) choices, 0);
+                if (c0 == null) continue;
 
                 org.json.JSONObject delta = c0 == null ? null : c0.optJSONObject("delta");
                 if (delta != null) {
@@ -2670,6 +2715,7 @@ private String callZhiliaStreamOnce(String apiUrl, String apiKey, String modelNa
         }
 
         String result = out.toString().trim();
+        debugLog("[智聊AI-流式聚合结果] " + result);
         return TextUtils.isEmpty(result) ? null : result;
     } catch (Exception e) {
         debugLog("[异常] 流式请求失败: " + e.getMessage());
@@ -2755,8 +2801,7 @@ private void sendZhiliaAiReply(final String talker, String userContent, final bo
                 if (TextUtils.isEmpty(msgContent)) {
                     debugLog("[异常] 智聊AI 两种模式均失败");
                     insertSystemMsg(talker, "智聊AI响应失败（流式/非流式都不可用）", System.currentTimeMillis());
-                    sendText(talker, "抱歉，我暂时无法回复。");
-                    return;
+                                        return;
                 }
 
                 debugLog("[智聊AI] 获取回复成功(" + modeUsed + ") -> " + msgContent);
@@ -4817,7 +4862,7 @@ private void ensureZhiliaDefaultMigrated() {
         if (all == null || ((org.json.JSONObject) all).length() == 0) {
             org.json.JSONObject one = new org.json.JSONObject();
             jPut(one, "apiKey", getString(ZHILIA_AI_API_KEY, ""));
-            jPut(one, "apiUrl", getString(ZHILIA_AI_API_URL, "https://api.siliconflow.cn/v1/chat/completions"));
+            jPut(one, "apiUrl", getString(ZHILIA_AI_API_URL, "https://api.siliconflow.cn/v1"));
             jPut(one, "modelName", getString(ZHILIA_AI_MODEL_NAME, "deepseek-ai/DeepSeek-V3"));
             jPut(one, "apiPath", getString(ZHILIA_AI_API_PATH, "/chat/completions"));
             jPut(one, "systemPrompt", getString(ZHILIA_AI_SYSTEM_PROMPT, "你是个宝宝"));
@@ -4845,7 +4890,7 @@ private void syncLegacyZhiliaKeysFromConfig(Object cfg) {
         int contextLimit = jInt(cfg, "contextLimit");
 
         if (apiKey == null) apiKey = "";
-        if (TextUtils.isEmpty(apiUrl)) apiUrl = "https://api.siliconflow.cn/v1/chat/completions";
+        if (TextUtils.isEmpty(apiUrl)) apiUrl = "https://api.siliconflow.cn/v1";
         if (TextUtils.isEmpty(modelName)) modelName = "deepseek-ai/DeepSeek-V3";
         if (TextUtils.isEmpty(apiPath)) apiPath = "/chat/completions";
         if (systemPrompt == null) systemPrompt = "你是个宝宝";
@@ -4879,7 +4924,7 @@ private Object getActiveZhiliaConfig() {
     if (cfg == null) {
         cfg = new org.json.JSONObject();
         jPut(cfg, "apiKey", "");
-        jPut(cfg, "apiUrl", "https://api.siliconflow.cn/v1/chat/completions");
+        jPut(cfg, "apiUrl", "https://api.siliconflow.cn/v1");
         jPut(cfg, "modelName", "deepseek-ai/DeepSeek-V3");
         jPut(cfg, "apiPath", "/chat/completions");
         jPut(cfg, "systemPrompt", "你是个宝宝");
@@ -5108,6 +5153,7 @@ private String httpJsonGetSync(String url, String apiKey) {
 }
 
 private List<String> fetchModelListByApi(String apiUrl, String apiKey) {
+    debugLog("[模型拉取] base入参=" + apiUrl);
     List<String> out = new ArrayList<String>();
     if (TextUtils.isEmpty(apiUrl)) return out;
 
@@ -5118,6 +5164,7 @@ private List<String> fetchModelListByApi(String apiUrl, String apiKey) {
         String modelsUrl;
         if (p > 0) {
             modelsUrl = base.substring(0, p) + "/models";
+            debugLog("[模型拉取] modelsUrl=" + modelsUrl);
         } else {
             // 若本身不是chat/completions，尝试拼接/models
             if (base.endsWith("/")) base = base.substring(0, base.length() - 1);
@@ -5139,7 +5186,8 @@ private List<String> fetchModelListByApi(String apiUrl, String apiKey) {
                 if (!alt.equals(modelsUrl)) body = httpJsonGetSync(alt, apiKey);
             } catch (Exception ignore) {}
         }
-        if (TextUtils.isEmpty(body)) return out;
+                debugLog("[模型拉取] body前200=" + (body == null ? "null" : body.substring(0, Math.min(200, body.length()))));
+if (TextUtils.isEmpty(body)) return out;
 
         org.json.JSONObject obj = jo(body);
         if (obj == null) return out;
@@ -5623,7 +5671,7 @@ private void runZhiliaConnectivityTest(final String key, final String url, final
                         try {
                             org.json.JSONObject obj = jo(data);
                             Object ch = jArr(obj, "choices");
-                            if (ch != null && !jsonIsEmpty(ch)) {
+                            if (ch != null && jSize((org.json.JSONArray) ch) > 0) {
                                 org.json.JSONObject c0 = jAObj((org.json.JSONArray) ch, 0);
                                 org.json.JSONObject delta = c0 == null ? null : c0.optJSONObject("delta");
                                 if (delta != null) {
@@ -5912,7 +5960,7 @@ private void showZhiliaAIConfigDialog() {
 
                             new Thread(new Runnable() {
                                 public void run() {
-                                    final List<String> models = fetchModelListByApi(url, key);
+                                    final List<String> models = fetchModelListByApi(base, key);
                                     new Handler(Looper.getMainLooper()).post(new Runnable() {
                                         public void run() {
                                             try { loading.dismiss(); } catch (Exception ignore) {}
@@ -5956,8 +6004,8 @@ private void showZhiliaAIConfigDialog() {
         fetchModelsBtn.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 final String key = apiKeyEdit.getText().toString().trim();
-                final String url = apiUrlEdit.getText().toString().trim();
-                if (TextUtils.isEmpty(url)) {
+                final String base = apiUrlEdit.getText().toString().trim();
+                if (TextUtils.isEmpty(base)) {
                     toast("请先填写 API URL");
                     return;
                 }
@@ -5974,7 +6022,7 @@ private void showZhiliaAIConfigDialog() {
 
                 new Thread(new Runnable() {
                     public void run() {
-                        final List<String> models = fetchModelListByApi(url, key);
+                        final List<String> models = fetchModelListByApi(base, key);
                         new Handler(Looper.getMainLooper()).post(new Runnable() {
                             public void run() {
                                 try { loading.dismiss(); } catch (Exception ignore) {}
