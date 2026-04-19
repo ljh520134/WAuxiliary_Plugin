@@ -3,7 +3,10 @@ const path = require('path');
 const propReader = require('properties-reader');
 
 const repoRoot = process.cwd();
-const pluginsDir = path.join(repoRoot, 'plugins', 'v126');
+const pluginsDirs = [
+    path.join(repoRoot, 'plugins', 'v126'),
+    path.join(repoRoot, 'plugins', 'v127'),
+];
 const docsDir = path.join(repoRoot, 'docs');
 const outputMdFile = path.join(docsDir, 'index.md');
 const outputJsonFile = path.join(docsDir, 'index.json');
@@ -36,17 +39,27 @@ function parseInfoProp(filePath) {
     }
 }
 
+function toSafeFileName(value) {
+    return String(value)
+        .replace(/[\\/:*?"<>|]+/g, '_')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
 function getPluginInfo(pluginPath) {
     const rel = path.relative(repoRoot, pluginPath).replace(/\\/g, '/');
     const homeLink = `https://github.com/HdShare/WAuxiliary_Plugin/tree/main/${rel}`;
+    const encodedHomeLink = encodeURIComponent(homeLink);
     const props = parseInfoProp(path.join(pluginPath, 'info.prop'));
+    const fileName = toSafeFileName(`${props.name}_${props.version}`);
+    const encodedFileName = encodeURIComponent(fileName);
     return {
         name: props.name,
         author: props.author,
         version: props.version,
         updateTime: props.updateTime,
         homeLink: homeLink,
-        downloadUrl: `https://minhaskamal.github.io/DownGit/#/home?url=${homeLink}`,
+        downloadUrl: `https://download-directory.github.io/?url=${encodedHomeLink}&filename=${encodedFileName}`,
     };
 }
 
@@ -93,7 +106,10 @@ function generateJSON(plugins) {
     return JSON.stringify(jsonData, null, 2);
 }
 
-const plugins = traversePlugins(pluginsDir);
+const plugins = pluginsDirs
+    .filter(dir => fs.existsSync(dir))
+    .flatMap(dir => traversePlugins(dir))
+    .sort((a, b) => parseInt(b.updateTime) - parseInt(a.updateTime));
 console.log(`正在处理 ${plugins.length} 个插件`);
 
 const markdown = generateMarkdown(plugins);

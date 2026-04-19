@@ -6,6 +6,7 @@ on:
     paths:
       - ".github/workflows/generate.js"
       - "plugins/v126/**"
+      - "plugins/v127/**"
   workflow_dispatch:
 
 permissions:

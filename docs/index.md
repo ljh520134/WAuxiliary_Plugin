@@ -6,207 +6,215 @@ hero:
   text: "WAuxiliary 插件"
 
 features:
+  - title: 元启Ai回复@神明佑我
+    details: 版本 1.8 | 更新于 20260415
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FAAZl3l4%2FYuanQiAiReply&filename=%E5%85%83%E5%90%AFAi%E5%9B%9E%E5%A4%8D_1.8
+
+  - title: 点歌插件@Hd
+    details: 版本 1.0.1 | 更新于 20260413
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FMusicPlugin&filename=%E7%82%B9%E6%AD%8C%E6%8F%92%E4%BB%B6_1.0.1
+
   - title: 关键词通知@。。
     details: 版本 1.1.0 | 更新于 20260412
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/。。/关键词通知
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E3%80%82%E3%80%82%2F%E5%85%B3%E9%94%AE%E8%AF%8D%E9%80%9A%E7%9F%A5&filename=%E5%85%B3%E9%94%AE%E8%AF%8D%E9%80%9A%E7%9F%A5_1.1.0
 
   - title: 自动回复配置版@。。
-    details: 版本 2.2.2 | 更新于 20260412
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/。。/自动回复配置版
+    details: 版本 2.2.3 | 更新于 20260412
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E3%80%82%E3%80%82%2F%E8%87%AA%E5%8A%A8%E5%9B%9E%E5%A4%8D%E9%85%8D%E7%BD%AE%E7%89%88&filename=%E8%87%AA%E5%8A%A8%E5%9B%9E%E5%A4%8D%E9%85%8D%E7%BD%AE%E7%89%88_2.2.3
 
   - title: 分组管理@。。
     details: 版本 1.1.1 | 更新于 20260411
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/。。/分组管理
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E3%80%82%E3%80%82%2F%E5%88%86%E7%BB%84%E7%AE%A1%E7%90%86&filename=%E5%88%86%E7%BB%84%E7%AE%A1%E7%90%86_1.1.1
 
   - title: 群发助手@。。
     details: 版本 1.2.1 | 更新于 20260411
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/。。/群发助手
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E3%80%82%E3%80%82%2F%E7%BE%A4%E5%8F%91%E5%8A%A9%E6%89%8B&filename=%E7%BE%A4%E5%8F%91%E5%8A%A9%E6%89%8B_1.2.1
 
   - title: 自动抢红包(模拟手动抢版)@。。
     details: 版本 1.0.0 | 更新于 20260410
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/。。/自动抢红包(模拟手动抢版)
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E3%80%82%E3%80%82%2F%E8%87%AA%E5%8A%A8%E6%8A%A2%E7%BA%A2%E5%8C%85(%E6%A8%A1%E6%8B%9F%E6%89%8B%E5%8A%A8%E6%8A%A2%E7%89%88)&filename=%E8%87%AA%E5%8A%A8%E6%8A%A2%E7%BA%A2%E5%8C%85(%E6%A8%A1%E6%8B%9F%E6%89%8B%E5%8A%A8%E6%8A%A2%E7%89%88)_1.0.0
 
   - title: 进退群配置版@。。
     details: 版本 2.3.0 | 更新于 20260410
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/。。/进退群配置版
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E3%80%82%E3%80%82%2F%E8%BF%9B%E9%80%80%E7%BE%A4%E9%85%8D%E7%BD%AE%E7%89%88&filename=%E8%BF%9B%E9%80%80%E7%BE%A4%E9%85%8D%E7%BD%AE%E7%89%88_2.3.0
 
   - title: 音频转换@。。
     details: 版本 1.2.0 | 更新于 20260410
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/。。/音频转换
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E3%80%82%E3%80%82%2F%E9%9F%B3%E9%A2%91%E8%BD%AC%E6%8D%A2&filename=%E9%9F%B3%E9%A2%91%E8%BD%AC%E6%8D%A2_1.2.0
 
   - title: 天气查询配置版@晚药
     details: 版本 2.2.0 | 更新于 20260404
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/晚药/天气预报
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E6%99%9A%E8%8D%AF%2F%E5%A4%A9%E6%B0%94%E9%A2%84%E6%8A%A5&filename=%E5%A4%A9%E6%B0%94%E6%9F%A5%E8%AF%A2%E9%85%8D%E7%BD%AE%E7%89%88_2.2.0
 
   - title: 星座运势@晚药
     details: 版本 1.1.0 | 更新于 20260402
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/晚药/星座运势
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E6%99%9A%E8%8D%AF%2F%E6%98%9F%E5%BA%A7%E8%BF%90%E5%8A%BF&filename=%E6%98%9F%E5%BA%A7%E8%BF%90%E5%8A%BF_1.1.0
 
   - title: 群聊统计分析@晚药
     details: 版本 9.1.0 | 更新于 20260401
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/晚药/群聊统计分析＋定时发送
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E6%99%9A%E8%8D%AF%2F%E7%BE%A4%E8%81%8A%E7%BB%9F%E8%AE%A1%E5%88%86%E6%9E%90%EF%BC%8B%E5%AE%9A%E6%97%B6%E5%8F%91%E9%80%81&filename=%E7%BE%A4%E8%81%8A%E7%BB%9F%E8%AE%A1%E5%88%86%E6%9E%90_9.1.0
 
   - title: 自动增加步数@Wukon、VAY冬冬
     details: 版本 1.0.7 | 更新于 20260327
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/VAY冬冬/AutoStep
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FVAY%E5%86%AC%E5%86%AC%2FAutoStep&filename=%E8%87%AA%E5%8A%A8%E5%A2%9E%E5%8A%A0%E6%AD%A5%E6%95%B0_1.0.7
 
   - title: Vocu ai文转音@。。
     details: 版本 1.0.0 | 更新于 20260318
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/。。/Vocu ai文转音
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E3%80%82%E3%80%82%2FVocu%20ai%E6%96%87%E8%BD%AC%E9%9F%B3&filename=Vocu%20ai%E6%96%87%E8%BD%AC%E9%9F%B3_1.0.0
 
   - title: 自动收款@。。
     details: 版本 1.2.0 | 更新于 20260318
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/。。/自动收款
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E3%80%82%E3%80%82%2F%E8%87%AA%E5%8A%A8%E6%94%B6%E6%AC%BE&filename=%E8%87%AA%E5%8A%A8%E6%94%B6%E6%AC%BE_1.2.0
 
   - title: 微信AI回复插件@Alan-qwq
     details: 版本 1.2.1 | 更新于 20260313
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Alan-qwq/wechatAI
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FAlan-qwq%2FwechatAI&filename=%E5%BE%AE%E4%BF%A1AI%E5%9B%9E%E5%A4%8D%E6%8F%92%E4%BB%B6_1.2.1
 
   - title: AI文字转语音@vhukze
     details: 版本 1.0.0 | 更新于 20260303
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/vhukze/AITextToVoice
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2Fvhukze%2FAITextToVoice&filename=AI%E6%96%87%E5%AD%97%E8%BD%AC%E8%AF%AD%E9%9F%B3_1.0.0
 
   - title: 定时发送助手@冰块
     details: 版本 1.0.0 | 更新于 20260302
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/冰块/定时发送助手
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E5%86%B0%E5%9D%97%2F%E5%AE%9A%E6%97%B6%E5%8F%91%E9%80%81%E5%8A%A9%E6%89%8B&filename=%E5%AE%9A%E6%97%B6%E5%8F%91%E9%80%81%E5%8A%A9%E6%89%8B_1.0.0
 
   - title: 艾特关键词自动回复@冰块
     details: 版本 1.0.0 | 更新于 20260302
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/冰块/艾特关键词自动回复
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E5%86%B0%E5%9D%97%2F%E8%89%BE%E7%89%B9%E5%85%B3%E9%94%AE%E8%AF%8D%E8%87%AA%E5%8A%A8%E5%9B%9E%E5%A4%8D&filename=%E8%89%BE%E7%89%B9%E5%85%B3%E9%94%AE%E8%AF%8D%E8%87%AA%E5%8A%A8%E5%9B%9E%E5%A4%8D_1.0.0
 
   - title: 自动增加步数@Wukon
     details: 版本 1.0.6 | 更新于 20260228
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Wukon/AutoStep
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FWukon%2FAutoStep&filename=%E8%87%AA%E5%8A%A8%E5%A2%9E%E5%8A%A0%E6%AD%A5%E6%95%B0_1.0.6
+
+  - title: 示例插件@Hd
+    details: 版本 1.0.0 | 更新于 20260228
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FDemoPlugin&filename=%E7%A4%BA%E4%BE%8B%E6%8F%92%E4%BB%B6_1.0.0
 
   - title: 统计@轻乳
     details: 版本 1.0.0 | 更新于 20260222
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/轻乳/统计累计收到消息
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E8%BD%BB%E4%B9%B3%2F%E7%BB%9F%E8%AE%A1%E7%B4%AF%E8%AE%A1%E6%94%B6%E5%88%B0%E6%B6%88%E6%81%AF&filename=%E7%BB%9F%E8%AE%A1_1.0.0
 
   - title: 记事本@轻乳
     details: 版本 1.0.0 | 更新于 20260222
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/轻乳/记事本插件
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E8%BD%BB%E4%B9%B3%2F%E8%AE%B0%E4%BA%8B%E6%9C%AC%E6%8F%92%E4%BB%B6&filename=%E8%AE%B0%E4%BA%8B%E6%9C%AC_1.0.0
 
   - title: AI作图@vhukze
     details: 版本 1.5.0 | 更新于 20251013
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/vhukze/AIImg
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2Fvhukze%2FAIImg&filename=AI%E4%BD%9C%E5%9B%BE_1.5.0
 
   - title: 表情合成@Kyo
     details: 版本 1.0.0 | 更新于 20251010
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Kyo/EmojiKitchen
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FKyo%2FEmojiKitchen&filename=%E8%A1%A8%E6%83%85%E5%90%88%E6%88%90_1.0.0
 
   - title: 每日新闻@Wukon
     details: 版本 1.0.0 | 更新于 20251010
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Wukon/DailyNews
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FWukon%2FDailyNews&filename=%E6%AF%8F%E6%97%A5%E6%96%B0%E9%97%BB_1.0.0
 
   - title: 自动回复@yixin
     details: 版本 1.0.0 | 更新于 20251010
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/yixin/AutoReply
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2Fyixin%2FAutoReply&filename=%E8%87%AA%E5%8A%A8%E5%9B%9E%E5%A4%8D_1.0.0
 
   - title: 自动增加步数@yixin
     details: 版本 1.0.0 | 更新于 20251010
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/yixin/StepChange
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2Fyixin%2FStepChange&filename=%E8%87%AA%E5%8A%A8%E5%A2%9E%E5%8A%A0%E6%AD%A5%E6%95%B0_1.0.0
 
   - title: 自动同意好友@Hd
     details: 版本 1.0.0 | 更新于 20250917
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/AutoAgreeFriend
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FAutoAgreeFriend&filename=%E8%87%AA%E5%8A%A8%E5%90%8C%E6%84%8F%E5%A5%BD%E5%8F%8B_1.0.0
 
   - title: 自动艾特回复@Hd
     details: 版本 1.0.0 | 更新于 20250917
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/AutoAtReply
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FAutoAtReply&filename=%E8%87%AA%E5%8A%A8%E8%89%BE%E7%89%B9%E5%9B%9E%E5%A4%8D_1.0.0
 
   - title: 自动回复@Hd
     details: 版本 1.0.0 | 更新于 20250917
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/AutoReply
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FAutoReply&filename=%E8%87%AA%E5%8A%A8%E5%9B%9E%E5%A4%8D_1.0.0
 
   - title: 自动回复被拍@Hd
     details: 版本 1.0.0 | 更新于 20250917
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/AutoReplyPat
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FAutoReplyPat&filename=%E8%87%AA%E5%8A%A8%E5%9B%9E%E5%A4%8D%E8%A2%AB%E6%8B%8D_1.0.0
 
   - title: 摸头插件@Hd
     details: 版本 1.0.0 | 更新于 20250917
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/Avatar-rua
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FAvatar-rua&filename=%E6%91%B8%E5%A4%B4%E6%8F%92%E4%BB%B6_1.0.0
 
   - title: 表情合成@Hd
     details: 版本 1.0.0 | 更新于 20250917
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/EmojiMix
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FEmojiMix&filename=%E8%A1%A8%E6%83%85%E5%90%88%E6%88%90_1.0.0
 
   - title: 历史今天@Hd
     details: 版本 1.0.0 | 更新于 20250917
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/HistoryToday
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FHistoryToday&filename=%E5%8E%86%E5%8F%B2%E4%BB%8A%E5%A4%A9_1.0.0
 
   - title: 进退群提醒@Hd
     details: 版本 1.0.0 | 更新于 20250917
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/JoinAndLeftGroupTips
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FJoinAndLeftGroupTips&filename=%E8%BF%9B%E9%80%80%E7%BE%A4%E6%8F%90%E9%86%92_1.0.0
 
   - title: 进群邀请@Hd
     details: 版本 1.0.0 | 更新于 20250917
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/JoinGroupInvite
-
-  - title: 点歌插件@Hd
-    details: 版本 1.0.0 | 更新于 20250917
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/MusicPlugin
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FJoinGroupInvite&filename=%E8%BF%9B%E7%BE%A4%E9%82%80%E8%AF%B7_1.0.0
 
   - title: 智能聊天@Hd
     details: 版本 1.0.0 | 更新于 20250917
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/OpenAiChat
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FOpenAiChat&filename=%E6%99%BA%E8%83%BD%E8%81%8A%E5%A4%A9_1.0.0
 
   - title: 文转图@Hd
     details: 版本 1.0.0 | 更新于 20250917
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/TextToImg
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FTextToImg&filename=%E6%96%87%E8%BD%AC%E5%9B%BE_1.0.0
 
   - title: 文转音@Hd
     details: 版本 1.0.0 | 更新于 20250917
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/TextToSpeech
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FTextToSpeech&filename=%E6%96%87%E8%BD%AC%E9%9F%B3_1.0.0
 
   - title: 视频插件@Hd
     details: 版本 1.0.0 | 更新于 20250917
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/VideoPlugin
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FVideoPlugin&filename=%E8%A7%86%E9%A2%91%E6%8F%92%E4%BB%B6_1.0.0
 
   - title: 语录插件@Hd
     details: 版本 1.0.0 | 更新于 20250917
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/msg-q
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2Fmsg-q&filename=%E8%AF%AD%E5%BD%95%E6%8F%92%E4%BB%B6_1.0.0
 
   - title: 抖音视频图文解析@coderpwh
     details: 版本 1.0.0 | 更新于 20250917
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/coderpwh/douyin
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2Fcoderpwh%2Fdouyin&filename=%E6%8A%96%E9%9F%B3%E8%A7%86%E9%A2%91%E5%9B%BE%E6%96%87%E8%A7%A3%E6%9E%90_1.0.0
 
   - title: 龙图@yfishyon
     details: 版本 1.0.0 | 更新于 20250917
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/yfishyon/long
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2Fyfishyon%2Flong&filename=%E9%BE%99%E5%9B%BE_1.0.0
 
   - title: 看看腿@yfishyon
     details: 版本 1.0.0 | 更新于 20250917
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/yfishyon/sese
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2Fyfishyon%2Fsese&filename=%E7%9C%8B%E7%9C%8B%E8%85%BF_1.0.0
 
   - title: 举牌@周芷越
     details: 版本 1.0.0 | 更新于 20250917
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/周芷越/jupai
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E5%91%A8%E8%8A%B7%E8%B6%8A%2Fjupai&filename=%E4%B8%BE%E7%89%8C_1.0.0
 
   - title: AiChatbot@Aden
     details: 版本 1.0.0 | 更新于 20250830
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Aden/AiChatbot
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FAden%2FAiChatbot&filename=AiChatbot_1.0.0
 
   - title: Http主动发送@icksky
     details: 版本 1.0.0 | 更新于 20250712
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/icksky/HttpSend
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2Ficksky%2FHttpSend&filename=Http%E4%B8%BB%E5%8A%A8%E5%8F%91%E9%80%81_1.0.0
 
   - title: DeepSeek多角色智能体@icksky
     details: 版本 1.0.0 | 更新于 20250711
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/icksky/DeepSeek
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2Ficksky%2FDeepSeek&filename=DeepSeek%E5%A4%9A%E8%A7%92%E8%89%B2%E6%99%BA%E8%83%BD%E4%BD%93_1.0.0
 
   - title: 微信自动管理@C3604
     details: 版本 1.0.0 | 更新于 20250621
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/C3604/WeChatAutoManager
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FC3604%2FWeChatAutoManager&filename=%E5%BE%AE%E4%BF%A1%E8%87%AA%E5%8A%A8%E7%AE%A1%E7%90%86_1.0.0
 
   - title: 点歌@CkBcDD
     details: 版本 1.0.0 | 更新于 20250523
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/CkBcDD/Fetch-Music
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FCkBcDD%2FFetch-Music&filename=%E7%82%B9%E6%AD%8C_1.0.0
 
   - title: 群投票@CkBcDD
     details: 版本 1.0.0 | 更新于 20250523
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/CkBcDD/Group-Poll
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FCkBcDD%2FGroup-Poll&filename=%E7%BE%A4%E6%8A%95%E7%A5%A8_1.0.0
 
   - title: 文生图@CkBcDD
     details: 版本 1.0.0 | 更新于 20250520
-    link: https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/CkBcDD/TXT-to-IMG
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FCkBcDD%2FTXT-to-IMG&filename=%E6%96%87%E7%94%9F%E5%9B%BE_1.0.0
 
