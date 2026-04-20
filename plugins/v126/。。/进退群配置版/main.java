@@ -1839,7 +1839,7 @@ private void showGroupManagementDialog() {
 
 private void showActualGroupManagementDialog(final List<GroupInfo> allGroupList, final Map<String, Integer> groupMemberCounts) {
     try {
-        final Set<String> selectedGroups = getStringSet(LISTEN_GROUPS_KEY, new HashSet<String>());
+        final Set<String> selectedGroups = new HashSet<>(getStringSet(LISTEN_GROUPS_KEY, new HashSet<String>()));
         final List<String> currentFilteredRoomIds = new ArrayList<>();
         final List<String> currentFilteredNames = new ArrayList<>();
 
