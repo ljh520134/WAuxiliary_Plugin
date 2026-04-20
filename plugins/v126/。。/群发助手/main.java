@@ -108,6 +108,8 @@ final int SEND_TYPE_VIDEO = 2;
 final int SEND_TYPE_FILE = 3;
 final int SEND_TYPE_EMOJI = 4;
 final int SEND_TYPE_VOICE = 5;
+final int SEND_TYPE_MOMENTS_TEXT = 6;      // 朋友圈纯文本
+final int SEND_TYPE_MOMENTS_IMAGE = 7;     // 朋友圈图文
 
 // 存储Key
 final String CONFIG_KEY = "scheduled_send_multi_v2";
@@ -302,58 +304,78 @@ private void executeTaskSend(final String taskId) {
             int success = 0;
             int fail = 0;
 
-            for (int i = 0; i < finalTargets.size(); i++) {
-                final String target = finalTargets.get(i);
-                final String name = getContactName(target);
-
-                boolean targetSuccess = true;
-
+            // 朋友圈模式特殊处理
+            if (type == SEND_TYPE_MOMENTS_TEXT || type == SEND_TYPE_MOMENTS_IMAGE) {
                 try {
-                    if (type == SEND_TYPE_TEXT) {
-                        String contentToSend = content.replace("%friendName%", name);
-                        sendText(target, contentToSend);
+                    if (type == SEND_TYPE_MOMENTS_TEXT) {
+                        uploadText(content);
                     } else {
-                        for (int j = 0; j < finalMediaPaths.size(); j++) {
-                            final String path = finalMediaPaths.get(j);
-                            final File f = new File(path);
-                            if (f.exists()) {
-                                switch (type) {
-                                    case SEND_TYPE_IMAGE:
-                                        sendImage(target, path);
-                                        break;
-                                    case SEND_TYPE_VIDEO:
-                                        sendVideo(target, path);
-                                        break;
-                                    case SEND_TYPE_EMOJI:
-                                        sendEmoji(target, path);
-                                        break;
-                                    case SEND_TYPE_FILE:
-                                        shareFile(target, f.getName(), path, "");
-                                        break;
-                                    case SEND_TYPE_VOICE:
-                                        runOnMainSync(new Runnable() {
-                                            public void run() {
-                                                sendVoice(target, path);
-                                            }
-                                        });
-                                        break;
-                                }
-                                if (j < finalMediaPaths.size() - 1) {
-                                    long mInterval = mediaInterval > 0 ? mediaInterval * 1000 : 500;
-                                    Thread.sleep(mInterval);
+                        if (finalMediaPaths.isEmpty()) {
+                            uploadText(content);
+                        } else {
+                            uploadTextAndPicList(content, finalMediaPaths);
+                        }
+                    }
+                    success = 1;
+                    notify("朋友圈发送成功", type == SEND_TYPE_MOMENTS_TEXT ? "已发送纯文本" : "已发送图文");
+                } catch (Exception e) {
+                    fail = 1;
+                    log("朋友圈发送失败: " + e.getMessage());
+                }
+            } else {
+                // 原有的群发逻辑
+                for (int i = 0; i < finalTargets.size(); i++) {
+                    final String target = finalTargets.get(i);
+                    final String name = getContactName(target);
+                    boolean targetSuccess = true;
+
+                    try {
+                        if (type == SEND_TYPE_TEXT) {
+                            String contentToSend = content.replace("%friendName%", name);
+                            sendText(target, contentToSend);
+                        } else {
+                            for (int j = 0; j < finalMediaPaths.size(); j++) {
+                                final String path = finalMediaPaths.get(j);
+                                final File f = new File(path);
+                                if (f.exists()) {
+                                    switch (type) {
+                                        case SEND_TYPE_IMAGE:
+                                            sendImage(target, path);
+                                            break;
+                                        case SEND_TYPE_VIDEO:
+                                            sendVideo(target, path);
+                                            break;
+                                        case SEND_TYPE_EMOJI:
+                                            sendEmoji(target, path);
+                                            break;
+                                        case SEND_TYPE_FILE:
+                                            shareFile(target, f.getName(), path, "");
+                                            break;
+                                        case SEND_TYPE_VOICE:
+                                            runOnMainSync(new Runnable() {
+                                                public void run() {
+                                                    sendVoice(target, path);
+                                                }
+                                            });
+                                            break;
+                                    }
+                                    if (j < finalMediaPaths.size() - 1) {
+                                        long mInterval = mediaInterval > 0 ? mediaInterval * 1000 : 500;
+                                        Thread.sleep(mInterval);
+                                    }
                                 }
                             }
                         }
+                    } catch (Exception e) {
+                        targetSuccess = false;
+                        log("发送失败: " + target + " - " + e.getMessage());
                     }
-                } catch (Exception e) {
-                    targetSuccess = false;
-                    log("发送失败: " + target + " - " + e.getMessage());
-                }
 
-                if (targetSuccess) success++; else fail++;
+                    if (targetSuccess) success++; else fail++;
 
-                if (i < finalTargets.size() - 1 && interval > 0) {
-                    try { Thread.sleep(interval * 1000); } catch (Exception e) {}
+                    if (i < finalTargets.size() - 1 && interval > 0) {
+                        try { Thread.sleep(interval * 1000); } catch (Exception e) {}
+                    }
                 }
             }
 
@@ -549,7 +571,7 @@ private void showMainDialog() {
     quickCard.addView(newTaskBtn);
     root.addView(quickCard);
 
-    LinearLayout targetCard = createCardLayout();
+    final LinearLayout targetCard = createCardLayout();
     targetCard.addView(createSectionTitle("👥 发送目标"));
     final TextView targetCountTv = new TextView(getTopActivity());
     updateTargetCountText(targetCountTv);
@@ -608,6 +630,7 @@ private void showMainDialog() {
 
     RadioGroup mainTypeGroup = new RadioGroup(getTopActivity());
     mainTypeGroup.setOrientation(LinearLayout.VERTICAL);
+    
     RadioGroup row1Group = new RadioGroup(getTopActivity());
     row1Group.setOrientation(LinearLayout.HORIZONTAL);
     RadioButton rbText = createRadioButton(getTopActivity(), "📝文本");
@@ -626,14 +649,24 @@ private void showMainDialog() {
     row2Group.addView(rbEmoji);
     row2Group.addView(rbVoice);
 
+    RadioGroup row3Group = new RadioGroup(getTopActivity());
+    row3Group.setOrientation(LinearLayout.HORIZONTAL);
+    RadioButton rbMomentsText = createRadioButton(getTopActivity(), "🌟朋友圈(纯文本)");
+    RadioButton rbMomentsImage = createRadioButton(getTopActivity(), "🌟朋友圈(图文)");
+    row3Group.addView(rbMomentsText);
+    row3Group.addView(rbMomentsImage);
+
     LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
         LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
     );
     rowParams.setMargins(0, 4, 0, 4);
     row1Group.setLayoutParams(rowParams);
     row2Group.setLayoutParams(rowParams);
+    row3Group.setLayoutParams(rowParams);
+    
     mainTypeGroup.addView(row1Group);
     mainTypeGroup.addView(row2Group);
+    mainTypeGroup.addView(row3Group);
     contentCard.addView(mainTypeGroup);
 
     final LinearLayout contentContainer = new LinearLayout(getTopActivity());
@@ -642,7 +675,7 @@ private void showMainDialog() {
     contentCard.addView(contentContainer);
     root.addView(contentCard);
 
-    LinearLayout settingCard = createCardLayout();
+    final LinearLayout settingCard = createCardLayout();
     settingCard.addView(createSectionTitle("⚙️ 发送参数设置"));
 
     settingCard.addView(createTextView(getTopActivity(), "⏰ 循环发送设置:", 14, 8));
@@ -710,8 +743,15 @@ private void showMainDialog() {
     final Runnable updateContentUI = new Runnable() {
         public void run() {
             contentContainer.removeAllViews();
-            if (massSendType == SEND_TYPE_TEXT) {
-                EditText textEdit = createStyledEditText("请输入要群发的文本内容...", massSendTextContent);
+            
+            // 朋友圈类型时隐藏目标选择和间隔设置
+            boolean isMoments = (massSendType == SEND_TYPE_MOMENTS_TEXT || massSendType == SEND_TYPE_MOMENTS_IMAGE);
+            targetCard.setVisibility(isMoments ? View.GONE : View.VISIBLE);
+            settingCard.setVisibility(isMoments ? View.GONE : View.VISIBLE);
+            
+            if (massSendType == SEND_TYPE_TEXT || massSendType == SEND_TYPE_MOMENTS_TEXT) {
+                String hint = massSendType == SEND_TYPE_MOMENTS_TEXT ? "请输入朋友圈文本内容..." : "请输入要群发的文本内容...";
+                EditText textEdit = createStyledEditText(hint, massSendTextContent);
                 textEdit.setMinLines(5);
                 textEdit.setGravity(Gravity.TOP);
                 textEdit.addTextChangedListener(new TextWatcher() {
@@ -720,7 +760,83 @@ private void showMainDialog() {
                     public void afterTextChanged(Editable s) { massSendTextContent = s.toString(); }
                 });
                 contentContainer.addView(textEdit);
-                contentContainer.addView(createPromptText("支持变量: %friendName% (好友昵称/备注)"));
+                
+                if (massSendType == SEND_TYPE_TEXT) {
+                    contentContainer.addView(createPromptText("支持变量: %friendName% (好友昵称/备注)"));
+                } else {
+                    TextView momentsTip = createPromptText("⚠️ 朋友圈模式：将发送到您的朋友圈，无需选择目标");
+                    momentsTip.setTextColor(Color.parseColor("#FF9800"));
+                    contentContainer.addView(momentsTip);
+                }
+            } else if (massSendType == SEND_TYPE_MOMENTS_IMAGE) {
+                // 朋友圈图文模式
+                TextView momentsTip = createPromptText("⚠️ 朋友圈图文：文本+图片（最多9张）");
+                momentsTip.setTextColor(Color.parseColor("#FF9800"));
+                contentContainer.addView(momentsTip);
+                
+                EditText textEdit = createStyledEditText("输入朋友圈文字（可为空）", massSendTextContent);
+                textEdit.setMinLines(3);
+                textEdit.setGravity(Gravity.TOP);
+                textEdit.addTextChangedListener(new TextWatcher() {
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {}
+                    public void afterTextChanged(Editable s) { massSendTextContent = s.toString(); }
+                });
+                contentContainer.addView(textEdit);
+                
+                TextView pathTv = new TextView(getTopActivity());
+                StringBuilder sb = new StringBuilder();
+                if (massSendMediaPaths.isEmpty()) {
+                    sb.append("🚫 未选择图片");
+                } else {
+                    sb.append("✅ 已选 ").append(massSendMediaPaths.size()).append(" 张图片:\n");
+                    for (int i = 0; i < Math.min(massSendMediaPaths.size(), 5); i++) {
+                        sb.append(new File((String) massSendMediaPaths.get(i)).getName()).append("\n");
+                    }
+                    if (massSendMediaPaths.size() > 5) sb.append("...等");
+                }
+                pathTv.setText(sb.toString());
+                pathTv.setTextColor(Color.parseColor("#333333"));
+                pathTv.setPadding(0, 0, 0, 16);
+                contentContainer.addView(pathTv);
+                
+                Button selMediaBtn = new Button(getTopActivity());
+                selMediaBtn.setText("📂 选择图片 (最多9张)");
+                styleMediaSelectionButton(selMediaBtn);
+                selMediaBtn.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View v) {
+                        File lastFolder = new File(getString(DEFAULT_LAST_FOLDER_SP_AUTO, ROOT_FOLDER));
+                        browseFolderForSelectionAuto(lastFolder, ".jpg,.png,.jpeg,.gif,.bmp", "", new MediaSelectionCallback() {
+                            public void onSelected(ArrayList<String> selectedFiles) {
+                                if (selectedFiles.size() > 9) {
+                                    toast("朋友圈最多支持9张图片");
+                                    massSendMediaPaths.clear();
+                                    for (int i = 0; i < 9; i++) {
+                                        massSendMediaPaths.add(selectedFiles.get(i));
+                                    }
+                                } else {
+                                    massSendMediaPaths.clear();
+                                    massSendMediaPaths.addAll(selectedFiles);
+                                }
+                                updateContentUI.run();
+                            }
+                        }, false);
+                    }
+                });
+                contentContainer.addView(selMediaBtn);
+                
+                if (!massSendMediaPaths.isEmpty()) {
+                    Button clearMediaBtn = new Button(getTopActivity());
+                    clearMediaBtn.setText("清空已选图片");
+                    styleUtilityButton(clearMediaBtn);
+                    clearMediaBtn.setOnClickListener(new View.OnClickListener() {
+                        public void onClick(View v) {
+                            massSendMediaPaths.clear();
+                            updateContentUI.run();
+                        }
+                    });
+                    contentContainer.addView(clearMediaBtn);
+                }
             } else {
                 TextView pathTv = new TextView(getTopActivity());
                 StringBuilder sb = new StringBuilder();
@@ -786,6 +902,8 @@ private void showMainDialog() {
         case SEND_TYPE_FILE: rbFile.setChecked(true); break;
         case SEND_TYPE_EMOJI: rbEmoji.setChecked(true); break;
         case SEND_TYPE_VOICE: rbVoice.setChecked(true); break;
+        case SEND_TYPE_MOMENTS_TEXT: rbMomentsText.setChecked(true); break;
+        case SEND_TYPE_MOMENTS_IMAGE: rbMomentsImage.setChecked(true); break;
     }
     updateContentUI.run();
 
@@ -798,11 +916,13 @@ private void showMainDialog() {
             else if (checkedId == rbImage.getId()) massSendType = SEND_TYPE_IMAGE;
             else if (checkedId == rbVideo.getId()) massSendType = SEND_TYPE_VIDEO;
             row2Group.clearCheck();
+            row3Group.clearCheck();
             massSendMediaPaths.clear();
             updateContentUI.run();
             isProcessing[0] = false;
         }
     });
+    
     row2Group.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
         public void onCheckedChanged(RadioGroup group, int checkedId) {
             if (isProcessing[0]) return;
@@ -811,7 +931,25 @@ private void showMainDialog() {
             else if (checkedId == rbEmoji.getId()) massSendType = SEND_TYPE_EMOJI;
             else if (checkedId == rbVoice.getId()) massSendType = SEND_TYPE_VOICE;
             row1Group.clearCheck();
+            row3Group.clearCheck();
             massSendMediaPaths.clear();
+            updateContentUI.run();
+            isProcessing[0] = false;
+        }
+    });
+    
+    row3Group.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+        public void onCheckedChanged(RadioGroup group, int checkedId) {
+            if (isProcessing[0]) return;
+            isProcessing[0] = true;
+            if (checkedId == rbMomentsText.getId()) {
+                massSendType = SEND_TYPE_MOMENTS_TEXT;
+                massSendMediaPaths.clear();
+            } else if (checkedId == rbMomentsImage.getId()) {
+                massSendType = SEND_TYPE_MOMENTS_IMAGE;
+            }
+            row1Group.clearCheck();
+            row2Group.clearCheck();
             updateContentUI.run();
             isProcessing[0] = false;
         }
@@ -819,9 +957,10 @@ private void showMainDialog() {
 
     final Runnable saveTaskAction = new Runnable() {
         public void run() {
-            if (massSendTargetWxids.isEmpty()) { toast("请选择发送目标！"); return; }
+            boolean isMomentsMode = (massSendType == SEND_TYPE_MOMENTS_TEXT || massSendType == SEND_TYPE_MOMENTS_IMAGE);
+            if (!isMomentsMode && massSendTargetWxids.isEmpty()) { toast("请选择发送目标！"); return; }
             if (massSendType == SEND_TYPE_TEXT && TextUtils.isEmpty(massSendTextContent)) { toast("请输入文本内容！"); return; }
-            if (massSendType != SEND_TYPE_TEXT && massSendType != SEND_TYPE_VOICE && massSendMediaPaths.isEmpty()) { toast("请选择发送文件！"); return; }
+            if (massSendType != SEND_TYPE_TEXT && massSendType != SEND_TYPE_VOICE && massSendType != SEND_TYPE_MOMENTS_TEXT && massSendType != SEND_TYPE_MOMENTS_IMAGE && massSendMediaPaths.isEmpty()) { toast("请选择发送文件！"); return; }
             if (massSendType == SEND_TYPE_VOICE && massSendMediaPaths.isEmpty()) { toast("请选择语音文件(.silk)！"); return; }
 
             final List<Integer> selectedDays = new ArrayList<Integer>();
@@ -862,9 +1001,10 @@ private void showMainDialog() {
         }
     }, "立即直接发送", new DialogInterface.OnClickListener() {
         public void onClick(DialogInterface dialog, int which) {
-            if (massSendTargetWxids.isEmpty()) { toast("请选择发送目标！"); return; }
+            boolean isMomentsMode = (massSendType == SEND_TYPE_MOMENTS_TEXT || massSendType == SEND_TYPE_MOMENTS_IMAGE);
+            if (!isMomentsMode && massSendTargetWxids.isEmpty()) { toast("请选择发送目标！"); return; }
             if (massSendType == SEND_TYPE_TEXT && TextUtils.isEmpty(massSendTextContent)) { toast("请输入文本内容！"); return; }
-            if (massSendType != SEND_TYPE_TEXT && massSendType != SEND_TYPE_VOICE && massSendMediaPaths.isEmpty()) { toast("请选择发送文件！"); return; }
+            if (massSendType != SEND_TYPE_TEXT && massSendType != SEND_TYPE_VOICE && massSendType != SEND_TYPE_MOMENTS_TEXT && massSendType != SEND_TYPE_MOMENTS_IMAGE && massSendMediaPaths.isEmpty()) { toast("请选择发送文件！"); return; }
             if (massSendType == SEND_TYPE_VOICE && massSendMediaPaths.isEmpty()) { toast("请选择语音文件！"); return; }
 
             try {
@@ -941,7 +1081,35 @@ private void executeImmediateSend() {
         public void run() {
             int success = 0;
             int fail = 0;
-
+            
+            // 朋友圈模式特殊处理
+            if (type == SEND_TYPE_MOMENTS_TEXT || type == SEND_TYPE_MOMENTS_IMAGE) {
+                try {
+                    if (type == SEND_TYPE_MOMENTS_TEXT) {
+                        uploadText(content);
+                    } else {
+                        if (mediaPaths.isEmpty()) {
+                            uploadText(content);
+                        } else {
+                            uploadTextAndPicList(content, mediaPaths);
+                        }
+                    }
+                    success = 1;
+                    notify("朋友圈发送成功", type == SEND_TYPE_MOMENTS_TEXT ? "已发送纯文本" : "已发送图文");
+                } catch (Exception e) {
+                    fail = 1;
+                    log("朋友圈发送失败: " + e.getMessage());
+                }
+                
+                final String report = "成功: " + success + ", 失败: " + fail;
+                notify("发送完成", report);
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    public void run() { toast("✅ 发送完成\n" + report); }
+                });
+                return;
+            }
+            
+            // 原有群发逻辑
             for (int i = 0; i < targets.size(); i++) {
                 final String target = targets.get(i);
                 final String name = getContactName(target);
@@ -993,7 +1161,6 @@ private void executeImmediateSend() {
         }
     }).start();
 }
-
 /**
  * 更新任务统计显示
  */
@@ -1078,6 +1245,8 @@ private void showTaskListDialog() {
                 case SEND_TYPE_FILE: typeStr = "📁文件"; break;
                 case SEND_TYPE_EMOJI: typeStr = "😊表情"; break;
                 case SEND_TYPE_VOICE: typeStr = "🎤语音"; break;
+                case SEND_TYPE_MOMENTS_TEXT: typeStr = "🌟朋友圈文本"; break;
+                case SEND_TYPE_MOMENTS_IMAGE: typeStr = "🌟朋友圈图文"; break;
             }
 
             String statusEmoji = "";
@@ -1946,6 +2115,7 @@ private Object[] getMediaSelectTagForMassSend(int type) {
         case SEND_TYPE_EMOJI: extFilter = ".gif"; break;
         case SEND_TYPE_FILE: extFilter = ""; break;
         case SEND_TYPE_VOICE: extFilter = ".silk"; break;
+        case SEND_TYPE_MOMENTS_IMAGE: extFilter = ".jpg,.png,.jpeg,.gif,.bmp"; break;
     }
     return new Object[]{extFilter, false, false, true};
 }
@@ -2164,7 +2334,7 @@ private void showLoadingDialog(String title, String message, final Runnable data
     initialLayout.addView(progressBar);
     TextView loadingText = new TextView(getTopActivity());
     loadingText.setText(message);
-    loadingText.setPadding(20, 0, 0, 0);
+    loadingText.setPadding(20, 0, 0, 0);  // ← 修复这里
     initialLayout.addView(loadingText);
     final AlertDialog loadingDialog = buildCommonAlertDialog(getTopActivity(), title, initialLayout, null, null, "❌ 取消", new DialogInterface.OnClickListener() {
         public void onClick(DialogInterface d, int w) { d.dismiss(); }
@@ -2185,7 +2355,6 @@ private void showLoadingDialog(String title, String message, final Runnable data
         }
     }).start();
 }
-
 private int dpToPx(int dp) {
     return (int) (dp * getTopActivity().getResources().getDisplayMetrics().density);
 }
