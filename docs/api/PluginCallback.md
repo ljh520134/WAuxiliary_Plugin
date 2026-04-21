@@ -1,7 +1,7 @@
 # 回调方法
 
 ::: warning 警告
-本文档适用于 WAuxiliary v1.2.7 版本
+本文档适用于 WAuxiliary v1.2.7.r1342 版本
 :::
 
 ## 插件加载
