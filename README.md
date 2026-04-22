@@ -12,11 +12,11 @@ WeChat Auxiliary Plugin
 
 | 插件                                      | API                                | 类型 | 状态 | 更新时间   |
 |-----------------------------------------|------------------------------------|----|----|--------|
-| [点歌插件@Hd](plugins/v127/Hd/MusicPlugin)  | [落月API](https://doc.vkeys.cn/)     | 免费 | ✅  | 260413 |
+| [文转音@Hd](plugins/v127/Hd/TextToSpeech)  | [轩心云API](https://www.yx520.ltd/)   | 免费 | ✅  | 260422 |
+| [点歌插件@Hd](plugins/v127/Hd/MusicPlugin)  | [落月API](https://doc.vkeys.cn/)     | 免费 | ✅  | 260422 |
 | [摸头插件@Hd](plugins/v126/Hd/Avatar-rua)   | [维梦API](https://api.52vmy.cn/)     | 免费 | ✅  | 260314 |
 | [表情合成@Hd](plugins/v126/Hd/EmojiMix)     | [晴天API](https://sbtxqq.com/)       | 免费 | ✅  | 260314 |
 | [历史今天@Hd](plugins/v126/Hd/HistoryToday) | [未知](https://v2.xxapi.cn/)         | 免费 | 🚫 | 260314 |
-| [文转音@Hd](plugins/v126/Hd/TextToSpeech)  | [轩心云API](https://www.yx520.ltd/)   | 免费 | ✅  | 260314 |
 | [视频插件@Hd](plugins/v126/Hd/VideoPlugin)  | [未知](https://www.hhlqilongzhu.cn/) | 免费 | 🚫 | 260314 |
 
 ## 贡献:
