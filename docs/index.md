@@ -26,6 +26,10 @@ features:
     details: 版本 1.0.2 | 更新于 20260422
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FMusicPlugin&filename=%E7%82%B9%E6%AD%8C%E6%8F%92%E4%BB%B6_1.0.2
 
+  - title: 智能聊天@Hd
+    details: 版本 1.0.2 | 更新于 20260422
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FOpenAiChat&filename=%E6%99%BA%E8%83%BD%E8%81%8A%E5%A4%A9_1.0.2
+
   - title: 文转图@Hd
     details: 版本 1.0.2 | 更新于 20260422
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FTextToImg&filename=%E6%96%87%E8%BD%AC%E5%9B%BE_1.0.2
@@ -37,6 +41,10 @@ features:
   - title: 视频插件@Hd
     details: 版本 1.0.2 | 更新于 20260422
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FVideoPlugin&filename=%E8%A7%86%E9%A2%91%E6%8F%92%E4%BB%B6_1.0.2
+
+  - title: 语录插件@Hd
+    details: 版本 1.0.2 | 更新于 20260422
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2Fmsg-q&filename=%E8%AF%AD%E5%BD%95%E6%8F%92%E4%BB%B6_1.0.2
 
   - title: 群发助手@。。
     details: 版本 1.3.0 | 更新于 20260421
@@ -141,14 +149,6 @@ features:
   - title: 自动增加步数@yixin
     details: 版本 1.0.0 | 更新于 20251010
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2Fyixin%2FStepChange&filename=%E8%87%AA%E5%8A%A8%E5%A2%9E%E5%8A%A0%E6%AD%A5%E6%95%B0_1.0.0
-
-  - title: 智能聊天@Hd
-    details: 版本 1.0.0 | 更新于 20250917
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FOpenAiChat&filename=%E6%99%BA%E8%83%BD%E8%81%8A%E5%A4%A9_1.0.0
-
-  - title: 语录插件@Hd
-    details: 版本 1.0.0 | 更新于 20250917
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2Fmsg-q&filename=%E8%AF%AD%E5%BD%95%E6%8F%92%E4%BB%B6_1.0.0
 
   - title: 抖音视频图文解析@coderpwh
     details: 版本 1.0.0 | 更新于 20250917

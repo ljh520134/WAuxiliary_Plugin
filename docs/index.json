@@ -43,6 +43,14 @@
       "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FMusicPlugin&filename=%E7%82%B9%E6%AD%8C%E6%8F%92%E4%BB%B6_1.0.2"
     },
     {
+      "name": "智能聊天",
+      "author": "Hd",
+      "version": "1.0.2",
+      "updateTime": 20260422,
+      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/Hd/OpenAiChat",
+      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FOpenAiChat&filename=%E6%99%BA%E8%83%BD%E8%81%8A%E5%A4%A9_1.0.2"
+    },
+    {
       "name": "文转图",
       "author": "Hd",
       "version": "1.0.2",
@@ -65,6 +73,14 @@
       "updateTime": 20260422,
       "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/Hd/VideoPlugin",
       "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FVideoPlugin&filename=%E8%A7%86%E9%A2%91%E6%8F%92%E4%BB%B6_1.0.2"
+    },
+    {
+      "name": "语录插件",
+      "author": "Hd",
+      "version": "1.0.2",
+      "updateTime": 20260422,
+      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/Hd/msg-q",
+      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2Fmsg-q&filename=%E8%AF%AD%E5%BD%95%E6%8F%92%E4%BB%B6_1.0.2"
     },
     {
       "name": "群发助手",
@@ -273,22 +289,6 @@
       "updateTime": 20251010,
       "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/yixin/StepChange",
       "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2Fyixin%2FStepChange&filename=%E8%87%AA%E5%8A%A8%E5%A2%9E%E5%8A%A0%E6%AD%A5%E6%95%B0_1.0.0"
-    },
-    {
-      "name": "智能聊天",
-      "author": "Hd",
-      "version": "1.0.0",
-      "updateTime": 20250917,
-      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/OpenAiChat",
-      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FOpenAiChat&filename=%E6%99%BA%E8%83%BD%E8%81%8A%E5%A4%A9_1.0.0"
-    },
-    {
-      "name": "语录插件",
-      "author": "Hd",
-      "version": "1.0.0",
-      "updateTime": 20250917,
-      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/msg-q",
-      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2Fmsg-q&filename=%E8%AF%AD%E5%BD%95%E6%8F%92%E4%BB%B6_1.0.0"
     },
     {
       "name": "抖音视频图文解析",
