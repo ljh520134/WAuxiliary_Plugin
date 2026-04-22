@@ -1,28 +1,28 @@
 
-import me.hd.wauxv.plugin.api.callback.PluginCallBack;
+import me.hd.wauxv.plugin.api.callback.PluginCallBack
 
 void sendToday(String talker) {
-    var api = "https://v2.xxapi.cn/api/historypic";
+    var api = "https://v2.xxapi.cn/api/historypic"
     get(api, null, (respCode, respContent) -> {
-        var jsonObj = new JSONObject(respContent);
-        var code = jsonObj.optInt("code");
+        var jsonObj = new JSONObject(respContent)
+        var code = jsonObj.optInt("code")
         if (code == 200) {
-            var url = jsonObj.optString("data");
-            var path = "${cacheDir}/image.png";
+            var url = jsonObj.optString("data")
+            var path = "${cacheDir}/image.png"
             download(url, path, null, cacheFile -> {
-                sendImage(talker, cacheFile.getAbsolutePath());
-                cacheFile.delete();
-            });
+                sendImage(talker, cacheFile.getAbsolutePath())
+                cacheFile.delete()
+            })
         }
-    });
+    })
 }
 
 void onHandleMsg(Object msgInfoBean) {
     if (msgInfoBean.isText()) {
-        var content = msgInfoBean.getContent();
-        var talker = msgInfoBean.getTalker();
+        var content = msgInfoBean.getContent()
+        var talker = msgInfoBean.getTalker()
         if (content.equals("/历史今天")) {
-            sendToday(talker);
+            sendToday(talker)
         }
     }
 }
