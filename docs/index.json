@@ -1,7 +1,71 @@
 {
-  "generatedAt": "2026-04-21",
-  "totalPlugins": 53,
+  "generatedAt": "2026-04-22",
+  "totalPlugins": 47,
   "plugins": [
+    {
+      "name": "摸头插件",
+      "author": "Hd",
+      "version": "1.0.2",
+      "updateTime": 20260422,
+      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/Hd/Avatar-rua",
+      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FAvatar-rua&filename=%E6%91%B8%E5%A4%B4%E6%8F%92%E4%BB%B6_1.0.2"
+    },
+    {
+      "name": "示例插件",
+      "author": "Hd",
+      "version": "1.0.2",
+      "updateTime": 20260422,
+      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/Hd/DemoPlugin",
+      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FDemoPlugin&filename=%E7%A4%BA%E4%BE%8B%E6%8F%92%E4%BB%B6_1.0.2"
+    },
+    {
+      "name": "表情合成",
+      "author": "Hd",
+      "version": "1.0.2",
+      "updateTime": 20260422,
+      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/Hd/EmojiMix",
+      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FEmojiMix&filename=%E8%A1%A8%E6%83%85%E5%90%88%E6%88%90_1.0.2"
+    },
+    {
+      "name": "历史今天",
+      "author": "Hd",
+      "version": "1.0.2",
+      "updateTime": 20260422,
+      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/Hd/HistoryToday",
+      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FHistoryToday&filename=%E5%8E%86%E5%8F%B2%E4%BB%8A%E5%A4%A9_1.0.2"
+    },
+    {
+      "name": "点歌插件",
+      "author": "Hd",
+      "version": "1.0.2",
+      "updateTime": 20260422,
+      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/Hd/MusicPlugin",
+      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FMusicPlugin&filename=%E7%82%B9%E6%AD%8C%E6%8F%92%E4%BB%B6_1.0.2"
+    },
+    {
+      "name": "文转图",
+      "author": "Hd",
+      "version": "1.0.2",
+      "updateTime": 20260422,
+      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/Hd/TextToImg",
+      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FTextToImg&filename=%E6%96%87%E8%BD%AC%E5%9B%BE_1.0.2"
+    },
+    {
+      "name": "文转音",
+      "author": "Hd",
+      "version": "1.0.2",
+      "updateTime": 20260422,
+      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/Hd/TextToSpeech",
+      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FTextToSpeech&filename=%E6%96%87%E8%BD%AC%E9%9F%B3_1.0.2"
+    },
+    {
+      "name": "视频插件",
+      "author": "Hd",
+      "version": "1.0.2",
+      "updateTime": 20260422,
+      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/Hd/VideoPlugin",
+      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FVideoPlugin&filename=%E8%A7%86%E9%A2%91%E6%8F%92%E4%BB%B6_1.0.2"
+    },
     {
       "name": "群发助手",
       "author": "。。",
@@ -33,14 +97,6 @@
       "updateTime": 20260420,
       "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/。。/自动回复配置版",
       "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E3%80%82%E3%80%82%2F%E8%87%AA%E5%8A%A8%E5%9B%9E%E5%A4%8D%E9%85%8D%E7%BD%AE%E7%89%88&filename=%E8%87%AA%E5%8A%A8%E5%9B%9E%E5%A4%8D%E9%85%8D%E7%BD%AE%E7%89%88_2.3.0"
-    },
-    {
-      "name": "点歌插件",
-      "author": "Hd",
-      "version": "1.0.1",
-      "updateTime": 20260413,
-      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/Hd/MusicPlugin",
-      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FMusicPlugin&filename=%E7%82%B9%E6%AD%8C%E6%8F%92%E4%BB%B6_1.0.1"
     },
     {
       "name": "关键词通知",
@@ -163,14 +219,6 @@
       "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FWukon%2FAutoStep&filename=%E8%87%AA%E5%8A%A8%E5%A2%9E%E5%8A%A0%E6%AD%A5%E6%95%B0_1.0.6"
     },
     {
-      "name": "示例插件",
-      "author": "Hd",
-      "version": "1.0.0",
-      "updateTime": 20260228,
-      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/Hd/DemoPlugin",
-      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FDemoPlugin&filename=%E7%A4%BA%E4%BE%8B%E6%8F%92%E4%BB%B6_1.0.0"
-    },
-    {
       "name": "统计",
       "author": "轻乳",
       "version": "1.0.0",
@@ -227,108 +275,12 @@
       "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2Fyixin%2FStepChange&filename=%E8%87%AA%E5%8A%A8%E5%A2%9E%E5%8A%A0%E6%AD%A5%E6%95%B0_1.0.0"
     },
     {
-      "name": "自动同意好友",
-      "author": "Hd",
-      "version": "1.0.0",
-      "updateTime": 20250917,
-      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/AutoAgreeFriend",
-      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FAutoAgreeFriend&filename=%E8%87%AA%E5%8A%A8%E5%90%8C%E6%84%8F%E5%A5%BD%E5%8F%8B_1.0.0"
-    },
-    {
-      "name": "自动艾特回复",
-      "author": "Hd",
-      "version": "1.0.0",
-      "updateTime": 20250917,
-      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/AutoAtReply",
-      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FAutoAtReply&filename=%E8%87%AA%E5%8A%A8%E8%89%BE%E7%89%B9%E5%9B%9E%E5%A4%8D_1.0.0"
-    },
-    {
-      "name": "自动回复",
-      "author": "Hd",
-      "version": "1.0.0",
-      "updateTime": 20250917,
-      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/AutoReply",
-      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FAutoReply&filename=%E8%87%AA%E5%8A%A8%E5%9B%9E%E5%A4%8D_1.0.0"
-    },
-    {
-      "name": "自动回复被拍",
-      "author": "Hd",
-      "version": "1.0.0",
-      "updateTime": 20250917,
-      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/AutoReplyPat",
-      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FAutoReplyPat&filename=%E8%87%AA%E5%8A%A8%E5%9B%9E%E5%A4%8D%E8%A2%AB%E6%8B%8D_1.0.0"
-    },
-    {
-      "name": "摸头插件",
-      "author": "Hd",
-      "version": "1.0.0",
-      "updateTime": 20250917,
-      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/Avatar-rua",
-      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FAvatar-rua&filename=%E6%91%B8%E5%A4%B4%E6%8F%92%E4%BB%B6_1.0.0"
-    },
-    {
-      "name": "表情合成",
-      "author": "Hd",
-      "version": "1.0.0",
-      "updateTime": 20250917,
-      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/EmojiMix",
-      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FEmojiMix&filename=%E8%A1%A8%E6%83%85%E5%90%88%E6%88%90_1.0.0"
-    },
-    {
-      "name": "历史今天",
-      "author": "Hd",
-      "version": "1.0.0",
-      "updateTime": 20250917,
-      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/HistoryToday",
-      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FHistoryToday&filename=%E5%8E%86%E5%8F%B2%E4%BB%8A%E5%A4%A9_1.0.0"
-    },
-    {
-      "name": "进退群提醒",
-      "author": "Hd",
-      "version": "1.0.0",
-      "updateTime": 20250917,
-      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/JoinAndLeftGroupTips",
-      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FJoinAndLeftGroupTips&filename=%E8%BF%9B%E9%80%80%E7%BE%A4%E6%8F%90%E9%86%92_1.0.0"
-    },
-    {
-      "name": "进群邀请",
-      "author": "Hd",
-      "version": "1.0.0",
-      "updateTime": 20250917,
-      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/JoinGroupInvite",
-      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FJoinGroupInvite&filename=%E8%BF%9B%E7%BE%A4%E9%82%80%E8%AF%B7_1.0.0"
-    },
-    {
       "name": "智能聊天",
       "author": "Hd",
       "version": "1.0.0",
       "updateTime": 20250917,
       "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/OpenAiChat",
       "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FOpenAiChat&filename=%E6%99%BA%E8%83%BD%E8%81%8A%E5%A4%A9_1.0.0"
-    },
-    {
-      "name": "文转图",
-      "author": "Hd",
-      "version": "1.0.0",
-      "updateTime": 20250917,
-      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/TextToImg",
-      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FTextToImg&filename=%E6%96%87%E8%BD%AC%E5%9B%BE_1.0.0"
-    },
-    {
-      "name": "文转音",
-      "author": "Hd",
-      "version": "1.0.0",
-      "updateTime": 20250917,
-      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/TextToSpeech",
-      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FTextToSpeech&filename=%E6%96%87%E8%BD%AC%E9%9F%B3_1.0.0"
-    },
-    {
-      "name": "视频插件",
-      "author": "Hd",
-      "version": "1.0.0",
-      "updateTime": 20250917,
-      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Hd/VideoPlugin",
-      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FVideoPlugin&filename=%E8%A7%86%E9%A2%91%E6%8F%92%E4%BB%B6_1.0.0"
     },
     {
       "name": "语录插件",
