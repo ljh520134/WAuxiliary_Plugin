@@ -39,7 +39,7 @@ void sendTextImg(String title, String subTitle) {
 
     try {
         var path = "${cacheDir}/image.png"
-        FileOutputStream out = new FileOutputStream(path)
+        var out = new FileOutputStream(path)
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
         bitmap.recycle()
 

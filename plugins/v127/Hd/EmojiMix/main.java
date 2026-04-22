@@ -23,7 +23,7 @@ void onHandleMsg(Object msgInfoBean) {
                         })
                     } else {
                         var msg = jsonObj.optString("message")
-                        sendText(talker, "表情合成失败: $msg")
+                        sendText(talker, "[表情合成]合成失败: $msg")
                     }
                 })
             }

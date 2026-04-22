@@ -16,7 +16,7 @@ void onHandleMsg(Object msgInfoBean) {
                     cacheFile.delete()
                 })
             } else {
-                sendText(talker, "获取头像异常")
+                sendText(talker, "[摸头插件]获取异常")
             }
         }
     }
