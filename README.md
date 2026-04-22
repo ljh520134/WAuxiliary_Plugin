@@ -12,12 +12,12 @@ WeChat Auxiliary Plugin
 
 | 插件                                      | API                              | 类型 | 状态 | 更新时间   |
 |-----------------------------------------|----------------------------------|----|----|--------|
+| [表情合成@Hd](plugins/v127/Hd/EmojiMix)     | [OIAPI](https://oiapi.net/)      | 免费 | ✅  | 260422 |
 | [摸头插件@Hd](plugins/v127/Hd/Avatar-rua)   | [维梦API](https://api.52vmy.cn/)   | 免费 | ✅  | 260422 |
 | [历史今天@Hd](plugins/v127/Hd/HistoryToday) | [PPAPI](http://api.ppqa.cn/)     | 免费 | ✅  | 260422 |
 | [视频插件@Hd](plugins/v127/Hd/VideoPlugin)  | [远梦API](https://api.mmp.cc/)     | 免费 | ✅  | 260422 |
 | [文转音@Hd](plugins/v127/Hd/TextToSpeech)  | [轩心云API](https://www.yx520.ltd/) | 免费 | ✅  | 260422 |
 | [点歌插件@Hd](plugins/v127/Hd/MusicPlugin)  | [落月API](https://doc.vkeys.cn/)   | 免费 | ✅  | 260422 |
-| [表情合成@Hd](plugins/v126/Hd/EmojiMix)     | [晴天API](https://sbtxqq.com/)     | 免费 | ✅  | 260314 |
 
 ## 贡献:
 
