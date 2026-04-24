@@ -70,6 +70,7 @@ final String ROOT_FOLDER = android.os.Environment.getExternalStorageDirectory().
 
 // 回调接口（必须定义在使用之前）
 interface MediaSelectionCallback { void onSelected(ArrayList<String> selectedFiles); }
+interface SendAction { void run() throws Exception; }
 
 /* ========== 单例模式文件夹浏览器全局变量 ========== */
 AlertDialog gFolderDialogAuto = null;
@@ -95,12 +96,16 @@ long massSendInterval = 0; // 发送对象间隔(秒)
 long massSendMediaInterval = 0; // 多媒体文件间隔(秒)
 int massSendRepeatType = 0; // 0:不重复(单次), 1:每天重复, 2:每周重复
 boolean massSendWakeOnTime = false; // 是否到点唤醒微信执行
+boolean massSendSendOnTimeout = true; // 任务超时后是否补发
 
 // 定时任务相关 - 改为多任务支持
 Map scheduledTasks = new HashMap(); // taskId -> JSONObject
 Map scheduledRunnables = new HashMap(); // taskId -> Runnable
+Map taskPrewarmRunnables = new HashMap(); // taskId -> Runnable
 boolean isTaskRunning = false;
 Handler scheduleHandler = new Handler(Looper.getMainLooper());
+boolean sendPipelineWarmed = false;
+final Object sendWarmLock = new Object();
 
 // 常量定义
 final int SEND_TYPE_TEXT = 0;
@@ -112,11 +117,15 @@ final int SEND_TYPE_VOICE = 5;
 final int SEND_TYPE_MOMENTS_TEXT = 6;      // 朋友圈纯文本
 final int SEND_TYPE_MOMENTS_IMAGE = 7;     // 朋友圈图文
 final int SEND_TYPE_XML = 8;               // XML消息
+final long WAKEUP_LEAD_MS = 1000L;         // 提前唤醒1秒
+final int SEND_MAX_RETRY = 3;              // 冷态首发重试次数（全类型）
+final long SEND_RETRY_BASE_MS = 2000L;
 
 // 存储Key
 final String CONFIG_KEY = "scheduled_send_multi_v2";
 final String KEY_LABELS = "saved_target_labels";
 final String KEY_TASKS = "scheduled_tasks"; // 存储多任务列表
+final String KEY_DEFAULT_SEND_ON_TIMEOUT = "default_send_on_timeout";
 
 // 缓存列表
 private List sCachedFriendList = null;
@@ -136,6 +145,12 @@ public void onLoad() {
             restoreAllTasks();
         }
     }, 5000);
+    // 预热发送链路，避免首个任务冷启动卡顿
+    new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+        public void run() {
+            warmupSendPipeline(false, "onLoad");
+        }
+    }, 1500);
 }
 
 /**
@@ -156,6 +171,25 @@ private void restoreAllTasks() {
             String taskId = String.valueOf(keys.next());
             JSONObject task = allTasks.optJSONObject(taskId);
             if (task == null) continue;
+            String status = task.optString("status", "pending");
+            int repeatType = task.optInt("repeatType", 0);
+            boolean sendOnTimeout = task.optBoolean("sendOnTimeout", true);
+
+            // 进程被杀后，running 状态可能遗留；启动时统一纠正，避免卡在“执行中”。
+            if ("running".equals(status)) {
+                if (repeatType > 0) {
+                    task.put("status", "pending");
+                } else {
+                    task.put("status", "completed");
+                    task.put("completedTime", task.optLong("completedTime", System.currentTimeMillis()));
+                    continue;
+                }
+            }
+
+            // 已完成/已过期任务不再恢复执行，防止重启后误恢复。
+            if ("completed".equals(status) || "expired".equals(status)) {
+                continue;
+            }
 
             long planTime = task.optLong("planTime", 0);
             if (planTime <= 0) continue;
@@ -164,23 +198,42 @@ private void restoreAllTasks() {
 
             if (now >= planTime) {
                 long missMs = now - planTime;
-                int repeatType = task.optInt("repeatType", 0);
 
                 if (repeatType > 0) {
-                    // 循环任务：只要错过就补发一次，避免直接跳到下一轮导致“第二天不执行”的体感问题。
-                    task.put("status", "pending");
-                    log("检测到错过的循环任务 " + taskId + "（晚点 " + missMs + "ms），准备补发...");
-                    notify("定时发送补发", "检测到循环任务 " + taskId + " 即将补发...");
-                    scheduleTaskWithPrecision(taskId, task, 1000);
-                    restoredCount++;
-                } else if (missMs < 10 * 60 * 1000) {
+                    if (sendOnTimeout) {
+                        // 循环任务：只要错过就补发一次，避免直接跳到下一轮导致“第二天不执行”的体感问题。
+                        task.put("status", "pending");
+                        log("检测到错过的循环任务 " + taskId + "（晚点 " + missMs + "ms），准备补发...");
+                        notify("定时发送补发", "检测到循环任务 " + taskId + " 即将补发...");
+                        scheduleTaskWithPrecision(taskId, task, 1000);
+                        restoredCount++;
+                    } else {
+                        JSONArray repeatDaysArray = task.optJSONArray("repeatDays");
+                        long nextPlanTime = calculateNextFuturePlanTime(planTime, repeatType, repeatDaysArray, now);
+                        if (nextPlanTime > now) {
+                            task.put("planTime", nextPlanTime);
+                            task.put("status", "pending");
+                            long nextDelay = nextPlanTime - now;
+                            scheduleTaskWithPrecision(taskId, task, nextDelay);
+                            restoredCount++;
+                            log("循环任务 " + taskId + " 已跳过超时补发，顺延到 " + formatTimeWithSeconds(nextPlanTime));
+                        } else {
+                            task.put("status", "expired");
+                            log("循环任务 " + taskId + " 超时且无法顺延，已标记过期");
+                        }
+                    }
+                } else if (sendOnTimeout && missMs < 10 * 60 * 1000) {
                     log("检测到错过的任务 " + taskId + "（10分钟内），准备补发...");
                     notify("定时发送补发", "检测到任务 " + taskId + " 即将补发...");
                     scheduleTaskWithPrecision(taskId, task, 1000);
                     restoredCount++;
                 } else {
                     task.put("status", "expired");
-                    log("任务 " + taskId + " 已过期");
+                    if (sendOnTimeout) {
+                        log("任务 " + taskId + " 已过期");
+                    } else {
+                        log("任务 " + taskId + " 已超时，已按配置跳过发送");
+                    }
                     continue;
                 }
             } else {
@@ -198,6 +251,16 @@ private void restoreAllTasks() {
     } catch (Exception e) {
         log("恢复任务失败: " + e.getMessage());
     }
+}
+
+private long calculateNextFuturePlanTime(long currentPlanTime, int repeatType, JSONArray repeatDaysArray, long now) {
+    long nextPlanTime = currentPlanTime;
+    int guard = 0;
+    while (nextPlanTime > 0 && nextPlanTime <= now && guard < 400) {
+        nextPlanTime = calculateNextPlanTime(nextPlanTime, repeatType, repeatDaysArray);
+        guard++;
+    }
+    return nextPlanTime;
 }
 
 /**
@@ -227,11 +290,96 @@ private void runOnMainSync(final Runnable runnable) {
     }
 }
 
+private boolean performSendWithRetry(final String actionName, final boolean runOnMainThread, final SendAction action) {
+    for (int attempt = 1; attempt <= SEND_MAX_RETRY; attempt++) {
+        try {
+            if (runOnMainThread) {
+                final AtomicReference<Exception> errorRef = new AtomicReference<Exception>(null);
+                runOnMainSync(new Runnable() {
+                    public void run() {
+                        try {
+                            action.run();
+                        } catch (Exception e) {
+                            errorRef.set(e);
+                        }
+                    }
+                });
+                Exception err = errorRef.get();
+                if (err != null) throw err;
+            } else {
+                action.run();
+            }
+
+            if (attempt > 1) {
+                log(actionName + " 重试成功: 第 " + attempt + " 次");
+            }
+            return true;
+        } catch (Exception e) {
+            log(actionName + " 第 " + attempt + " 次失败: " + e.getMessage());
+            if (attempt < SEND_MAX_RETRY) {
+                try {
+                    Thread.sleep(SEND_RETRY_BASE_MS * attempt);
+                } catch (Exception ignored) {}
+            }
+        }
+    }
+    return false;
+}
+
+private void warmupSendPipeline(boolean blocking, final String reason) {
+    if (sendPipelineWarmed) return;
+    Runnable warmJob = new Runnable() {
+        public void run() {
+            synchronized (sendWarmLock) {
+                if (sendPipelineWarmed) return;
+                long begin = System.currentTimeMillis();
+                try {
+                    if (sCachedFriendList == null) sCachedFriendList = getFriendList();
+                    if (sCachedGroupList == null) sCachedGroupList = getGroupList();
+                    sendPipelineWarmed = true;
+                    long cost = System.currentTimeMillis() - begin;
+                    log("发送链路预热完成(" + reason + "): " + cost + "ms");
+                } catch (Exception e) {
+                    long cost = System.currentTimeMillis() - begin;
+                    log("发送链路预热失败(" + reason + "): " + cost + "ms, " + e.getMessage());
+                }
+            }
+        }
+    };
+
+    if (blocking) {
+        warmJob.run();
+    } else {
+        new Thread(warmJob).start();
+    }
+}
+
+private void scheduleTaskPrewarm(final String taskId, long delayMillis) {
+    Runnable old = (Runnable) taskPrewarmRunnables.get(taskId);
+    if (old != null) {
+        scheduleHandler.removeCallbacks(old);
+        taskPrewarmRunnables.remove(taskId);
+    }
+    if (sendPipelineWarmed) return;
+    if (delayMillis < 7000) return;
+
+    long prewarmDelay = Math.max(0, delayMillis - 5000);
+    Runnable prewarmRunnable = new Runnable() {
+        public void run() {
+            warmupSendPipeline(false, "task_prewarm:" + taskId);
+            taskPrewarmRunnables.remove(taskId);
+        }
+    };
+    taskPrewarmRunnables.put(taskId, prewarmRunnable);
+    scheduleHandler.postDelayed(prewarmRunnable, prewarmDelay);
+}
+
 /**
  * 高精度定时执行（精确到毫秒级，误差<100ms）
  */
 private void scheduleTaskWithPrecision(final String taskId, JSONObject task, long delayMillis) {
     cancelTaskTimer(taskId);
+    scheduleTaskPrewarm(taskId, delayMillis);
 
     final long targetTime = task.optLong("planTime", 0);
     if (task.optBoolean("wakeOnTime", false)) {
@@ -261,6 +409,7 @@ private void scheduleTaskWithPrecision(final String taskId, JSONObject task, lon
 private void executeTaskSend(final String taskId) {
     final JSONObject task = (JSONObject) scheduledTasks.get(taskId);
     if (task == null) return;
+    warmupSendPipeline(false, "before_executeTaskSend");
 
     long planTime = task.optLong("planTime", 0);
     long nowAtExecute = System.currentTimeMillis();
@@ -309,15 +458,16 @@ private void executeTaskSend(final String taskId) {
             // 朋友圈模式特殊处理
             if (type == SEND_TYPE_MOMENTS_TEXT || type == SEND_TYPE_MOMENTS_IMAGE) {
                 try {
-                    if (type == SEND_TYPE_MOMENTS_TEXT) {
-                        uploadText(content);
-                    } else {
-                        if (finalMediaPaths.isEmpty()) {
-                            uploadText(content);
-                        } else {
-                            uploadTextAndPicList(content, finalMediaPaths);
+                    boolean ok = performSendWithRetry("朋友圈发送", true, new SendAction() {
+                        public void run() throws Exception {
+                            if (type == SEND_TYPE_MOMENTS_TEXT || finalMediaPaths.isEmpty()) {
+                                uploadText(content);
+                            } else {
+                                uploadTextAndPicList(content, finalMediaPaths);
+                            }
                         }
-                    }
+                    });
+                    if (!ok) throw new RuntimeException("重试后仍失败");
                     success = 1;
                     notify("朋友圈发送成功", type == SEND_TYPE_MOMENTS_TEXT ? "已发送纯文本" : "已发送图文");
                 } catch (Exception e) {
@@ -333,36 +483,48 @@ private void executeTaskSend(final String taskId) {
 
                     try {
                         if (type == SEND_TYPE_TEXT) {
-                            String contentToSend = content.replace("%friendName%", name);
-                            sendText(target, contentToSend);
+                            final String contentToSend = content.replace("%friendName%", name);
+                            targetSuccess = performSendWithRetry("文本发送->" + target, false, new SendAction() {
+                                public void run() throws Exception {
+                                    sendText(target, contentToSend);
+                                }
+                            });
                         } else if (type == SEND_TYPE_XML) {
-                            String xmlToSend = content.replace("%friendName%", name);
-                            sendXmlMsg(target, xmlToSend);
+                            final String xmlToSend = content.replace("%friendName%", name);
+                            targetSuccess = performSendWithRetry("XML发送->" + target, false, new SendAction() {
+                                public void run() throws Exception {
+                                    sendXmlMsg(target, xmlToSend);
+                                }
+                            });
                         } else {
                             for (int j = 0; j < finalMediaPaths.size(); j++) {
                                 final String path = finalMediaPaths.get(j);
                                 final File f = new File(path);
                                 if (f.exists()) {
-                                    switch (type) {
-                                        case SEND_TYPE_IMAGE:
-                                            sendImage(target, path);
-                                            break;
-                                        case SEND_TYPE_VIDEO:
-                                            sendVideo(target, path);
-                                            break;
-                                        case SEND_TYPE_EMOJI:
-                                            sendEmoji(target, path);
-                                            break;
-                                        case SEND_TYPE_FILE:
-                                            shareFile(target, f.getName(), path, "");
-                                            break;
-                                        case SEND_TYPE_VOICE:
-                                            runOnMainSync(new Runnable() {
-                                                public void run() {
+                                    boolean mediaOk = performSendWithRetry("媒体发送->" + target + " [" + f.getName() + "]", type == SEND_TYPE_VOICE, new SendAction() {
+                                        public void run() throws Exception {
+                                            switch (type) {
+                                                case SEND_TYPE_IMAGE:
+                                                    sendImage(target, path);
+                                                    break;
+                                                case SEND_TYPE_VIDEO:
+                                                    sendVideo(target, path);
+                                                    break;
+                                                case SEND_TYPE_EMOJI:
+                                                    sendEmoji(target, path);
+                                                    break;
+                                                case SEND_TYPE_FILE:
+                                                    shareFile(target, f.getName(), path, "");
+                                                    break;
+                                                case SEND_TYPE_VOICE:
                                                     sendVoice(target, path);
-                                                }
-                                            });
-                                            break;
+                                                    break;
+                                            }
+                                        }
+                                    });
+                                    if (!mediaOk) {
+                                        targetSuccess = false;
+                                        break;
                                     }
                                     if (j < finalMediaPaths.size() - 1) {
                                         long mInterval = mediaInterval > 0 ? mediaInterval * 1000 : 500;
@@ -420,6 +582,7 @@ private void executeTaskSend(final String taskId) {
 
                     cancelTaskTimer(taskId);
                     scheduledTasks.remove(taskId);
+                    saveAllTasks();
 
                     final String report = "成功: " + fSuccess + ", 失败: " + fFail;
                     notify("定时发送完成", "任务 " + taskId.substring(0, 8) + " 已完成\n" + report);
@@ -502,6 +665,11 @@ private void cancelTaskTimer(String taskId) {
         scheduleHandler.removeCallbacks(runnable);
         scheduledRunnables.remove(taskId);
     }
+    Runnable prewarmRunnable = (Runnable) taskPrewarmRunnables.get(taskId);
+    if (prewarmRunnable != null) {
+        scheduleHandler.removeCallbacks(prewarmRunnable);
+        taskPrewarmRunnables.remove(taskId);
+    }
     cancelAlarmForTask(taskId);
 }
 
@@ -520,7 +688,7 @@ private void setAlarmForTask(String taskId, long triggerTime) {
         android.app.AlarmManager am = (android.app.AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
         if (am == null || pi == null) return;
 
-        long alarmAt = Math.max(System.currentTimeMillis(), triggerTime - 1000);
+        long alarmAt = Math.max(System.currentTimeMillis(), triggerTime - WAKEUP_LEAD_MS);
 
         try { am.cancel(pi); } catch (Exception ignored) {}
 
@@ -620,6 +788,15 @@ private void saveAllTasks() {
     }
 }
 
+private boolean loadDefaultSendOnTimeout() {
+    String value = getString(CONFIG_KEY, KEY_DEFAULT_SEND_ON_TIMEOUT, "1");
+    return "1".equals(value) || "true".equalsIgnoreCase(value);
+}
+
+private void saveDefaultSendOnTimeout(boolean enabled) {
+    putString(CONFIG_KEY, KEY_DEFAULT_SEND_ON_TIMEOUT, enabled ? "1" : "0");
+}
+
 // 入口函数
 public boolean onClickSendBtn(String text) {
     massSendTargetWxids.clear();
@@ -637,6 +814,8 @@ public boolean onClickSendBtn(String text) {
 // ==========================================
 
 private void showMainDialog() {
+    massSendSendOnTimeout = loadDefaultSendOnTimeout();
+
     ScrollView scrollView = new ScrollView(getTopActivity());
     LinearLayout root = new LinearLayout(getTopActivity());
     root.setOrientation(LinearLayout.VERTICAL);
@@ -928,6 +1107,71 @@ private void showMainDialog() {
     });
 
     settingCard.addView(wakeCard);
+
+    LinearLayout timeoutCard = new LinearLayout(getTopActivity());
+    timeoutCard.setOrientation(LinearLayout.VERTICAL);
+    timeoutCard.setPadding(24, 20, 24, 20);
+    timeoutCard.setBackground(createGradientDrawable("#FFF7ED", 20));
+    LinearLayout.LayoutParams timeoutCardParams = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+    timeoutCardParams.setMargins(0, 0, 0, 12);
+    timeoutCard.setLayoutParams(timeoutCardParams);
+
+    TextView timeoutLabel = new TextView(getTopActivity());
+    timeoutLabel.setText("超时补发任务");
+    timeoutLabel.setTextSize(15);
+    timeoutLabel.setTextColor(Color.parseColor("#1F2937"));
+    try { timeoutLabel.getPaint().setFakeBoldText(true); } catch (Exception e) {}
+    timeoutCard.addView(timeoutLabel);
+
+    final TextView timeoutStateTv = new TextView(getTopActivity());
+    timeoutStateTv.setTextSize(13);
+    timeoutStateTv.setPadding(0, 8, 0, 14);
+    timeoutCard.addView(timeoutStateTv);
+
+    final Button timeoutToggleBtn = new Button(getTopActivity());
+    timeoutToggleBtn.setAllCaps(false);
+    timeoutToggleBtn.setTextSize(14);
+    timeoutToggleBtn.setPadding(20, 12, 20, 12);
+    timeoutCard.addView(timeoutToggleBtn);
+
+    final Runnable[] refreshTimeoutUi = new Runnable[1];
+    refreshTimeoutUi[0] = new Runnable() {
+        public void run() {
+            if (massSendSendOnTimeout) {
+                timeoutStateTv.setText("当前状态：已开启（错过时间会补发）");
+                timeoutStateTv.setTextColor(Color.parseColor("#0F766E"));
+                GradientDrawable shape = new GradientDrawable();
+                shape.setCornerRadius(20);
+                shape.setColor(Color.parseColor("#DCFCE7"));
+                shape.setStroke(2, Color.parseColor("#4ADE80"));
+                timeoutToggleBtn.setBackground(shape);
+                timeoutToggleBtn.setTextColor(Color.parseColor("#166534"));
+                timeoutToggleBtn.setText("点击关闭超时补发");
+            } else {
+                timeoutStateTv.setText("当前状态：已关闭（超时将跳过发送）");
+                timeoutStateTv.setTextColor(Color.parseColor("#9A3412"));
+                GradientDrawable shape = new GradientDrawable();
+                shape.setCornerRadius(20);
+                shape.setColor(Color.parseColor("#FFF1F2"));
+                shape.setStroke(2, Color.parseColor("#FDA4AF"));
+                timeoutToggleBtn.setBackground(shape);
+                timeoutToggleBtn.setTextColor(Color.parseColor("#9F1239"));
+                timeoutToggleBtn.setText("点击开启超时补发");
+            }
+        }
+    };
+    refreshTimeoutUi[0].run();
+
+    timeoutToggleBtn.setOnClickListener(new View.OnClickListener() {
+        public void onClick(View v) {
+            massSendSendOnTimeout = !massSendSendOnTimeout;
+            saveDefaultSendOnTimeout(massSendSendOnTimeout);
+            refreshTimeoutUi[0].run();
+        }
+    });
+
+    settingCard.addView(timeoutCard);
 
     final TextView intervalLabel = createTextView(getTopActivity(), "发送对象间隔 (秒):", 14, 8);
     settingCard.addView(intervalLabel);
@@ -1268,6 +1512,7 @@ private void createAndSaveTask(long planTime, List<Integer> repeatDays) {
         task.put("mediaInterval", massSendMediaInterval);
         task.put("repeatType", massSendRepeatType);
         task.put("wakeOnTime", massSendWakeOnTime);
+        task.put("sendOnTimeout", massSendSendOnTimeout);
 
         if (massSendRepeatType == 2 && repeatDays != null) {
             task.put("repeatDays", listToJsonArray(repeatDays));
@@ -1283,6 +1528,7 @@ private void createAndSaveTask(long planTime, List<Integer> repeatDays) {
 
         long delay = planTime - System.currentTimeMillis();
         if (delay > 0) {
+            warmupSendPipeline(false, "create_task");
             scheduleTaskWithPrecision(taskId, task, delay);
             String msg = "✅ 任务已排期在:\n" + formatTimeWithSeconds(planTime);
             if (massSendRepeatType == 1) msg += "\n(循环: 每天)";
@@ -1291,6 +1537,7 @@ private void createAndSaveTask(long planTime, List<Integer> repeatDays) {
                 msg += "\n(循环: 每周 " + formatRepeatDays(arr) + ")";
             }
             msg += massSendWakeOnTime ? "\n(到点唤醒微信: 开启)" : "\n(到点唤醒微信: 关闭)";
+            msg += massSendSendOnTimeout ? "\n(超时补发: 开启)" : "\n(超时补发: 关闭)";
             toast(msg);
         } else {
             toast("⚠️ 时间已过");
@@ -1305,6 +1552,7 @@ private void createAndSaveTask(long planTime, List<Integer> repeatDays) {
  * 立即执行发送
  */
 private void executeImmediateSend() {
+    warmupSendPipeline(false, "before_executeImmediateSend");
     final List<String> targets = new ArrayList<String>(massSendTargetWxids);
     final int type = massSendType;
     final String content = massSendTextContent;
@@ -1320,15 +1568,16 @@ private void executeImmediateSend() {
             // 朋友圈模式特殊处理
             if (type == SEND_TYPE_MOMENTS_TEXT || type == SEND_TYPE_MOMENTS_IMAGE) {
                 try {
-                    if (type == SEND_TYPE_MOMENTS_TEXT) {
-                        uploadText(content);
-                    } else {
-                        if (mediaPaths.isEmpty()) {
-                            uploadText(content);
-                        } else {
-                            uploadTextAndPicList(content, mediaPaths);
+                    boolean ok = performSendWithRetry("朋友圈发送", true, new SendAction() {
+                        public void run() throws Exception {
+                            if (type == SEND_TYPE_MOMENTS_TEXT || mediaPaths.isEmpty()) {
+                                uploadText(content);
+                            } else {
+                                uploadTextAndPicList(content, mediaPaths);
+                            }
                         }
-                    }
+                    });
+                    if (!ok) throw new RuntimeException("重试后仍失败");
                     success = 1;
                     notify("朋友圈发送成功", type == SEND_TYPE_MOMENTS_TEXT ? "已发送纯文本" : "已发送图文");
                 } catch (Exception e) {
@@ -1352,28 +1601,38 @@ private void executeImmediateSend() {
 
                 try {
                     if (type == SEND_TYPE_TEXT) {
-                        String finalContent = content.replace("%friendName%", name);
-                        sendText(target, finalContent);
+                        final String finalContent = content.replace("%friendName%", name);
+                        targetSuccess = performSendWithRetry("文本发送->" + target, false, new SendAction() {
+                            public void run() throws Exception {
+                                sendText(target, finalContent);
+                            }
+                        });
                     } else if (type == SEND_TYPE_XML) {
-                        String xmlToSend = content.replace("%friendName%", name);
-                        sendXmlMsg(target, xmlToSend);
+                        final String xmlToSend = content.replace("%friendName%", name);
+                        targetSuccess = performSendWithRetry("XML发送->" + target, false, new SendAction() {
+                            public void run() throws Exception {
+                                sendXmlMsg(target, xmlToSend);
+                            }
+                        });
                     } else {
                         for (int j = 0; j < mediaPaths.size(); j++) {
                             final String path = mediaPaths.get(j);
                             final File f = new File(path);
                             if (f.exists()) {
-                                switch (type) {
-                                    case SEND_TYPE_IMAGE: sendImage(target, path); break;
-                                    case SEND_TYPE_VIDEO: sendVideo(target, path); break;
-                                    case SEND_TYPE_EMOJI: sendEmoji(target, path); break;
-                                    case SEND_TYPE_FILE: shareFile(target, f.getName(), path, ""); break;
-                                    case SEND_TYPE_VOICE:
-                                        runOnMainSync(new Runnable() {
-                                            public void run() {
-                                                sendVoice(target, path);
-                                            }
-                                        });
-                                        break;
+                                boolean mediaOk = performSendWithRetry("媒体发送->" + target + " [" + f.getName() + "]", type == SEND_TYPE_VOICE, new SendAction() {
+                                    public void run() throws Exception {
+                                        switch (type) {
+                                            case SEND_TYPE_IMAGE: sendImage(target, path); break;
+                                            case SEND_TYPE_VIDEO: sendVideo(target, path); break;
+                                            case SEND_TYPE_EMOJI: sendEmoji(target, path); break;
+                                            case SEND_TYPE_FILE: shareFile(target, f.getName(), path, ""); break;
+                                            case SEND_TYPE_VOICE: sendVoice(target, path); break;
+                                        }
+                                    }
+                                });
+                                if (!mediaOk) {
+                                    targetSuccess = false;
+                                    break;
                                 }
                                 if (mediaInterval > 0 && j < mediaPaths.size() - 1) Thread.sleep(mediaInterval * 1000);
                             }
@@ -1475,6 +1734,7 @@ private void showTaskListDialog() {
             int type = task.optInt("type", 0);
             int repeatType = task.optInt("repeatType", 0);
             boolean wakeOnTime = task.optBoolean("wakeOnTime", false);
+            boolean sendOnTimeout = task.optBoolean("sendOnTimeout", true);
 
             String typeStr = "";
             switch (type) {
@@ -1501,6 +1761,7 @@ private void showTaskListDialog() {
                 repeatStr = " [每周 " + formatRepeatDays(task.optJSONArray("repeatDays")) + "]";
             }
             if (wakeOnTime) repeatStr += " [唤醒]";
+            repeatStr += sendOnTimeout ? " [超时补发]" : " [超时跳过]";
 
             String display = statusEmoji + " " + formatTimeWithSeconds(planTime) + repeatStr + "\n" +
                     typeStr + " | " + targetCount + " 个目标 | " + status;
