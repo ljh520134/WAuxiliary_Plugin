@@ -10,16 +10,17 @@ WeChat Auxiliary Plugin
 
 ## 致谢
 
-| 插件                                                    | API                              | 类型 | 状态 | 更新时间   |
-|-------------------------------------------------------|----------------------------------|----|----|--------|
-| [看看腿@yfishyon](plugins/v127/yfishyon/long)            | [遇见API](https://api.yujn.cn/)    | 免费 | ✅  | 260424 |
-| [表情合成@yfishyon](plugins/v127/yfishyon/sese/main.java) | [遇见API](https://api.yujn.cn/)    | 免费 | ✅  | 260424 |
-| [表情合成@Hd](plugins/v127/Hd/EmojiMix)                   | [OIAPI](https://oiapi.net/)      | 免费 | ✅  | 260422 |
-| [摸头插件@Hd](plugins/v127/Hd/Avatar-rua)                 | [维梦API](https://api.52vmy.cn/)   | 免费 | ✅  | 260422 |
-| [历史今天@Hd](plugins/v127/Hd/HistoryToday)               | [PPAPI](http://api.ppqa.cn/)     | 免费 | ✅  | 260422 |
-| [视频插件@Hd](plugins/v127/Hd/VideoPlugin)                | [远梦API](https://api.mmp.cc/)     | 免费 | ✅  | 260422 |
-| [文转音@Hd](plugins/v127/Hd/TextToSpeech)                | [轩心云API](https://www.yx520.ltd/) | 免费 | ✅  | 260422 |
-| [点歌插件@Hd](plugins/v127/Hd/MusicPlugin)                | [落月API](https://doc.vkeys.cn/)   | 免费 | ✅  | 260422 |
+| 插件                                          | API                              | 类型 | 状态 | 更新时间   |
+|---------------------------------------------|----------------------------------|----|----|--------|
+| [举牌@周芷越](plugins/v127/周芷越/jupai)            | [HelloAPI](https://api.zxz.ee/)  | 免费 | ✅  | 260424 |
+| [看看腿@yfishyon](plugins/v127/yfishyon/long)  | [遇见API](https://api.yujn.cn/)    | 免费 | ✅  | 260424 |
+| [表情合成@yfishyon](plugins/v127/yfishyon/sese) | [遇见API](https://api.yujn.cn/)    | 免费 | ✅  | 260424 |
+| [表情合成@Hd](plugins/v127/Hd/EmojiMix)         | [OIAPI](https://oiapi.net/)      | 免费 | ✅  | 260422 |
+| [摸头插件@Hd](plugins/v127/Hd/Avatar-rua)       | [维梦API](https://api.52vmy.cn/)   | 免费 | ✅  | 260422 |
+| [历史今天@Hd](plugins/v127/Hd/HistoryToday)     | [PPAPI](http://api.ppqa.cn/)     | 免费 | ✅  | 260422 |
+| [视频插件@Hd](plugins/v127/Hd/VideoPlugin)      | [远梦API](https://api.mmp.cc/)     | 免费 | ✅  | 260422 |
+| [文转音@Hd](plugins/v127/Hd/TextToSpeech)      | [轩心云API](https://www.yx520.ltd/) | 免费 | ✅  | 260422 |
+| [点歌插件@Hd](plugins/v127/Hd/MusicPlugin)      | [落月API](https://doc.vkeys.cn/)   | 免费 | ✅  | 260422 |
 
 ## 贡献:
 
