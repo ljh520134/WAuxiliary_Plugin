@@ -17,15 +17,15 @@ Bitmap createGradientMask(int width, int height) {
 }
 
 Bitmap applyGradientToBitmap(Bitmap original, Bitmap gradientMask) {
-    var width = original.getWidth()
-    var height = original.getHeight()
-    var result = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-    var canvas = new Canvas(result)
-    var paint = new Paint()
-    canvas.drawBitmap(original, 0, 0, paint)
-    paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN))
-    canvas.drawBitmap(gradientMask, 0, 0, paint)
-    paint.setXfermode(null)
+    var oWidth = original.getWidth()
+    var oHeight = original.getHeight()
+    var result = Bitmap.createBitmap(oWidth, oHeight, Bitmap.Config.ARGB_8888)
+    var newCanvas = new Canvas(result)
+    var newPaint = new Paint()
+    newCanvas.drawBitmap(original, 0, 0, newPaint)
+    newPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN))
+    newCanvas.drawBitmap(gradientMask, 0, 0, newPaint)
+    newPaint.setXfermode(null)
     return result
 }
 
