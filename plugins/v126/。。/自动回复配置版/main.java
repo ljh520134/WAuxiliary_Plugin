@@ -4139,7 +4139,13 @@ private void sendReplyDirectly(Map<String, Object> finalRule, String replyConten
             default:
                 debugLog("[执行回复] 动作: " + (replyAsQuote ? "引用发送文本" : "发送文本") + " -> " + replyContent);
                 if (replyAsQuote) {
-                    sendQuoteMsg(talker, msgId, replyContent);
+                    // 引用消息接口不会解析 [AtWx=xxx] 标记；包含@占位符时改用普通发送，保证真正艾特生效。
+                    if (!TextUtils.isEmpty(replyContent) && replyContent.contains("[AtWx=")) {
+                        debugLog("[执行回复] 检测到At标记，引用发送将导致字面量，改为普通发送: " + replyContent);
+                        sendText(talker, replyContent);
+                    } else {
+                        sendQuoteMsg(talker, msgId, replyContent);
+                    }
                 } else {
                     sendText(talker, replyContent);
                 }
@@ -4287,6 +4293,11 @@ private String buildReplyContent(String template, Object msgInfoBean) {
             result = result.replace("%atSender%", "[AtWx=" + senderWxid + "]");
         } else {
             result = result.replace("%atSender%", "");
+        }
+        if (isGroupChat) {
+            result = result.replace("%atAll%", "[AtWx=notify@all]");
+        } else {
+            result = result.replace("%atAll%", "");
         }
 
         if (isGroupChat) {
@@ -7738,6 +7749,7 @@ private void showEditRuleDialog(final Map<String, Object> rule, final List rules
         LinearLayout row3 = new LinearLayout(getTopActivity());
         row3.setOrientation(LinearLayout.HORIZONTAL);
         row3.addView(createVariableChip("%atSender%", "@发送者", replyEdit));
+        row3.addView(createVariableChip("%atAll%", "@所有人", replyEdit));
         helpCard.addView(row1);
         helpCard.addView(row2);
         helpCard.addView(row3);

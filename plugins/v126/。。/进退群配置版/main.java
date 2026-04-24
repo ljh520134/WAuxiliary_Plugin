@@ -664,11 +664,11 @@ private byte[] getImageBytesFromUrl(String imageUrl) {
         conn.setReadTimeout(5000);
         conn.setRequestMethod("GET");
         if (conn.getResponseCode() == 200) {
-            InputStream is = conn.getInputStream();
+            InputStream inputStream = conn.getInputStream();
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
             int nRead;
             byte[] data = new byte[1024];
-            while ((nRead = is.read(data, 0, data.length)) != -1) {
+            while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
                 buffer.write(data, 0, nRead);
             }
             buffer.flush();
