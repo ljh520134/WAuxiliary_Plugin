@@ -6,6 +6,22 @@ hero:
   text: "WAuxiliary 插件"
 
 features:
+  - title: 群发助手@。。
+    details: 版本 1.3.1 | 更新于 20260424
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E3%80%82%E3%80%82%2F%E7%BE%A4%E5%8F%91%E5%8A%A9%E6%89%8B&filename=%E7%BE%A4%E5%8F%91%E5%8A%A9%E6%89%8B_1.3.1
+
+  - title: 自动回复配置版@。。
+    details: 版本 2.3.1 | 更新于 20260424
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E3%80%82%E3%80%82%2F%E8%87%AA%E5%8A%A8%E5%9B%9E%E5%A4%8D%E9%85%8D%E7%BD%AE%E7%89%88&filename=%E8%87%AA%E5%8A%A8%E5%9B%9E%E5%A4%8D%E9%85%8D%E7%BD%AE%E7%89%88_2.3.1
+
+  - title: 自动抢红包(模拟手动抢版)@。。
+    details: 版本 1.0.1 | 更新于 20260424
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E3%80%82%E3%80%82%2F%E8%87%AA%E5%8A%A8%E6%8A%A2%E7%BA%A2%E5%8C%85(%E6%A8%A1%E6%8B%9F%E6%89%8B%E5%8A%A8%E6%8A%A2%E7%89%88)&filename=%E8%87%AA%E5%8A%A8%E6%8A%A2%E7%BA%A2%E5%8C%85(%E6%A8%A1%E6%8B%9F%E6%89%8B%E5%8A%A8%E6%8A%A2%E7%89%88)_1.0.1
+
+  - title: 进退群配置版@。。
+    details: 版本 2.3.3 | 更新于 20260424
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E3%80%82%E3%80%82%2F%E8%BF%9B%E9%80%80%E7%BE%A4%E9%85%8D%E7%BD%AE%E7%89%88&filename=%E8%BF%9B%E9%80%80%E7%BE%A4%E9%85%8D%E7%BD%AE%E7%89%88_2.3.3
+
   - title: 语录Pro插件@Hd
     details: 版本 1.0.2 | 更新于 20260424
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2Fmsg-q-pro&filename=%E8%AF%AD%E5%BD%95Pro%E6%8F%92%E4%BB%B6_1.0.2
@@ -62,21 +78,9 @@ features:
     details: 版本 1.0.2 | 更新于 20260422
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2Fmsg-q&filename=%E8%AF%AD%E5%BD%95%E6%8F%92%E4%BB%B6_1.0.2
 
-  - title: 群发助手@。。
-    details: 版本 1.3.0 | 更新于 20260421
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E3%80%82%E3%80%82%2F%E7%BE%A4%E5%8F%91%E5%8A%A9%E6%89%8B&filename=%E7%BE%A4%E5%8F%91%E5%8A%A9%E6%89%8B_1.3.0
-
-  - title: 进退群配置版@。。
-    details: 版本 2.3.2 | 更新于 20260421
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E3%80%82%E3%80%82%2F%E8%BF%9B%E9%80%80%E7%BE%A4%E9%85%8D%E7%BD%AE%E7%89%88&filename=%E8%BF%9B%E9%80%80%E7%BE%A4%E9%85%8D%E7%BD%AE%E7%89%88_2.3.2
-
   - title: 元启Ai回复@神明佑我
     details: 版本 1.9 | 更新于 20260421
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FAAZl3l4%2FYuanQiAiReply&filename=%E5%85%83%E5%90%AFAi%E5%9B%9E%E5%A4%8D_1.9
-
-  - title: 自动回复配置版@。。
-    details: 版本 2.3.0 | 更新于 20260420
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E3%80%82%E3%80%82%2F%E8%87%AA%E5%8A%A8%E5%9B%9E%E5%A4%8D%E9%85%8D%E7%BD%AE%E7%89%88&filename=%E8%87%AA%E5%8A%A8%E5%9B%9E%E5%A4%8D%E9%85%8D%E7%BD%AE%E7%89%88_2.3.0
 
   - title: 关键词通知@。。
     details: 版本 1.1.0 | 更新于 20260412
@@ -85,10 +89,6 @@ features:
   - title: 分组管理@。。
     details: 版本 1.1.1 | 更新于 20260411
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E3%80%82%E3%80%82%2F%E5%88%86%E7%BB%84%E7%AE%A1%E7%90%86&filename=%E5%88%86%E7%BB%84%E7%AE%A1%E7%90%86_1.1.1
-
-  - title: 自动抢红包(模拟手动抢版)@。。
-    details: 版本 1.0.0 | 更新于 20260410
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E3%80%82%E3%80%82%2F%E8%87%AA%E5%8A%A8%E6%8A%A2%E7%BA%A2%E5%8C%85(%E6%A8%A1%E6%8B%9F%E6%89%8B%E5%8A%A8%E6%8A%A2%E7%89%88)&filename=%E8%87%AA%E5%8A%A8%E6%8A%A2%E7%BA%A2%E5%8C%85(%E6%A8%A1%E6%8B%9F%E6%89%8B%E5%8A%A8%E6%8A%A2%E7%89%88)_1.0.0
 
   - title: 音频转换@。。
     details: 版本 1.2.0 | 更新于 20260410
