@@ -31,6 +31,18 @@ List<FriendInfo> getFriendList();
 ## 取好友昵称
 
 ```beanshell
+String getFriendNickName(String friendWxid);
+```
+
+## 取好友备注
+
+```beanshell
+String getFriendRemark(String friendWxid);
+```
+
+## 取好友显示昵称
+
+```beanshell
 String getFriendName(String friendWxid);
 
 String getFriendName(String friendWxid, String roomId);
