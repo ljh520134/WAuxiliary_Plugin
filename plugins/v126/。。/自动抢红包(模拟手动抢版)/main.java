@@ -1315,10 +1315,12 @@ void addStatsCard(Activity ctx, LinearLayout root) {
     float totalAmount = getFloat(KEY_STATS_AMOUNT, 0f);
     int failedCount = getInt(KEY_STATS_FAILED, 0);
     int todayCount = getInt("hb_stats_today_count", 0);
+    String amountStr = new java.text.DecimalFormat("0.00").format(totalAmount);
+    
     TextView tvStats = new TextView(ctx);
     tvStats.setText(
         "✅ 成功抢到: " + totalCount + " 个\n" +
-        "💰 累计金额: " + String.format("%.2f", totalAmount) + " 元\n" +
+        "💰 累计金额: " + amountStr + " 元\n" +
         "❌ 未抢到: " + failedCount + " 个\n" +
         "📅 今日抢到: " + todayCount + " 个"
     );
@@ -1326,6 +1328,7 @@ void addStatsCard(Activity ctx, LinearLayout root) {
     tvStats.setLineSpacing(10, 1);
     cardStats.addView(tvStats);
 }
+
 
 LinearLayout createCard(Activity ctx) {
     LinearLayout card = new LinearLayout(ctx);
