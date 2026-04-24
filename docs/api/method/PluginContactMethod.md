@@ -37,12 +37,19 @@ String getFriendNickName(String friendWxid);
 ## 取好友备注
 
 ```beanshell
-String getFriendRemark(String friendWxid);
+String getFriendRemarkName(String friendWxid);
 ```
 
-## 取好友显示昵称
+## 取好友群内昵称
 
 ```beanshell
+String getFriendDisplayName(String friendWxid, String roomId);
+```
+
+## 取好友昵称(后续废弃及移除)
+
+```beanshell
+// 好友备注 > 群内昵称 > 好友昵称
 String getFriendName(String friendWxid);
 
 String getFriendName(String friendWxid, String roomId);
