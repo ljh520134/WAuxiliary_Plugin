@@ -6,6 +6,22 @@ hero:
   text: "WAuxiliary 插件"
 
 features:
+  - title: 语录Pro插件@Hd
+    details: 版本 1.0.2 | 更新于 20260424
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2Fmsg-q-pro&filename=%E8%AF%AD%E5%BD%95Pro%E6%8F%92%E4%BB%B6_1.0.2
+
+  - title: 龙图@yfishyon
+    details: 版本 1.0.1 | 更新于 20260424
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2Fyfishyon%2Flong&filename=%E9%BE%99%E5%9B%BE_1.0.1
+
+  - title: 看看腿@yfishyon
+    details: 版本 1.0.1 | 更新于 20260424
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2Fyfishyon%2Fsese&filename=%E7%9C%8B%E7%9C%8B%E8%85%BF_1.0.1
+
+  - title: 举牌@周芷越
+    details: 版本 1.0.1 | 更新于 20260424
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2F%E5%91%A8%E8%8A%B7%E8%B6%8A%2Fjupai&filename=%E4%B8%BE%E7%89%8C_1.0.1
+
   - title: 摸头插件@Hd
     details: 版本 1.0.2 | 更新于 20260422
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FAvatar-rua&filename=%E6%91%B8%E5%A4%B4%E6%8F%92%E4%BB%B6_1.0.2
@@ -153,18 +169,6 @@ features:
   - title: 抖音视频图文解析@coderpwh
     details: 版本 1.0.0 | 更新于 20250917
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2Fcoderpwh%2Fdouyin&filename=%E6%8A%96%E9%9F%B3%E8%A7%86%E9%A2%91%E5%9B%BE%E6%96%87%E8%A7%A3%E6%9E%90_1.0.0
-
-  - title: 龙图@yfishyon
-    details: 版本 1.0.0 | 更新于 20250917
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2Fyfishyon%2Flong&filename=%E9%BE%99%E5%9B%BE_1.0.0
-
-  - title: 看看腿@yfishyon
-    details: 版本 1.0.0 | 更新于 20250917
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2Fyfishyon%2Fsese&filename=%E7%9C%8B%E7%9C%8B%E8%85%BF_1.0.0
-
-  - title: 举牌@周芷越
-    details: 版本 1.0.0 | 更新于 20250917
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E5%91%A8%E8%8A%B7%E8%B6%8A%2Fjupai&filename=%E4%B8%BE%E7%89%8C_1.0.0
 
   - title: AiChatbot@Aden
     details: 版本 1.0.0 | 更新于 20250830

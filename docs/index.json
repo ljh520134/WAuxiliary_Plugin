@@ -1,7 +1,39 @@
 {
-  "generatedAt": "2026-04-22",
-  "totalPlugins": 47,
+  "generatedAt": "2026-04-24",
+  "totalPlugins": 48,
   "plugins": [
+    {
+      "name": "语录Pro插件",
+      "author": "Hd",
+      "version": "1.0.2",
+      "updateTime": 20260424,
+      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/Hd/msg-q-pro",
+      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2Fmsg-q-pro&filename=%E8%AF%AD%E5%BD%95Pro%E6%8F%92%E4%BB%B6_1.0.2"
+    },
+    {
+      "name": "龙图",
+      "author": "yfishyon",
+      "version": "1.0.1",
+      "updateTime": 20260424,
+      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/yfishyon/long",
+      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2Fyfishyon%2Flong&filename=%E9%BE%99%E5%9B%BE_1.0.1"
+    },
+    {
+      "name": "看看腿",
+      "author": "yfishyon",
+      "version": "1.0.1",
+      "updateTime": 20260424,
+      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/yfishyon/sese",
+      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2Fyfishyon%2Fsese&filename=%E7%9C%8B%E7%9C%8B%E8%85%BF_1.0.1"
+    },
+    {
+      "name": "举牌",
+      "author": "周芷越",
+      "version": "1.0.1",
+      "updateTime": 20260424,
+      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/周芷越/jupai",
+      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2F%E5%91%A8%E8%8A%B7%E8%B6%8A%2Fjupai&filename=%E4%B8%BE%E7%89%8C_1.0.1"
+    },
     {
       "name": "摸头插件",
       "author": "Hd",
@@ -297,30 +329,6 @@
       "updateTime": 20250917,
       "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/coderpwh/douyin",
       "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2Fcoderpwh%2Fdouyin&filename=%E6%8A%96%E9%9F%B3%E8%A7%86%E9%A2%91%E5%9B%BE%E6%96%87%E8%A7%A3%E6%9E%90_1.0.0"
-    },
-    {
-      "name": "龙图",
-      "author": "yfishyon",
-      "version": "1.0.0",
-      "updateTime": 20250917,
-      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/yfishyon/long",
-      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2Fyfishyon%2Flong&filename=%E9%BE%99%E5%9B%BE_1.0.0"
-    },
-    {
-      "name": "看看腿",
-      "author": "yfishyon",
-      "version": "1.0.0",
-      "updateTime": 20250917,
-      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/yfishyon/sese",
-      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2Fyfishyon%2Fsese&filename=%E7%9C%8B%E7%9C%8B%E8%85%BF_1.0.0"
-    },
-    {
-      "name": "举牌",
-      "author": "周芷越",
-      "version": "1.0.0",
-      "updateTime": 20250917,
-      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/周芷越/jupai",
-      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E5%91%A8%E8%8A%B7%E8%B6%8A%2Fjupai&filename=%E4%B8%BE%E7%89%8C_1.0.0"
     },
     {
       "name": "AiChatbot",
