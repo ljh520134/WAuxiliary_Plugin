@@ -6,25 +6,77 @@ hero:
   text: "WAuxiliary 插件"
 
 features:
+  - title: 语录Pro插件@Hd
+    details: 版本 1.0.2 | 更新于 20260424
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2Fmsg-q-pro&filename=%E8%AF%AD%E5%BD%95Pro%E6%8F%92%E4%BB%B6_1.0.2
+
+  - title: 龙图@yfishyon
+    details: 版本 1.0.1 | 更新于 20260424
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2Fyfishyon%2Flong&filename=%E9%BE%99%E5%9B%BE_1.0.1
+
+  - title: 看看腿@yfishyon
+    details: 版本 1.0.1 | 更新于 20260424
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2Fyfishyon%2Fsese&filename=%E7%9C%8B%E7%9C%8B%E8%85%BF_1.0.1
+
+  - title: 举牌@周芷越
+    details: 版本 1.0.1 | 更新于 20260424
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2F%E5%91%A8%E8%8A%B7%E8%B6%8A%2Fjupai&filename=%E4%B8%BE%E7%89%8C_1.0.1
+
+  - title: 摸头插件@Hd
+    details: 版本 1.0.2 | 更新于 20260422
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FAvatar-rua&filename=%E6%91%B8%E5%A4%B4%E6%8F%92%E4%BB%B6_1.0.2
+
+  - title: 示例插件@Hd
+    details: 版本 1.0.2 | 更新于 20260422
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FDemoPlugin&filename=%E7%A4%BA%E4%BE%8B%E6%8F%92%E4%BB%B6_1.0.2
+
+  - title: 表情合成@Hd
+    details: 版本 1.0.2 | 更新于 20260422
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FEmojiMix&filename=%E8%A1%A8%E6%83%85%E5%90%88%E6%88%90_1.0.2
+
+  - title: 历史今天@Hd
+    details: 版本 1.0.2 | 更新于 20260422
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FHistoryToday&filename=%E5%8E%86%E5%8F%B2%E4%BB%8A%E5%A4%A9_1.0.2
+
+  - title: 点歌插件@Hd
+    details: 版本 1.0.2 | 更新于 20260422
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FMusicPlugin&filename=%E7%82%B9%E6%AD%8C%E6%8F%92%E4%BB%B6_1.0.2
+
+  - title: 智能聊天@Hd
+    details: 版本 1.0.2 | 更新于 20260422
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FOpenAiChat&filename=%E6%99%BA%E8%83%BD%E8%81%8A%E5%A4%A9_1.0.2
+
+  - title: 文转图@Hd
+    details: 版本 1.0.2 | 更新于 20260422
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FTextToImg&filename=%E6%96%87%E8%BD%AC%E5%9B%BE_1.0.2
+
+  - title: 文转音@Hd
+    details: 版本 1.0.2 | 更新于 20260422
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FTextToSpeech&filename=%E6%96%87%E8%BD%AC%E9%9F%B3_1.0.2
+
+  - title: 视频插件@Hd
+    details: 版本 1.0.2 | 更新于 20260422
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FVideoPlugin&filename=%E8%A7%86%E9%A2%91%E6%8F%92%E4%BB%B6_1.0.2
+
+  - title: 语录插件@Hd
+    details: 版本 1.0.2 | 更新于 20260422
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2Fmsg-q&filename=%E8%AF%AD%E5%BD%95%E6%8F%92%E4%BB%B6_1.0.2
+
   - title: 群发助手@。。
-    details: 版本 1.2.2 | 更新于 20260420
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E3%80%82%E3%80%82%2F%E7%BE%A4%E5%8F%91%E5%8A%A9%E6%89%8B&filename=%E7%BE%A4%E5%8F%91%E5%8A%A9%E6%89%8B_1.2.2
+    details: 版本 1.3.0 | 更新于 20260421
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E3%80%82%E3%80%82%2F%E7%BE%A4%E5%8F%91%E5%8A%A9%E6%89%8B&filename=%E7%BE%A4%E5%8F%91%E5%8A%A9%E6%89%8B_1.3.0
+
+  - title: 进退群配置版@。。
+    details: 版本 2.3.2 | 更新于 20260421
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E3%80%82%E3%80%82%2F%E8%BF%9B%E9%80%80%E7%BE%A4%E9%85%8D%E7%BD%AE%E7%89%88&filename=%E8%BF%9B%E9%80%80%E7%BE%A4%E9%85%8D%E7%BD%AE%E7%89%88_2.3.2
+
+  - title: 元启Ai回复@神明佑我
+    details: 版本 1.9 | 更新于 20260421
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FAAZl3l4%2FYuanQiAiReply&filename=%E5%85%83%E5%90%AFAi%E5%9B%9E%E5%A4%8D_1.9
 
   - title: 自动回复配置版@。。
     details: 版本 2.3.0 | 更新于 20260420
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E3%80%82%E3%80%82%2F%E8%87%AA%E5%8A%A8%E5%9B%9E%E5%A4%8D%E9%85%8D%E7%BD%AE%E7%89%88&filename=%E8%87%AA%E5%8A%A8%E5%9B%9E%E5%A4%8D%E9%85%8D%E7%BD%AE%E7%89%88_2.3.0
-
-  - title: 进退群配置版@。。
-    details: 版本 2.3.1 | 更新于 20260420
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E3%80%82%E3%80%82%2F%E8%BF%9B%E9%80%80%E7%BE%A4%E9%85%8D%E7%BD%AE%E7%89%88&filename=%E8%BF%9B%E9%80%80%E7%BE%A4%E9%85%8D%E7%BD%AE%E7%89%88_2.3.1
-
-  - title: 元启Ai回复@神明佑我
-    details: 版本 1.8 | 更新于 20260415
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FAAZl3l4%2FYuanQiAiReply&filename=%E5%85%83%E5%90%AFAi%E5%9B%9E%E5%A4%8D_1.8
-
-  - title: 点歌插件@Hd
-    details: 版本 1.0.1 | 更新于 20260413
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FMusicPlugin&filename=%E7%82%B9%E6%AD%8C%E6%8F%92%E4%BB%B6_1.0.1
 
   - title: 关键词通知@。。
     details: 版本 1.1.0 | 更新于 20260412
@@ -86,10 +138,6 @@ features:
     details: 版本 1.0.6 | 更新于 20260228
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FWukon%2FAutoStep&filename=%E8%87%AA%E5%8A%A8%E5%A2%9E%E5%8A%A0%E6%AD%A5%E6%95%B0_1.0.6
 
-  - title: 示例插件@Hd
-    details: 版本 1.0.0 | 更新于 20260228
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FDemoPlugin&filename=%E7%A4%BA%E4%BE%8B%E6%8F%92%E4%BB%B6_1.0.0
-
   - title: 统计@轻乳
     details: 版本 1.0.0 | 更新于 20260222
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E8%BD%BB%E4%B9%B3%2F%E7%BB%9F%E8%AE%A1%E7%B4%AF%E8%AE%A1%E6%94%B6%E5%88%B0%E6%B6%88%E6%81%AF&filename=%E7%BB%9F%E8%AE%A1_1.0.0
@@ -118,77 +166,9 @@ features:
     details: 版本 1.0.0 | 更新于 20251010
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2Fyixin%2FStepChange&filename=%E8%87%AA%E5%8A%A8%E5%A2%9E%E5%8A%A0%E6%AD%A5%E6%95%B0_1.0.0
 
-  - title: 自动同意好友@Hd
-    details: 版本 1.0.0 | 更新于 20250917
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FAutoAgreeFriend&filename=%E8%87%AA%E5%8A%A8%E5%90%8C%E6%84%8F%E5%A5%BD%E5%8F%8B_1.0.0
-
-  - title: 自动艾特回复@Hd
-    details: 版本 1.0.0 | 更新于 20250917
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FAutoAtReply&filename=%E8%87%AA%E5%8A%A8%E8%89%BE%E7%89%B9%E5%9B%9E%E5%A4%8D_1.0.0
-
-  - title: 自动回复@Hd
-    details: 版本 1.0.0 | 更新于 20250917
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FAutoReply&filename=%E8%87%AA%E5%8A%A8%E5%9B%9E%E5%A4%8D_1.0.0
-
-  - title: 自动回复被拍@Hd
-    details: 版本 1.0.0 | 更新于 20250917
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FAutoReplyPat&filename=%E8%87%AA%E5%8A%A8%E5%9B%9E%E5%A4%8D%E8%A2%AB%E6%8B%8D_1.0.0
-
-  - title: 摸头插件@Hd
-    details: 版本 1.0.0 | 更新于 20250917
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FAvatar-rua&filename=%E6%91%B8%E5%A4%B4%E6%8F%92%E4%BB%B6_1.0.0
-
-  - title: 表情合成@Hd
-    details: 版本 1.0.0 | 更新于 20250917
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FEmojiMix&filename=%E8%A1%A8%E6%83%85%E5%90%88%E6%88%90_1.0.0
-
-  - title: 历史今天@Hd
-    details: 版本 1.0.0 | 更新于 20250917
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FHistoryToday&filename=%E5%8E%86%E5%8F%B2%E4%BB%8A%E5%A4%A9_1.0.0
-
-  - title: 进退群提醒@Hd
-    details: 版本 1.0.0 | 更新于 20250917
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FJoinAndLeftGroupTips&filename=%E8%BF%9B%E9%80%80%E7%BE%A4%E6%8F%90%E9%86%92_1.0.0
-
-  - title: 进群邀请@Hd
-    details: 版本 1.0.0 | 更新于 20250917
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FJoinGroupInvite&filename=%E8%BF%9B%E7%BE%A4%E9%82%80%E8%AF%B7_1.0.0
-
-  - title: 智能聊天@Hd
-    details: 版本 1.0.0 | 更新于 20250917
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FOpenAiChat&filename=%E6%99%BA%E8%83%BD%E8%81%8A%E5%A4%A9_1.0.0
-
-  - title: 文转图@Hd
-    details: 版本 1.0.0 | 更新于 20250917
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FTextToImg&filename=%E6%96%87%E8%BD%AC%E5%9B%BE_1.0.0
-
-  - title: 文转音@Hd
-    details: 版本 1.0.0 | 更新于 20250917
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FTextToSpeech&filename=%E6%96%87%E8%BD%AC%E9%9F%B3_1.0.0
-
-  - title: 视频插件@Hd
-    details: 版本 1.0.0 | 更新于 20250917
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2FVideoPlugin&filename=%E8%A7%86%E9%A2%91%E6%8F%92%E4%BB%B6_1.0.0
-
-  - title: 语录插件@Hd
-    details: 版本 1.0.0 | 更新于 20250917
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FHd%2Fmsg-q&filename=%E8%AF%AD%E5%BD%95%E6%8F%92%E4%BB%B6_1.0.0
-
   - title: 抖音视频图文解析@coderpwh
     details: 版本 1.0.0 | 更新于 20250917
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2Fcoderpwh%2Fdouyin&filename=%E6%8A%96%E9%9F%B3%E8%A7%86%E9%A2%91%E5%9B%BE%E6%96%87%E8%A7%A3%E6%9E%90_1.0.0
-
-  - title: 龙图@yfishyon
-    details: 版本 1.0.0 | 更新于 20250917
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2Fyfishyon%2Flong&filename=%E9%BE%99%E5%9B%BE_1.0.0
-
-  - title: 看看腿@yfishyon
-    details: 版本 1.0.0 | 更新于 20250917
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2Fyfishyon%2Fsese&filename=%E7%9C%8B%E7%9C%8B%E8%85%BF_1.0.0
-
-  - title: 举牌@周芷越
-    details: 版本 1.0.0 | 更新于 20250917
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2F%E5%91%A8%E8%8A%B7%E8%B6%8A%2Fjupai&filename=%E4%B8%BE%E7%89%8C_1.0.0
 
   - title: AiChatbot@Aden
     details: 版本 1.0.0 | 更新于 20250830
