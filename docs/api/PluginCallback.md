@@ -4,6 +4,12 @@
 本文档适用于 WAuxiliary v1.2.7.r1342 版本
 :::
 
+## 插件设置
+
+```beanshell
+void openSettings();
+```
+
 ## 插件加载
 
 ```beanshell
