@@ -5,7 +5,7 @@ import me.hd.wauxv.plugin.api.callback.PluginCallBack
 
 void handleSendMusic(String talker, String title) {
     var apiUrl = "https://api.vkeys.cn/v2/music/netease?word=${title}&choose=1"
-    get(apiUrl, null, (respCode, respContent) -> {
+    get(apiUrl, null, respContent -> {
         var jsonObj = new JSONObject(respContent)
         var data = jsonObj.optJSONObject("data")
 

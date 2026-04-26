@@ -10,7 +10,7 @@ void onHandleMsg(Object msgInfoBean) {
             var emojis = content.split("\\+")
             if (emojis.length == 2) {
                 var api = "https://oiapi.net/api/EmojiMix?emoji1=${emojis[0].trim()}&emoji2=${emojis[1].trim()}"
-                get(api, null, (respCode, respContent) -> {
+                get(api, null, respContent -> {
                     var jsonObj = new JSONObject(respContent)
                     var code = jsonObj.optInt("code")
                     if (code == 1) {

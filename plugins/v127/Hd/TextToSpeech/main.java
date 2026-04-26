@@ -49,7 +49,7 @@ boolean onClickSendBtn(String text) {
             return true
         }
         var api = "https://www.yx520.ltd/API/wzzyy/silk.php?text=${str}&voice=${voice}&apikey=${key}"
-        get(api, null, (respCode, respContent) -> {
+        get(api, null, respContent -> {
             var jsonObj = new JSONObject(respContent)
             var code = jsonObj.optString("code")
             if (code.equals("0")) {

@@ -110,7 +110,7 @@ Map getOpenAiHeader() {
 }
 
 void sendOpenAiResp(String talker, String content) {
-    post(host + api, getOpenAiParam(content), getOpenAiHeader(), (respCode, respContent) -> {
+    post(host + api, getOpenAiParam(content), getOpenAiHeader(), respContent -> {
                 var jsonObj = new JSONObject(respContent)
                 var choices = jsonObj.optJSONArray("choices")
                 var fristJsonObj = choices.optJSONObject(0)
