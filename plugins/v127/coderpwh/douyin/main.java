@@ -1,6 +1,6 @@
 
 // 是否开启群聊抖音链接解析
-boolean isOpenGroup = true
+var isOpenGroup = true
 
 var regex = "https://v\\.douyin\\.com/[^\\s/]+/"
 var pattern = Pattern.compile(regex)
