@@ -6,6 +6,10 @@ hero:
   text: "WAuxiliary 插件"
 
 features:
+  - title: 表情合成@Kyo
+    details: 版本 1.0.2 | 更新于 20260427
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FKyo%2FEmojiKitchen&filename=%E8%A1%A8%E6%83%85%E5%90%88%E6%88%90_1.0.2
+
   - title: 抖音链接解析@coderpwh
     details: 版本 1.0.2 | 更新于 20260427
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2Fcoderpwh%2Fdouyin&filename=%E6%8A%96%E9%9F%B3%E9%93%BE%E6%8E%A5%E8%A7%A3%E6%9E%90_1.0.2
@@ -153,10 +157,6 @@ features:
   - title: AI作图@vhukze
     details: 版本 1.5.0 | 更新于 20251013
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2Fvhukze%2FAIImg&filename=AI%E4%BD%9C%E5%9B%BE_1.5.0
-
-  - title: 表情合成@Kyo
-    details: 版本 1.0.0 | 更新于 20251010
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FKyo%2FEmojiKitchen&filename=%E8%A1%A8%E6%83%85%E5%90%88%E6%88%90_1.0.0
 
   - title: 每日新闻@Wukon
     details: 版本 1.0.0 | 更新于 20251010

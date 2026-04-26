@@ -3,6 +3,14 @@
   "totalPlugins": 48,
   "plugins": [
     {
+      "name": "表情合成",
+      "author": "Kyo",
+      "version": "1.0.2",
+      "updateTime": 20260427,
+      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/Kyo/EmojiKitchen",
+      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FKyo%2FEmojiKitchen&filename=%E8%A1%A8%E6%83%85%E5%90%88%E6%88%90_1.0.2"
+    },
+    {
       "name": "抖音链接解析",
       "author": "coderpwh",
       "version": "1.0.2",
@@ -297,14 +305,6 @@
       "updateTime": 20251013,
       "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/vhukze/AIImg",
       "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2Fvhukze%2FAIImg&filename=AI%E4%BD%9C%E5%9B%BE_1.5.0"
-    },
-    {
-      "name": "表情合成",
-      "author": "Kyo",
-      "version": "1.0.0",
-      "updateTime": 20251010,
-      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/Kyo/EmojiKitchen",
-      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FKyo%2FEmojiKitchen&filename=%E8%A1%A8%E6%83%85%E5%90%88%E6%88%90_1.0.0"
     },
     {
       "name": "每日新闻",
