@@ -6,6 +6,10 @@ hero:
   text: "WAuxiliary 插件"
 
 features:
+  - title: 抖音链接解析@coderpwh
+    details: 版本 1.0.2 | 更新于 20260427
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2Fcoderpwh%2Fdouyin&filename=%E6%8A%96%E9%9F%B3%E9%93%BE%E6%8E%A5%E8%A7%A3%E6%9E%90_1.0.2
+
   - title: 摸头插件@Hd
     details: 版本 1.0.2 | 更新于 20260426
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FAvatar-rua&filename=%E6%91%B8%E5%A4%B4%E6%8F%92%E4%BB%B6_1.0.2
@@ -165,10 +169,6 @@ features:
   - title: 自动增加步数@yixin
     details: 版本 1.0.0 | 更新于 20251010
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2Fyixin%2FStepChange&filename=%E8%87%AA%E5%8A%A8%E5%A2%9E%E5%8A%A0%E6%AD%A5%E6%95%B0_1.0.0
-
-  - title: 抖音视频图文解析@coderpwh
-    details: 版本 1.0.0 | 更新于 20250917
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2Fcoderpwh%2Fdouyin&filename=%E6%8A%96%E9%9F%B3%E8%A7%86%E9%A2%91%E5%9B%BE%E6%96%87%E8%A7%A3%E6%9E%90_1.0.0
 
   - title: AiChatbot@Aden
     details: 版本 1.0.0 | 更新于 20250830

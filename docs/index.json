@@ -3,6 +3,14 @@
   "totalPlugins": 48,
   "plugins": [
     {
+      "name": "抖音链接解析",
+      "author": "coderpwh",
+      "version": "1.0.2",
+      "updateTime": 20260427,
+      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/coderpwh/douyin",
+      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2Fcoderpwh%2Fdouyin&filename=%E6%8A%96%E9%9F%B3%E9%93%BE%E6%8E%A5%E8%A7%A3%E6%9E%90_1.0.2"
+    },
+    {
       "name": "摸头插件",
       "author": "Hd",
       "version": "1.0.2",
@@ -321,14 +329,6 @@
       "updateTime": 20251010,
       "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/yixin/StepChange",
       "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2Fyixin%2FStepChange&filename=%E8%87%AA%E5%8A%A8%E5%A2%9E%E5%8A%A0%E6%AD%A5%E6%95%B0_1.0.0"
-    },
-    {
-      "name": "抖音视频图文解析",
-      "author": "coderpwh",
-      "version": "1.0.0",
-      "updateTime": 20250917,
-      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/coderpwh/douyin",
-      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2Fcoderpwh%2Fdouyin&filename=%E6%8A%96%E9%9F%B3%E8%A7%86%E9%A2%91%E5%9B%BE%E6%96%87%E8%A7%A3%E6%9E%90_1.0.0"
     },
     {
       "name": "AiChatbot",
