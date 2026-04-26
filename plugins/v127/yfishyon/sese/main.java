@@ -1,6 +1,4 @@
 
-import me.hd.wauxv.plugin.api.callback.PluginCallBack
-
 boolean onClickSendBtn(String text) {
     var name = when(text) {
         "黑丝" ->"heisi"

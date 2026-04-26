@@ -1,6 +1,4 @@
 
-import me.hd.wauxv.plugin.api.callback.PluginCallBack
-
 void sendToday(String talker) {
     var api = "https://v2.xxapi.cn/api/historypic"
     get(api, null, respContent -> {

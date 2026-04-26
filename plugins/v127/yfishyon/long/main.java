@@ -1,6 +1,4 @@
 
-import me.hd.wauxv.plugin.api.callback.PluginCallBack
-
 boolean onClickSendBtn(String text) {
     if ("龙图".equals(text)) { // 龙哥就是龙！
         get("https://api.yujn.cn/api/long.php?type=json", null, respContent -> {

@@ -1,6 +1,4 @@
 
-import me.hd.wauxv.plugin.api.callback.PluginCallBack
-
 Bitmap createGradientMask(int width, int height) {
     var mask = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
     var maskCanvas = new Canvas(mask)

@@ -1,6 +1,4 @@
 
-import me.hd.wauxv.plugin.api.callback.PluginCallBack
-
 void openSettings() {
     var ctx = getTopActivity()
 

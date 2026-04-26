@@ -1,8 +1,6 @@
 
 import java.nio.file.Files
 
-import me.hd.wauxv.plugin.api.callback.PluginCallBack
-
 void handleSendMusic(String talker, String title) {
     var apiUrl = "https://api.vkeys.cn/v2/music/netease?word=${title}&choose=1"
     get(apiUrl, null, respContent -> {

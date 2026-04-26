@@ -1,6 +1,4 @@
 
-import me.hd.wauxv.plugin.api.callback.PluginCallBack
-
 var host = "https://api.openai.com"
 var api = "/v1/chat/completions"
 var model = "模型名称"
