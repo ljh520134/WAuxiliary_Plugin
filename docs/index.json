@@ -1,7 +1,15 @@
 {
   "generatedAt": "2026-04-26",
-  "totalPlugins": 48,
+  "totalPlugins": 49,
   "plugins": [
+    {
+      "name": "XpHook示例插件",
+      "author": "Hd",
+      "version": "1.0.2",
+      "updateTime": 20260427,
+      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/Hd/XpHookDemo",
+      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FXpHookDemo&filename=XpHook%E7%A4%BA%E4%BE%8B%E6%8F%92%E4%BB%B6_1.0.2"
+    },
     {
       "name": "表情合成",
       "author": "Kyo",
@@ -25,14 +33,6 @@
       "updateTime": 20260426,
       "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/Hd/Avatar-rua",
       "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FAvatar-rua&filename=%E6%91%B8%E5%A4%B4%E6%8F%92%E4%BB%B6_1.0.2"
-    },
-    {
-      "name": "示例插件",
-      "author": "Hd",
-      "version": "1.0.2",
-      "updateTime": 20260426,
-      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/Hd/DemoPlugin",
-      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FDemoPlugin&filename=%E7%A4%BA%E4%BE%8B%E6%8F%92%E4%BB%B6_1.0.2"
     },
     {
       "name": "表情合成",
@@ -65,6 +65,14 @@
       "updateTime": 20260426,
       "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/Hd/OpenAiChat",
       "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FOpenAiChat&filename=%E6%99%BA%E8%83%BD%E8%81%8A%E5%A4%A9_1.0.2"
+    },
+    {
+      "name": "综合示例插件",
+      "author": "Hd",
+      "version": "1.0.2",
+      "updateTime": 20260426,
+      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/Hd/PluginDemo",
+      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FPluginDemo&filename=%E7%BB%BC%E5%90%88%E7%A4%BA%E4%BE%8B%E6%8F%92%E4%BB%B6_1.0.2"
     },
     {
       "name": "文转图",

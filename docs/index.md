@@ -6,6 +6,10 @@ hero:
   text: "WAuxiliary 插件"
 
 features:
+  - title: XpHook示例插件@Hd
+    details: 版本 1.0.2 | 更新于 20260427
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FXpHookDemo&filename=XpHook%E7%A4%BA%E4%BE%8B%E6%8F%92%E4%BB%B6_1.0.2
+
   - title: 表情合成@Kyo
     details: 版本 1.0.2 | 更新于 20260427
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FKyo%2FEmojiKitchen&filename=%E8%A1%A8%E6%83%85%E5%90%88%E6%88%90_1.0.2
@@ -17,10 +21,6 @@ features:
   - title: 摸头插件@Hd
     details: 版本 1.0.2 | 更新于 20260426
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FAvatar-rua&filename=%E6%91%B8%E5%A4%B4%E6%8F%92%E4%BB%B6_1.0.2
-
-  - title: 示例插件@Hd
-    details: 版本 1.0.2 | 更新于 20260426
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FDemoPlugin&filename=%E7%A4%BA%E4%BE%8B%E6%8F%92%E4%BB%B6_1.0.2
 
   - title: 表情合成@Hd
     details: 版本 1.0.2 | 更新于 20260426
@@ -37,6 +37,10 @@ features:
   - title: 智能聊天@Hd
     details: 版本 1.0.2 | 更新于 20260426
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FOpenAiChat&filename=%E6%99%BA%E8%83%BD%E8%81%8A%E5%A4%A9_1.0.2
+
+  - title: 综合示例插件@Hd
+    details: 版本 1.0.2 | 更新于 20260426
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FPluginDemo&filename=%E7%BB%BC%E5%90%88%E7%A4%BA%E4%BE%8B%E6%8F%92%E4%BB%B6_1.0.2
 
   - title: 文转图@Hd
     details: 版本 1.0.2 | 更新于 20260426
