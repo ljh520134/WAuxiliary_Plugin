@@ -1,7 +1,15 @@
 {
   "generatedAt": "2026-04-27",
-  "totalPlugins": 50,
+  "totalPlugins": 51,
   "plugins": [
+    {
+      "name": "ChatLab",
+      "author": "Hd",
+      "version": "1.0.0",
+      "updateTime": 20260427,
+      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/Hd/ChatLab",
+      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FChatLab&filename=ChatLab_1.0.0"
+    },
     {
       "name": "XpHook示例插件",
       "author": "Hd",

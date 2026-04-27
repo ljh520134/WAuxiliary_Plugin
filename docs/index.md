@@ -6,6 +6,10 @@ hero:
   text: "WAuxiliary 插件"
 
 features:
+  - title: ChatLab@Hd
+    details: 版本 1.0.0 | 更新于 20260427
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FChatLab&filename=ChatLab_1.0.0
+
   - title: XpHook示例插件@Hd
     details: 版本 1.0.2 | 更新于 20260427
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FXpHookDemo&filename=XpHook%E7%A4%BA%E4%BE%8B%E6%8F%92%E4%BB%B6_1.0.2
