@@ -22,6 +22,10 @@ features:
     details: 版本 1.9.1 | 更新于 20260428
     link: https://GitFolderDownloader.github.io/?=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FAAZl3l4%2FYuanQiAiReply&name=%E5%85%83%E5%90%AFAi%E5%9B%9E%E5%A4%8D_1.9.1
 
+  - title: AI绘图助手@坤
+    details: 版本 1.0.0 | 更新于 20260428
+    link: https://GitFolderDownloader.github.io/?=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2F%E5%9D%A4%2FAI%E7%BB%98%E5%9B%BE%E5%8A%A9%E6%89%8B&name=AI%E7%BB%98%E5%9B%BE%E5%8A%A9%E6%89%8B_1.0.0
+
   - title: ChatLab@Hd
     details: 版本 1.0.0 | 更新于 20260427
     link: https://GitFolderDownloader.github.io/?=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FChatLab&name=ChatLab_1.0.0
@@ -213,8 +217,4 @@ features:
   - title: 文生图@CkBcDD
     details: 版本 1.0.0 | 更新于 20250520
     link: https://GitFolderDownloader.github.io/?=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FCkBcDD%2FTXT-to-IMG&name=%E6%96%87%E7%94%9F%E5%9B%BE_1.0.0
-
-  - title: AI绘图助手@坤
-    details: 版本 1.0.0 | 更新于 2026-04-28
-    link: https://GitFolderDownloader.github.io/?=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2F%E5%9D%A4%2FAI%E7%BB%98%E5%9B%BE%E5%8A%A9%E6%89%8B&name=AI%E7%BB%98%E5%9B%BE%E5%8A%A9%E6%89%8B_1.0.0
 
