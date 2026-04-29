@@ -6,6 +6,10 @@ hero:
   text: "WAuxiliary 插件"
 
 features:
+  - title: 智能绘图@Hd
+    details: 版本 1.0.0 | 更新于 20260429
+    link: https://GitFolderDownloader.github.io/?=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FOpenAiDraw&name=%E6%99%BA%E8%83%BD%E7%BB%98%E5%9B%BE_1.0.0
+
   - title: 自动抢红包(模拟手动抢版)@。。
     details: 版本 1.0.2 | 更新于 20260429
     link: https://GitFolderDownloader.github.io/?=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2F%E3%80%82%E3%80%82%2F%E8%87%AA%E5%8A%A8%E6%8A%A2%E7%BA%A2%E5%8C%85(%E6%A8%A1%E6%8B%9F%E6%89%8B%E5%8A%A8%E6%8A%A2%E7%89%88)&name=%E8%87%AA%E5%8A%A8%E6%8A%A2%E7%BA%A2%E5%8C%85(%E6%A8%A1%E6%8B%9F%E6%89%8B%E5%8A%A8%E6%8A%A2%E7%89%88)_1.0.2
@@ -209,4 +213,8 @@ features:
   - title: 文生图@CkBcDD
     details: 版本 1.0.0 | 更新于 20250520
     link: https://GitFolderDownloader.github.io/?=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FCkBcDD%2FTXT-to-IMG&name=%E6%96%87%E7%94%9F%E5%9B%BE_1.0.0
+
+  - title: AI绘图助手@坤
+    details: 版本 1.0.0 | 更新于 2026-04-28
+    link: https://GitFolderDownloader.github.io/?=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2F%E5%9D%A4%2FAI%E7%BB%98%E5%9B%BE%E5%8A%A9%E6%89%8B&name=AI%E7%BB%98%E5%9B%BE%E5%8A%A9%E6%89%8B_1.0.0
 

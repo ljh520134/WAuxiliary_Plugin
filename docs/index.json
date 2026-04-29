@@ -1,7 +1,15 @@
 {
   "generatedAt": "2026-04-29",
-  "totalPlugins": 51,
+  "totalPlugins": 53,
   "plugins": [
+    {
+      "name": "智能绘图",
+      "author": "Hd",
+      "version": "1.0.0",
+      "updateTime": 20260429,
+      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/Hd/OpenAiDraw",
+      "downloadUrl": "https://GitFolderDownloader.github.io/?=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FOpenAiDraw&name=%E6%99%BA%E8%83%BD%E7%BB%98%E5%9B%BE_1.0.0"
+    },
     {
       "name": "自动抢红包(模拟手动抢版)",
       "author": "。。",
@@ -409,6 +417,14 @@
       "updateTime": 20250520,
       "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v126/CkBcDD/TXT-to-IMG",
       "downloadUrl": "https://GitFolderDownloader.github.io/?=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv126%2FCkBcDD%2FTXT-to-IMG&name=%E6%96%87%E7%94%9F%E5%9B%BE_1.0.0"
+    },
+    {
+      "name": "AI绘图助手",
+      "author": "坤",
+      "version": "1.0.0",
+      "updateTime": "2026-04-28",
+      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/坤/AI绘图助手",
+      "downloadUrl": "https://GitFolderDownloader.github.io/?=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2F%E5%9D%A4%2FAI%E7%BB%98%E5%9B%BE%E5%8A%A9%E6%89%8B&name=AI%E7%BB%98%E5%9B%BE%E5%8A%A9%E6%89%8B_1.0.0"
     }
   ]
 }
