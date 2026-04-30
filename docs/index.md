@@ -6,6 +6,10 @@ hero:
   text: "WAuxiliary 插件"
 
 features:
+  - title: 元启Ai回复@神明佑我
+    details: 版本 2 | 更新于 20260430
+    link: https://GitFolderDownloader.github.io/?=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FAAZl3l4%2FYuanQiAiReply&name=%E5%85%83%E5%90%AFAi%E5%9B%9E%E5%A4%8D_2
+
   - title: 智能绘图@Hd
     details: 版本 1.0.0 | 更新于 20260429
     link: https://GitFolderDownloader.github.io/?=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FOpenAiDraw&name=%E6%99%BA%E8%83%BD%E7%BB%98%E5%9B%BE_1.0.0
@@ -17,10 +21,6 @@ features:
   - title: 自定义通知配置版@。。&周杰伦
     details: 版本 1.1.0 | 更新于 20260429
     link: https://GitFolderDownloader.github.io/?=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2F%E3%80%82%E3%80%82%2F%E8%87%AA%E5%AE%9A%E4%B9%89%E9%80%9A%E7%9F%A5%E9%85%8D%E7%BD%AE%E7%89%88&name=%E8%87%AA%E5%AE%9A%E4%B9%89%E9%80%9A%E7%9F%A5%E9%85%8D%E7%BD%AE%E7%89%88_1.1.0
-
-  - title: 元启Ai回复@神明佑我
-    details: 版本 1.9.1 | 更新于 20260428
-    link: https://GitFolderDownloader.github.io/?=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FAAZl3l4%2FYuanQiAiReply&name=%E5%85%83%E5%90%AFAi%E5%9B%9E%E5%A4%8D_1.9.1
 
   - title: AI绘图助手@坤
     details: 版本 1.0.0 | 更新于 20260428

@@ -3,6 +3,14 @@
   "totalPlugins": 53,
   "plugins": [
     {
+      "name": "元启Ai回复",
+      "author": "神明佑我",
+      "version": 2,
+      "updateTime": 20260430,
+      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/AAZl3l4/YuanQiAiReply",
+      "downloadUrl": "https://GitFolderDownloader.github.io/?=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FAAZl3l4%2FYuanQiAiReply&name=%E5%85%83%E5%90%AFAi%E5%9B%9E%E5%A4%8D_2"
+    },
+    {
       "name": "智能绘图",
       "author": "Hd",
       "version": "1.0.0",
@@ -25,14 +33,6 @@
       "updateTime": 20260429,
       "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/。。/自定义通知配置版",
       "downloadUrl": "https://GitFolderDownloader.github.io/?=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2F%E3%80%82%E3%80%82%2F%E8%87%AA%E5%AE%9A%E4%B9%89%E9%80%9A%E7%9F%A5%E9%85%8D%E7%BD%AE%E7%89%88&name=%E8%87%AA%E5%AE%9A%E4%B9%89%E9%80%9A%E7%9F%A5%E9%85%8D%E7%BD%AE%E7%89%88_1.1.0"
-    },
-    {
-      "name": "元启Ai回复",
-      "author": "神明佑我",
-      "version": "1.9.1",
-      "updateTime": 20260428,
-      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/AAZl3l4/YuanQiAiReply",
-      "downloadUrl": "https://GitFolderDownloader.github.io/?=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FAAZl3l4%2FYuanQiAiReply&name=%E5%85%83%E5%90%AFAi%E5%9B%9E%E5%A4%8D_1.9.1"
     },
     {
       "name": "AI绘图助手",
