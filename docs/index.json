@@ -1,7 +1,15 @@
 {
-  "generatedAt": "2026-05-03",
+  "generatedAt": "2026-05-04",
   "totalPlugins": 54,
   "plugins": [
+    {
+      "name": "Hook示例插件",
+      "author": "Hd",
+      "version": "1.0.3",
+      "updateTime": 20260505,
+      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/Hd/HookDemo",
+      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FHookDemo&filename=Hook%E7%A4%BA%E4%BE%8B%E6%8F%92%E4%BB%B6_1.0.3"
+    },
     {
       "name": "关键词通知",
       "author": "。。",
@@ -65,14 +73,6 @@
       "updateTime": 20260427,
       "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/Hd/ChatLab",
       "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FChatLab&filename=ChatLab_1.0.0"
-    },
-    {
-      "name": "XpHook示例插件",
-      "author": "Hd",
-      "version": "1.0.2",
-      "updateTime": 20260427,
-      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/Hd/XpHookDemo",
-      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FXpHookDemo&filename=XpHook%E7%A4%BA%E4%BE%8B%E6%8F%92%E4%BB%B6_1.0.2"
     },
     {
       "name": "表情合成",

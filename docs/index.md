@@ -6,6 +6,10 @@ hero:
   text: "WAuxiliary 插件"
 
 features:
+  - title: Hook示例插件@Hd
+    details: 版本 1.0.3 | 更新于 20260505
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FHookDemo&filename=Hook%E7%A4%BA%E4%BE%8B%E6%8F%92%E4%BB%B6_1.0.3
+
   - title: 关键词通知@。。
     details: 版本 2.0.0 | 更新于 20260504
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2F%E3%80%82%E3%80%82%2F%E5%85%B3%E9%94%AE%E8%AF%8D%E9%80%9A%E7%9F%A5&filename=%E5%85%B3%E9%94%AE%E8%AF%8D%E9%80%9A%E7%9F%A5_2.0.0
@@ -37,10 +41,6 @@ features:
   - title: ChatLab@Hd
     details: 版本 1.0.0 | 更新于 20260427
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FChatLab&filename=ChatLab_1.0.0
-
-  - title: XpHook示例插件@Hd
-    details: 版本 1.0.2 | 更新于 20260427
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FXpHookDemo&filename=XpHook%E7%A4%BA%E4%BE%8B%E6%8F%92%E4%BB%B6_1.0.2
 
   - title: 表情合成@Kyo
     details: 版本 1.0.2 | 更新于 20260427
