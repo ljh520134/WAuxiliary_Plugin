@@ -23,8 +23,8 @@ features:
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2F%E3%80%82%E3%80%82%2F%E5%85%B3%E9%94%AE%E8%AF%8D%E9%80%9A%E7%9F%A5&filename=%E5%85%B3%E9%94%AE%E8%AF%8D%E9%80%9A%E7%9F%A5_2.0.0
 
   - title: TIAX文转音（DC）@Datamaniac Chaser
-    details: 版本 3.5 | 更新于 20260503
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FDatamaniac%20Chaser%2Ftiax%E6%96%87%E8%BD%AC%E9%9F%B3&filename=TIAX%E6%96%87%E8%BD%AC%E9%9F%B3%EF%BC%88DC%EF%BC%89_3.5
+    details: 版本 3.6 | 更新于 20260503
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FDatamaniac%20Chaser%2Ftiax%E6%96%87%E8%BD%AC%E9%9F%B3&filename=TIAX%E6%96%87%E8%BD%AC%E9%9F%B3%EF%BC%88DC%EF%BC%89_3.6
 
   - title: 元启Ai回复@神明佑我
     details: 版本 2 | 更新于 20260430
