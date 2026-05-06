@@ -6,6 +6,10 @@ hero:
   text: "WAuxiliary 插件"
 
 features:
+  - title: 群管助手@Alickra
+    details: 版本 1.0.0 | 更新于 20260505
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FAlickra%2F%E7%BE%A4%E7%AE%A1%E5%8A%A9%E6%89%8B&filename=%E7%BE%A4%E7%AE%A1%E5%8A%A9%E6%89%8B_1.0.0
+
   - title: Hook示例插件@Hd
     details: 版本 1.0.3 | 更新于 20260505
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FHd%2FHookDemo&filename=Hook%E7%A4%BA%E4%BE%8B%E6%8F%92%E4%BB%B6_1.0.3
