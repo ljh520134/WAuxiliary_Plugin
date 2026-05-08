@@ -4,44 +4,24 @@
 本文档适用于 WAuxiliary 最新版本
 :::
 
-## mp3 到 Silk 文件
-
-```beanshell
-File mp3ToSilkFile(String mp3Path);
-```
-
-## mp3 到 Silk 路径
-
-```beanshell
-String mp3ToSilkPath(String mp3Path);
-```
-
 ## mp3 到 Silk
 
 ```beanshell
-void mp3ToSilk(String mp3Path, String silkPath);
-```
+int mp3ToSilk(String mp3Path, String silkPath);
 
-## silk 到 Mp3 文件
-
-```beanshell
-File silkToMp3File(String silkPath);
-```
-
-## silk 到 Mp3 路径
-
-```beanshell
-String silkToMp3Path(String silkPath);
+int mp3ToSilk(String mp3Path, String silkPath, int hz);
 ```
 
 ## silk 到 Mp3
 
 ```beanshell
-void silkToMp3(String silkPath, String mp3Path);
+int silkToMp3(String silkPath, String mp3Path);
+
+int silkToMp3(String silkPath, String mp3Path, int hz);
 ```
 
-## 取 silk 毫秒时长
+## 取毫秒时长
 
 ```beanshell
-void getSilkDuration(String silkPath);
+long getDuration(String filePath);
 ```
