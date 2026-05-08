@@ -6,6 +6,10 @@ hero:
   text: "WAuxiliary 插件"
 
 features:
+  - title: 元启Ai回复@神明佑我
+    details: 版本 2.1 | 更新于 20260508
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FAAZl3l4%2FYuanQiAiReply&filename=%E5%85%83%E5%90%AFAi%E5%9B%9E%E5%A4%8D_2.1
+
   - title: 群管助手@Alickra
     details: 版本 1.0.0 | 更新于 20260505
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FAlickra%2F%E7%BE%A4%E7%AE%A1%E5%8A%A9%E6%89%8B&filename=%E7%BE%A4%E7%AE%A1%E5%8A%A9%E6%89%8B_1.0.0
@@ -25,10 +29,6 @@ features:
   - title: TIAX文转音（DC）@Datamaniac Chaser
     details: 版本 3.6 | 更新于 20260503
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FDatamaniac%20Chaser%2Ftiax%E6%96%87%E8%BD%AC%E9%9F%B3&filename=TIAX%E6%96%87%E8%BD%AC%E9%9F%B3%EF%BC%88DC%EF%BC%89_3.6
-
-  - title: 元启Ai回复@神明佑我
-    details: 版本 2 | 更新于 20260430
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2FAAZl3l4%2FYuanQiAiReply&filename=%E5%85%83%E5%90%AFAi%E5%9B%9E%E5%A4%8D_2
 
   - title: 智能绘图@Hd
     details: 版本 1.0.0 | 更新于 20260429
