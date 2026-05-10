@@ -22,14 +22,14 @@ export default defineConfig({
           { text: '音频方法', link: '/api/method/PluginAudioMethod' },
           { text: '配置方法', link: '/api/method/PluginConfigMethod' },
           { text: '联系方法', link: '/api/method/PluginContactMethod' },
-          { text: 'DexKit 方法', link: '/api/method/PluginDexKitMethod' },
-          { text: 'Hook 方法', link: '/api/method/PluginHookMethod' },
           { text: '网络方法', link: '/api/method/PluginHttpMethod' },
           { text: '媒体方法', link: '/api/method/PluginMediaMsgMethod' },
           { text: '消息方法', link: '/api/method/PluginMsgMethod' },
           { text: '其他方法', link: '/api/method/PluginOtherMethod' },
-          { text: '反射方法', link: '/api/method/PluginReflectMethod' },
           { text: '朋友圈方法', link: '/api/method/PluginSnsMethod' },
+          { text: 'DexKit 方法', link: '/api/method/PluginDexKitMethod' },
+          { text: 'Reflect 方法', link: '/api/method/PluginReflectMethod' },
+          { text: 'Hook 方法', link: '/api/method/PluginHookMethod' },
         ]
       }
     ],
