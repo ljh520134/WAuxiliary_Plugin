@@ -1,7 +1,15 @@
 {
-  "generatedAt": "2026-05-08",
-  "totalPlugins": 55,
+  "generatedAt": "2026-05-10",
+  "totalPlugins": 56,
   "plugins": [
+    {
+      "name": "微信密友",
+      "author": "桀翕",
+      "version": "1.0.0",
+      "updateTime": 20260509,
+      "homeLink": "https://github.com/HdShare/WAuxiliary_Plugin/tree/main/plugins/v127/桀翕/微信密友",
+      "downloadUrl": "https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2F%E6%A1%80%E7%BF%95%2F%E5%BE%AE%E4%BF%A1%E5%AF%86%E5%8F%8B&filename=%E5%BE%AE%E4%BF%A1%E5%AF%86%E5%8F%8B_1.0.0"
+    },
     {
       "name": "元启Ai回复",
       "author": "神明佑我",
