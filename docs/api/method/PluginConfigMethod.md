@@ -32,7 +32,7 @@ long getLong(String key, long defValue);
 - `defValue`：未命中或格式错误时返回的默认值
 - 返回值：对应类型的配置值
 
-## 完整示例
+## 示例
 
 ```beanshell
 String apiKey = getString("api_key", "");
@@ -67,7 +67,7 @@ putBoolean("enabled", true);
 putInt("max_count", 20);
 ```
 
-## 示例
+## 完整示例
 
 ```beanshell
 void onLoad() {
