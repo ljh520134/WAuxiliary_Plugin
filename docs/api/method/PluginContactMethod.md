@@ -42,6 +42,21 @@ String talker = getTargetTalker();
 log("current talker = " + talker);
 ```
 
+## 获取公众号列表
+
+```beanshell
+List<FriendInfo> getOfficialList();
+```
+
+- 返回值：公众号列表
+
+## 示例
+
+```beanshell
+var officialList = getOfficialList();
+log("official count = " + officialList.size());
+```
+
 ## 取好友列表
 
 ```beanshell
@@ -75,7 +90,7 @@ String getFriendRemarkName(String friendWxid);
 - `friendWxid`：好友 `wxid`
 - 返回值：好友备注
 
-## 取好友群内昵称
+## 取好友群内显示名
 
 ```beanshell
 String getFriendDisplayName(String friendWxid, String roomId);
@@ -83,7 +98,7 @@ String getFriendDisplayName(String friendWxid, String roomId);
 
 - `friendWxid`：成员 `wxid`
 - `roomId`：群聊 `chatroom id`
-- 返回值：群内显示昵称，取不到时回退为好友昵称
+- 返回值：群内显示名称，取不到时回退为好友昵称
 
 ## 示例
 
@@ -102,7 +117,7 @@ String getFriendName(String friendWxid);
 String getFriendName(String friendWxid, String roomId);
 ```
 
-- 返回值：综合名称，通常会按备注、群昵称、好友昵称等逻辑返回
+- 返回值：综合名称，通常会按备注、群显示名、好友昵称等逻辑返回
 
 ## 取头像链接
 
@@ -206,6 +221,53 @@ void verifyUser(String wxid, String ticket, int scene, int privacy);
 
 ```beanshell
 verifyUser("wxid_xxx", "ticket_xxx", 17);
+```
+
+## 获取标签列表
+
+```beanshell
+List<ContactLabelBean> getContactLabelList();
+```
+
+- 返回值：当前账号下全部标签
+
+## 示例
+
+```beanshell
+var labelList = getContactLabelList();
+log("label count = " + labelList.size());
+```
+
+## 通过标签 ID 获取联系人
+
+```beanshell
+List<String> getContactByLabelId(String labelId);
+```
+
+- `labelId`：标签 ID
+- 返回值：命中该标签的联系人 `wxid` 列表
+
+## 示例
+
+```beanshell
+var userList = getContactByLabelId("1");
+log(userList);
+```
+
+## 通过标签名称获取联系人
+
+```beanshell
+List<String> getContactByLabelName(String labelName);
+```
+
+- `labelName`：标签名称
+- 返回值：命中该标签的联系人 `wxid` 列表
+
+## 示例
+
+```beanshell
+var userList = getContactByLabelName("重要好友");
+log(userList);
 ```
 
 ## 修改好友标签
