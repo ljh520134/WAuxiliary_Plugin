@@ -6,6 +6,11 @@ hero:
   text: "WAuxiliary 插件"
 
 features:
+  - title: 分组管理(1.2.0)
+    details: 作者 。。
+    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2F%E3%80%82%E3%80%82%2F%E5%88%86%E7%BB%84%E7%AE%A1%E7%90%86&filename=%E5%88%86%E7%BB%84%E7%AE%A1%E7%90%86_1.2.0
+    linkText: 更新于 20260514
+
   - title: 微信密友(1.0.0)
     details: 作者 桀翕
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2F%E6%A1%80%E7%BF%95%2F%E5%BE%AE%E4%BF%A1%E5%AF%86%E5%8F%8B&filename=%E5%BE%AE%E4%BF%A1%E5%AF%86%E5%8F%8B_1.0.0
@@ -160,11 +165,6 @@ features:
     details: 作者 。。
     link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2F%E3%80%82%E3%80%82%2F%E8%BF%9B%E9%80%80%E7%BE%A4%E9%85%8D%E7%BD%AE%E7%89%88&filename=%E8%BF%9B%E9%80%80%E7%BE%A4%E9%85%8D%E7%BD%AE%E7%89%88_2.3.3
     linkText: 更新于 20260424
-
-  - title: 分组管理(1.1.1)
-    details: 作者 。。
-    link: https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2FHdShare%2FWAuxiliary_Plugin%2Ftree%2Fmain%2Fplugins%2Fv127%2F%E3%80%82%E3%80%82%2F%E5%88%86%E7%BB%84%E7%AE%A1%E7%90%86&filename=%E5%88%86%E7%BB%84%E7%AE%A1%E7%90%86_1.1.1
-    linkText: 更新于 20260411
 
   - title: 音频转换(1.2.0)
     details: 作者 。。
